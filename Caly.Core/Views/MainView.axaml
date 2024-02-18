@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Caly.Core.ViewModels"
+             xmlns:tabalonia="clr-namespace:Tabalonia.Controls;assembly=Tabalonia"
+             xmlns:controls="clr-namespace:Caly.Core.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Caly.Core.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+	<tabalonia:TabsControl Background="Transparent"
+                           Padding="0"
+                           AddItemCommand="{Binding OpenFileCommand}"
+                           CloseItemCommand="{Binding CloseTabCommand}"
+                           ItemsSource="{Binding PdfDocuments}"
+                           SelectedIndex="{Binding SelectedDocumentIndex}">
+		<TabControl.ItemTemplate>
+			<DataTemplate>
+				<DockPanel>
+					<TextBlock DockPanel.Dock="Left" Text="{Binding FileName}"/>
+				</DockPanel>
+			</DataTemplate>
+		</TabControl.ItemTemplate>
+		<TabControl.ContentTemplate>
+			<DataTemplate x:DataType="vm:PdfDocumentViewModel">
+				<Grid ColumnDefinitions="Auto,*">
+					<Border>
+						<TabControl TabStripPlacement="Left">
+
+							<!-- Thumbnails tab -->
+							<TabItem IsSelected="True">
+								<TabItem.Header>
+									<PathIcon Data="{StaticResource copy_regular}" >
+										<ToolTip.Tip>Thumbnails</ToolTip.Tip>
+										<PathIcon.RenderTransform>
+											<ScaleTransform ScaleY="-1"/>
+										</PathIcon.RenderTransform>
+									</PathIcon>
+								</TabItem.Header>
+								<controls:PdfDocumentThumbnailControl Grid.Column="0" />
+							</TabItem>
+
+							<!-- Bookmarks tab -->
+							<TabItem IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
+								<TabItem.Header>
+									<PathIcon Data="{StaticResource bookmark_regular}">
+										<ToolTip.Tip>Bookmarks</ToolTip.Tip>
+									</PathIcon>
+								</TabItem.Header>
+								<TreeView ItemsSource="{Binding Bookmarks}" SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}" SelectionMode="Toggle">
+									<TreeView.ItemTemplate>
+										<TreeDataTemplate ItemsSource="{Binding Nodes}">
+											<Border HorizontalAlignment="Left"
+													BorderBrush="Gray" BorderThickness="1"
+													CornerRadius="5" Padding="15 3">
+												<TextBlock Text="{Binding Title}" />
+											</Border>
+										</TreeDataTemplate>
+									</TreeView.ItemTemplate>
+								</TreeView>
+							</TabItem>
+
+						</TabControl>
+					</Border>
+					<controls:PdfDocumentControl Grid.Column="1" />
+				</Grid>
+			</DataTemplate>
+		</TabControl.ContentTemplate>
+	</tabalonia:TabsControl>
+
+</UserControl>

@@ -1,0 +1,76 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Caly.Core.Controls"
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+    <Design.PreviewWith>
+        <StackPanel>
+            <controls:PdfPageControl x:DataType="viewModels:PdfPageViewModel"
+                                     Picture="{Binding PdfPicture}"
+                                     IsPageRendering="{Binding IsPageRendering}"/>
+        </StackPanel>
+    </Design.PreviewWith>
+
+
+	<Style Selector="controls|PdfPageControl" x:DataType="viewModels:PdfPageViewModel">
+		<!-- Set Defaults -->
+		<Setter Property="LoadPagePictureCommand" Value="{Binding LoadPagePictureCommand}"/>
+		<Setter Property="UnloadPagePictureCommand" Value="{Binding UnloadPagePictureCommand}"/>
+		<Setter Property="Width" Value="{Binding Width}"/>
+		<Setter Property="Height" Value="{Binding Height}"/>
+		<Setter Property="Picture" Value="{Binding PdfPicture}"/>
+		<Setter Property="VisibleArea" Value="{Binding VisibleArea}"/>
+		<Setter Property="IsPageRendering" Value="{Binding IsPageRendering}"/>
+		<Setter Property="IsPageVisible" Value="{Binding IsPageVisible}"/>
+		<Setter Property="IsPagePrepared" Value="{Binding IsPagePrepared}"/>
+		<Setter Property="Exception" Value="{Binding Exception}"/>
+
+		<Setter Property="Template">
+			<!--Set Height / Width here in style-->
+			<ControlTemplate>
+				<Grid Background="White">
+					<ProgressBar Width="50" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+						<!--The below is to avoid a lot of `Error in binding to 'Avalonia.Animation.AnimatorKeyFrame'`-->
+						<ProgressBar.IsIndeterminate>
+							<MultiBinding Converter="{x:Static BoolConverters.And}">
+								<Binding RelativeSource="{RelativeSource TemplatedParent}" Path="IsPageRendering"/>
+								<Binding RelativeSource="{RelativeSource TemplatedParent}" Path="IsPageVisible"/>
+							</MultiBinding>
+						</ProgressBar.IsIndeterminate>
+
+						<ProgressBar.IsEnabled>
+							<MultiBinding Converter="{x:Static BoolConverters.And}">
+								<Binding RelativeSource="{RelativeSource TemplatedParent}" Path="IsPageRendering"/>
+								<Binding RelativeSource="{RelativeSource TemplatedParent}" Path="IsPageVisible"/>
+							</MultiBinding>
+						</ProgressBar.IsEnabled>
+
+						<ProgressBar.IsVisible>
+							<MultiBinding Converter="{x:Static BoolConverters.And}">
+								<Binding RelativeSource="{RelativeSource TemplatedParent}" Path="IsPageRendering"/>
+								<Binding RelativeSource="{RelativeSource TemplatedParent}" Path="IsPageVisible"/>
+							</MultiBinding>
+						</ProgressBar.IsVisible>
+						<!--The above is to avoid a lot of `Error in binding to 'Avalonia.Animation.AnimatorKeyFrame'`-->
+
+					</ProgressBar>
+
+					<controls:SkiaPdfPageControl
+                        Name="PART_SkiaPdfPageControl"
+                        Picture="{TemplateBinding Picture}"
+						VisibleArea="{TemplateBinding VisibleArea}"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
+
+					<controls:PdfPageTextLayerControl
+                        Name="PART_PdfPageTextLayerControl"
+                        PdfPageTextLayer="{Binding PdfTextLayer}"
+                        PageNumber="{Binding PageNumber}"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
+				</Grid>
+			</ControlTemplate>
+		</Setter>
+	</Style>
+
+</Styles>
