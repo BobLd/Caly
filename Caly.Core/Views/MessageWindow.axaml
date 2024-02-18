@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Caly.Core.Views.MessageWindow"
+        Title="MessageWindow"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        ShowActivated="True"
+        Width="450" MinWidth="450" MaxWidth="450"
+        Height="150" MinHeight="150" MaxHeight="200">
+    <!--
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaToDecorationsHint="True"
+	-->
+    <Grid RowDefinitions="Auto, Auto, *" x:DataType="viewModels:ExceptionViewModel">
+        <TextBlock Margin="5" FontSize="18" FontWeight="Bold">Error</TextBlock>
+        <TextBlock Grid.Row="1" Margin="5" FontStyle="Italic" TextWrapping="Wrap" Text="{Binding Message, Mode=OneTime}"/>
+        <ScrollViewer Grid.Row="2" Margin="5">
+            <TextBox TextWrapping="Wrap" IsReadOnly="True" Text="{Binding StackTrace, Mode=OneTime}"/>
+        </ScrollViewer>
+    </Grid>
+</Window>

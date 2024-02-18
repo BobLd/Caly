@@ -1,0 +1,9 @@
+[submodule "external/PdfPig"]
+	path = external/PdfPig
+	url = https://github.com/BobLd/PdfPig.git
+[submodule "external/Tabalonia"]
+	path = external/Tabalonia
+	url = https://github.com/BobLd/Tabalonia.git
+[submodule "external/PdfPig.Rendering.Skia"]
+	path = external/PdfPig.Rendering.Skia
+	url = https://github.com/BobLd/PdfPig.Rendering.Skia.git

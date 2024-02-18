@@ -1,0 +1,54 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Caly.Core.Controls"
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels"
+        xmlns:converters="using:Caly.Core.Converters">
+	<Design.PreviewWith>
+		<controls:PdfDocumentThumbnailControl x:DataType="viewModels:PdfDocumentViewModel" Width="200" Height="891" />
+	</Design.PreviewWith>
+
+	<Style Selector="controls|PdfDocumentThumbnailControl">
+		<Style.Resources>
+			<converters:ZeroPageIndexConverter x:Key="zeroPageIndexConverter"/>
+		</Style.Resources>
+
+		<Setter Property="Template">
+			<ControlTemplate x:DataType="viewModels:PdfDocumentViewModel">
+
+				<ScrollViewer IsScrollInertiaEnabled="false"
+                              VerticalScrollBarVisibility="Visible"
+                              HorizontalScrollBarVisibility="Auto">
+
+					<ListBox Name="PART_ListBox"
+							 Background="Transparent"
+                             SelectionMode="Single,AlwaysSelected"
+                             HorizontalAlignment="Center"
+                             BorderThickness="0"
+                             ItemsSource="{Binding Pages}"
+                             SelectedIndex="{Binding SelectedPageIndex, Mode=TwoWay, Converter={StaticResource zeroPageIndexConverter}}">
+						<ListBox.ItemTemplate>
+							<DataTemplate x:DataType="viewModels:PdfPageViewModel">
+								<StackPanel>
+									<Grid Margin="2,3,2,0"
+                                          Width="{Binding ThumbnailWidth}"
+                                          Height="{Binding ThumbnailHeight}">
+										<controls:PdfPageThumbnailControl
+                                            VisibleArea="{Binding VisibleArea}"
+                                            ThumbnailHeight="{Binding ThumbnailHeight}"
+                                            PageHeight="{Binding Height}"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"/>
+									</Grid>
+									<Label Content="{Binding PageNumber}" HorizontalAlignment="Center" Padding="0"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+
+				</ScrollViewer>
+
+			</ControlTemplate>
+		</Setter>
+	</Style>
+
+</Styles>

@@ -1,0 +1,26 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Caly.Core.Controls"
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+  <Design.PreviewWith>
+    <controls:PdfPageThumbnailControl />
+  </Design.PreviewWith>
+
+    <Style Selector="controls|PdfPageThumbnailControl">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate x:DataType="viewModels:PdfPageViewModel">
+
+                <!--
+                <ProgressBar HorizontalAlignment="Stretch"
+			                 VerticalAlignment="Stretch"
+			                 IsIndeterminate="{Binding IsPageRendering}"
+			                 IsEnabled="{Binding IsPageRendering}"
+			                 IsVisible="{Binding IsPageRendering}"/>
+                
+				<Image Source="{Binding Thumbnail}"/>
+                -->
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>
