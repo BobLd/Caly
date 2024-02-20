@@ -86,7 +86,7 @@ class Program
             if (ex is null) return;
 
             var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
-            dialogService?.ShowErrorWindow(new ExceptionViewModel(ex));
+            dialogService?.ShowExceptionWindow(ex);
         }
         catch
         {

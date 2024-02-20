@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using Avalonia.Controls.Notifications;
 using Caly.Core.ViewModels;
 
 namespace Caly.Core.Services.Interfaces
@@ -11,10 +13,28 @@ namespace Caly.Core.Services.Interfaces
         Task<string?> ShowPdfPasswordDialogAsync();
 
         /// <summary>
-        /// Show an exception popup.
+        /// Show a notification.
         /// </summary>
-        Task ShowErrorAsync(ExceptionViewModel exception);
+        void ShowNotification(string? title, string? message, NotificationType type);
 
-        void ShowErrorWindow(ExceptionViewModel exception);
+        /// <summary>
+        /// Show an exception in a popup window.
+        /// </summary>
+        Task ShowExceptionWindowAsync(Exception exception);
+
+        /// <summary>
+        /// Show an exception in a popup window.
+        /// </summary>
+        Task ShowExceptionWindowAsync(ExceptionViewModel exception);
+
+        /// <summary>
+        /// Show an exception in a popup window.
+        /// </summary>
+        void ShowExceptionWindow(Exception exception);
+
+        /// <summary>
+        /// Show an exception in a popup window.
+        /// </summary>
+        void ShowExceptionWindow(ExceptionViewModel exception);
     }
 }

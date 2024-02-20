@@ -45,7 +45,7 @@ namespace Caly.Core.Services
                     }
                     catch (Exception e)
                     {
-                        Dispatcher.UIThread.Post(() => _dialogService.ShowErrorAsync(new ExceptionViewModel(e)));
+                        Dispatcher.UIThread.Post(() => _dialogService.ShowExceptionWindowAsync(e));
                     }
                 });
             }
@@ -55,7 +55,7 @@ namespace Caly.Core.Services
                 // Critical error - can't open document anymore
                 System.Diagnostics.Debug.WriteLine($"ERROR in WorkerProc {e}");
                 File.WriteAllText($"error_avalonia_worker_proc_{Guid.NewGuid()}.txt", e.ToString());
-                Dispatcher.UIThread.Post(() => _dialogService.ShowErrorAsync(new ExceptionViewModel(e)));
+                Dispatcher.UIThread.Post(() => _dialogService.ShowExceptionWindowAsync(e));
                 throw;
             }
         }

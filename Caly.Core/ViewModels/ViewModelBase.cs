@@ -24,6 +24,6 @@ public partial class ViewModelBase : ObservableObject
             throw new NullReferenceException($"Missing {nameof(IDialogService)} instance.");
         }
 
-        Dispatcher.UIThread.Post(() => dialogService.ShowErrorAsync(value));
+        Dispatcher.UIThread.Post(() => dialogService.ShowExceptionWindowAsync(value));
     }
 }
