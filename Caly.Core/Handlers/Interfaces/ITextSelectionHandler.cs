@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
 using Caly.Core.Controls;
@@ -27,10 +28,12 @@ namespace Caly.Core.Handlers.Interfaces
 
         void OnPointerReleased(PointerReleasedEventArgs e);
 
+        void OnVisibleAreaChanged(Rect? visibleArea);
+
         /// <summary>
         /// Select text to end of page. If selection has not started, select the whole page text.
         /// </summary>
-        void SelectTextToEndInPage(PdfPageTextLayerControl control);
+        void SelectTextToEndOfPage(PdfPageTextLayerControl control);
 
         /// <summary>
         /// TODO - Should not be in selection handler.

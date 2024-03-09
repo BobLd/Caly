@@ -154,7 +154,7 @@ class Program
                 .UseSkia()
                 // https://github.com/AvaloniaUI/Avalonia/discussions/12597
                 .With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
-                .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software }, WmClass = "theia Pdf Reader" })
+                .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software }, WmClass = "Caly Pdf Reader" })
                 .With(new AvaloniaNativePlatformOptions { RenderingMode = new[] { AvaloniaNativeRenderingMode.Software } })
                 .LogToTrace();
         }

@@ -38,10 +38,23 @@ namespace Caly.Core.Controls
         private IDisposable? _pointerMovedDisposable;
         private IDisposable? _pointerPressedDisposable;
         private IDisposable? _pointerReleasedDisposable;
+        private IDisposable? _visibleAreaDisposable;
 
+        /// <summary>
+        /// Defines the <see cref="PdfPageTextLayer"/> property.
+        /// </summary>
         public static readonly StyledProperty<PdfTextLayer?> PdfPageTextLayerProperty =
             AvaloniaProperty.Register<PdfPageTextLayerControl, PdfTextLayer?>(nameof(PdfPageTextLayer));
 
+        /// <summary>
+        /// Defines the <see cref="VisibleArea"/> property.
+        /// </summary>
+        public static readonly StyledProperty<Rect?> VisibleAreaProperty =
+            AvaloniaProperty.Register<PdfPageTextLayerControl, Rect?>(nameof(VisibleArea));
+
+        /// <summary>
+        /// Defines the <see cref="PageNumber"/> property.
+        /// </summary>
         public static readonly StyledProperty<int?> PageNumberProperty =
             AvaloniaProperty.Register<PdfPageTextLayerControl, int?>(nameof(PageNumber));
 
@@ -49,6 +62,12 @@ namespace Caly.Core.Controls
         {
             get => GetValue(PdfPageTextLayerProperty);
             set => SetValue(PdfPageTextLayerProperty, value);
+        }
+
+        public Rect? VisibleArea
+        {
+            get => GetValue(VisibleAreaProperty);
+            set => SetValue(VisibleAreaProperty, value);
         }
 
         public int? PageNumber
@@ -94,7 +113,7 @@ namespace Caly.Core.Controls
 
         internal void SelectTextToEnd()
         {
-            _textSelectionHandler?.SelectTextToEndInPage(this);
+            _textSelectionHandler?.SelectTextToEndOfPage(this);
         }
 
         public override void Render(DrawingContext context)
@@ -118,6 +137,7 @@ namespace Caly.Core.Controls
             _pointerMovedDisposable?.Dispose();
             _pointerPressedDisposable?.Dispose();
             _pointerReleasedDisposable?.Dispose();
+            _visibleAreaDisposable?.Dispose();
 
             _textSelectionHandler = textSelectionHandler;
 
@@ -132,30 +152,28 @@ namespace Caly.Core.Controls
             _pointerReleasedDisposable = this.GetObservable(PointerReleasedEvent)
                 .DistinctUntilChanged()
                 .Subscribe(_textSelectionHandler.OnPointerReleased);
+
+            _visibleAreaDisposable = this.GetObservable(VisibleAreaProperty)
+                .DistinctUntilChanged()
+                .Subscribe(_textSelectionHandler.OnVisibleAreaChanged);
         }
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
             base.OnAttachedToVisualTree(e);
 
-            // First time the text layer is attached, we retrieve the TextSelectionHandler
-            if (_textSelectionHandler is null)
+            if (_textSelectionHandler is not null)
             {
-                var pdfDocumentControl = this.FindAncestorOfType<PdfDocumentControl>();
-                if (pdfDocumentControl is null)
-                {
-                    throw new NullReferenceException($"Could not find ancestor of type {typeof(PdfDocumentControl)}.");
-                }
+                return;
+            }
 
-                System.Diagnostics.Debug.Assert(pdfDocumentControl.TextSelectionHandler is not null);
-                AttachTextSelectionHandler(pdfDocumentControl.TextSelectionHandler);
-            }
-#if DEBUG
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("TextSelectionHandler not null");
-            }
-#endif
+            // First time the text layer is attached, we retrieve the TextSelectionHandler
+            var pdfDocumentControl = this.FindAncestorOfType<PdfDocumentControl>() ??
+                                     throw new NullReferenceException($"Could not find ancestor of type {typeof(PdfDocumentControl)}.");
+
+            System.Diagnostics.Debug.Assert(pdfDocumentControl.TextSelectionHandler is not null);
+
+            AttachTextSelectionHandler(pdfDocumentControl.TextSelectionHandler);
         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

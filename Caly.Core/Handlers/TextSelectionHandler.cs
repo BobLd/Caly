@@ -41,6 +41,8 @@ namespace Caly.Core.Handlers
 
         private readonly PdfTextSelection _selection;
 
+        private PointerEventArgs? _latestPointerEventArgs;
+
         /// <summary>
         /// <c>true</c> if we are currently selecting text. <c>false</c> otherwise.
         /// </summary>
@@ -56,7 +58,7 @@ namespace Caly.Core.Handlers
             _selection = selection;
         }
 
-        public void SelectTextToEndInPage(PdfPageTextLayerControl control)
+        public void SelectTextToEndOfPage(PdfPageTextLayerControl control)
         {
             if (control.PdfPageTextLayer is null || !control.PageNumber.HasValue)
             {
@@ -297,8 +299,11 @@ namespace Caly.Core.Handlers
                 return;
             }
 
+            _latestPointerEventArgs = e;
+
             var pointerPoint = e.GetCurrentPoint(control);
             var loc = pointerPoint.Position;
+            System.Diagnostics.Debug.WriteLine($"OnPointerMoved: {loc}");
 
             if (pointerPoint.Properties.IsLeftButtonPressed)
             {
@@ -461,6 +466,8 @@ namespace Caly.Core.Handlers
                 return;
             }
 
+            _latestPointerEventArgs = e;
+
             bool clearSelection = false;
 
             _isMultipleClickSelection = e.ClickCount > 1;
@@ -506,6 +513,8 @@ namespace Caly.Core.Handlers
                 return;
             }
 
+            _latestPointerEventArgs = e;
+
             var pointerPoint = e.GetCurrentPoint(control);
 
             bool ignore = _isSelecting || _isMultipleClickSelection;
@@ -518,6 +527,17 @@ namespace Caly.Core.Handlers
             }
 
             _isSelecting = false;
+        }
+
+        public void OnVisibleAreaChanged(Rect? visibleArea)
+        {
+            System.Diagnostics.Debug.WriteLine("OnVisibleAreaChanged()");
+            if (!visibleArea.HasValue || _latestPointerEventArgs is null)
+            {
+                return;
+            }
+
+            OnPointerMoved(_latestPointerEventArgs);
         }
 
         private static StreamGeometry GetGeometry(PdfRectangle rect, bool isFilled = false)

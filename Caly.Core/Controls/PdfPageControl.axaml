@@ -43,6 +43,7 @@
 
 					<controls:PdfPageTextLayerControl
                         PdfPageTextLayer="{Binding PdfTextLayer}"
+                        VisibleArea="{TemplateBinding VisibleArea}"
                         PageNumber="{Binding PageNumber}"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"/>
