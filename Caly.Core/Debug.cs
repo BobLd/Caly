@@ -41,8 +41,14 @@ namespace Caly.Core
         }
 
         [Conditional("DEBUG")]
-        public static void WriteExceptionToFile(Exception exception)
+        public static void WriteExceptionToFile(Exception? exception)
         {
+            if (exception is null)
+            {
+                File.WriteAllText($"error_caly_{Guid.NewGuid()}.txt", "Received null exception");
+                return;
+            }
+
             File.WriteAllText($"error_caly_{Guid.NewGuid()}.txt", exception.ToString());
         }
 

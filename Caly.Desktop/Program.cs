@@ -27,7 +27,9 @@ namespace Caly.Desktop;
 
 class Program
 {
-    private static readonly Mutex mutex = new Mutex(true, "Caly application");
+    private const string _appName = "Caly Pdf Reader";
+
+    private static readonly Mutex mutex = new Mutex(true, _appName);
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -38,56 +40,86 @@ class Program
         // Make sure the current directory is where the app is located, not where a file is opened
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
-        if (mutex.WaitOne(TimeSpan.Zero, true)) // Make sure a single instance of the app is running
+        bool isMainInstance = false;
+
+        try
         {
-            try
-            {
-                // TODO - should the below be in App.axaml.cs?
-                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-                TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+            // Make sure a single instance of the app is running
+            isMainInstance = mutex.WaitOne(TimeSpan.Zero, true);
 
-                BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-            }
-            catch (Exception ex)
+            if (isMainInstance)
             {
-                if (ex is AggregateException a)
-                {
-                    ex = a.Flatten();
-                }
-
-                Debug.WriteExceptionToFile(ex);
-                throw;
+                SendToMainInstance(args);
             }
-            finally
+            else // App instance already running
             {
-                mutex.ReleaseMutex();
-                AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
-                TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+                SendToRunningInstance(args);
             }
         }
-        else
+        finally
         {
-            try
+            if (isMainInstance)
             {
-                // App instance already running
-                if (args.Length == 0)
-                {
-                    return;
-                }
+                mutex.ReleaseMutex();
+            }
+        }
+    }
 
+    private static int SendToMainInstance(string[] args)
+    {
+        try
+        {
+            // TODO - should the below be in App.axaml.cs?
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
+            return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex)
+        {
+            if (ex is AggregateException a)
+            {
+                ex = a.Flatten();
+            }
+
+            Debug.WriteExceptionToFile(ex);
+            throw;
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
+            TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+        }
+    }
+
+    private static void SendToRunningInstance(string[] args)
+    {
+        try
+        {
+            if (args.Length == 0)
+            {
                 // TODO - Still bring app to front even if there's no file to open
-                SendPathToRunningInstance(args[0]);
+                return;
             }
-            catch (Exception ex)
-            {
-                if (ex is AggregateException a)
-                {
-                    ex = a.Flatten();
-                }
 
-                Debug.WriteExceptionToFile(ex);
-                throw;
+            string path = args[0];
+
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
             }
+
+            FilePipeStream.SendPath(path);
+        }
+        catch (Exception ex)
+        {
+            if (ex is AggregateException a)
+            {
+                ex = a.Flatten();
+            }
+
+            Debug.WriteExceptionToFile(ex);
+            throw;
         }
     }
 
@@ -106,16 +138,6 @@ class Program
         }
     }
 
-    private static void SendPathToRunningInstance(string path)
-    {
-        if (string.IsNullOrEmpty(path))
-        {
-            return;
-        }
-
-        FilePipeStream.SendPath(path);
-    }
-
     private static void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         // https://docs.avaloniaui.net/docs/getting-started/unhandled-exceptions
@@ -129,7 +151,6 @@ class Program
     private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         // https://github.com/AvaloniaUI/Avalonia/issues/5387
-
         if (e.ExceptionObject is not Exception exception)
         {
             return;
@@ -154,7 +175,7 @@ class Program
                 .UseSkia()
                 // https://github.com/AvaloniaUI/Avalonia/discussions/12597
                 .With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
-                .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software }, WmClass = "Caly Pdf Reader" })
+                .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software }, WmClass = _appName })
                 .With(new AvaloniaNativePlatformOptions { RenderingMode = new[] { AvaloniaNativeRenderingMode.Software } })
                 .LogToTrace();
         }
