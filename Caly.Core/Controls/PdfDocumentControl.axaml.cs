@@ -235,8 +235,6 @@ namespace Caly.Core.Controls
                 ZoomTo(e);
                 e.Handled = true;
             }
-
-
         }
 
         protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -246,11 +244,7 @@ namespace Caly.Core.Controls
             _scrollViewer?.RemoveHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
             _scrollViewer?.RemoveHandler(SizeChangedEvent, (_, _) => SetPagesVisibility());
             _scrollViewer?.RemoveHandler(KeyDownEvent, _onKeyDownHandler);
-
-            if (_layoutTransformControl is not null)
-            {
-                _layoutTransformControl.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
-            }
+            _layoutTransformControl?.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
 
             if (_itemsRepeater is not null)
             {
@@ -430,8 +424,6 @@ namespace Caly.Core.Controls
 
         private void SetPagesVisibility()
         {
-            // TODO - There's a bug in Avalonia (it seems) where the offset is incorrectly reset to 0,0
-
             if (_isCheckingPageVisibility)
             {
                 return;
@@ -582,18 +574,15 @@ namespace Caly.Core.Controls
 
             indexMaxOverlap++; // Switch to base 1 indexing
 
-            if (indexMaxOverlap == 0)
+            // TODO - There's a bug in Avalonia (it seems) where the offset is incorrectly reset to 0,0
+            // It should have been improved with commits 86bfc26 and acc3c3c but seems it's still there
+            // Use DeviceN_CS_test.pdf from PdfPig integration test
+            if (indexMaxOverlap == 0 && _scrollViewer.Offset == default)
             {
-                if (_scrollViewer.Offset != default)
-                {
-                    // TODO - This is a different bug from the one mentioned above
-                }
-
                 try
                 {
                     // TODO - Check why this is happening. It seems sometime the offset is incorrectly 0,0.
                     // Hack to display the current page when no page is visible.
-                    // This is related to a bug (I think) in the item repeater
                     _isCheckingPageVisibility = true;
                     // https://github.com/AvaloniaUI/Avalonia/blob/master/samples/ControlCatalog/Pages/ItemsRepeaterPage.xaml.cs
                     var element = _itemsRepeater.GetOrCreateElement(SelectedPageIndex - 1);
