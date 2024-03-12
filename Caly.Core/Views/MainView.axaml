@@ -22,9 +22,7 @@
                            SelectedIndex="{Binding SelectedDocumentIndex}">
 		<TabControl.ItemTemplate>
 			<DataTemplate>
-				<DockPanel>
-					<TextBlock DockPanel.Dock="Left" Text="{Binding FileName}"/>
-				</DockPanel>
+                <TextBlock DockPanel.Dock="Left" Text="{Binding FileName}" TextTrimming="CharacterEllipsis"/>
 			</DataTemplate>
 		</TabControl.ItemTemplate>
 		<TabControl.ContentTemplate>
