@@ -149,7 +149,7 @@ namespace Caly.Core.Controls
 
             while (_shouldRender)
             {
-                await Task.Delay(100);
+                await Task.Delay(150);
                 if (RenderPage())
                 {
                     Dispatcher.UIThread.Post(InvalidateVisual);
@@ -273,7 +273,11 @@ namespace Caly.Core.Controls
             using (var canvas = new SKCanvas(bitmap))
             {
                 canvas.DrawPicture(picture.Item);
-                _defaultBitmap = new SKPaint() { Shader = bitmap.ToShader() };
+                _defaultBitmap = new SKPaint()
+                {
+                    Shader = bitmap.ToShader(),
+                    FilterQuality = SKFilterQuality.Low
+                };
                 _scaledImage = _defaultBitmap;
             }
         }
