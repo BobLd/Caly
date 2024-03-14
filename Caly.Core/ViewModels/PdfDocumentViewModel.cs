@@ -57,6 +57,12 @@ namespace Caly.Core.ViewModels
         private readonly ChannelWriter<PdfPageViewModel> _channelWriter;
         private readonly ChannelReader<PdfPageViewModel> _channelReader;
 
+        private readonly Lazy<Task> _loadPagesTask;
+        public Task LoadPagesTask => _loadPagesTask.Value;
+
+        private readonly Lazy<Task> _loadBookmarksTask;
+        public Task LoadBookmarksTask => _loadBookmarksTask.Value;
+
         internal string? LocalPath { get; private set; }
 
         private async Task ProcessPagesInfoQueue(CancellationToken token)
@@ -107,6 +113,9 @@ namespace Caly.Core.ViewModels
             FileName = _pdfService.FileName;
             LocalPath = _pdfService.LocalPath;
             _selection = new PdfTextSelection(PageCount);
+
+            _loadPagesTask = new Lazy<Task>(LoadPages);
+            _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);
         }
 
         /// <summary>
@@ -130,7 +139,7 @@ namespace Caly.Core.ViewModels
             await _cts.CancelAsync();
         }
 
-        public async Task LoadPages()
+        private async Task LoadPages()
         {
             await Task.Run(async () =>
             {
@@ -158,7 +167,7 @@ namespace Caly.Core.ViewModels
             }, _cts.Token);
         }
 
-        public async Task LoadBookmarks()
+        private async Task LoadBookmarks()
         {
             _cts.Token.ThrowIfCancellationRequested();
             Bookmarks = await Task.Run(() => _pdfService.GetPdfBookmark(_cts.Token));

@@ -53,7 +53,7 @@ public sealed partial class MainViewModel : ViewModelBase
                     {
                         foreach (var newDoc in e.NewItems.OfType<PdfDocumentViewModel>())
                         {
-                            await Task.WhenAll(newDoc.LoadPages(), newDoc.LoadBookmarks());
+                            await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask);
                         }
 
                         SelectedDocumentIndex = PdfDocuments.Count - 1;
