@@ -56,7 +56,7 @@ namespace Caly.Pdf.Layout
 
             if (array == null || array.Length == 0)
             {
-                return EmptyArray<PdfTextBlock>.Instance;
+                return Array.Empty<PdfTextBlock>();
             }
 
             var parallelOptions = new ParallelOptions()
