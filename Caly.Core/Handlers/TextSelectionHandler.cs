@@ -35,9 +35,9 @@ namespace Caly.Core.Handlers
     // See https://github.com/AvaloniaUI/Avalonia/pull/13107/files#diff-f183b476e3366d748fd935e515bf1c8d8845525dcb130aae00ebd70422cd453e
     // See https://github.com/AvaloniaUI/AvaloniaEdit/blob/master/src/AvaloniaEdit/Editing/SelectionLayer.cs
 
-    internal sealed class TextSelectionHandler : ITextSelectionHandler
+    public sealed class TextSelectionHandler : ITextSelectionHandler
     {
-        private readonly Brush _selectionBrush = new SolidColorBrush(Color.FromArgb(0xa9, 0x33, 0x99, 0xFF));
+        private static readonly Brush _selectionBrush = new SolidColorBrush(Color.FromArgb(0xa9, 0x33, 0x99, 0xFF));
 
         private readonly PdfTextSelection _selection;
 

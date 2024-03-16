@@ -21,6 +21,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.LogicalTree;
+using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using SkiaSharp;
@@ -65,6 +66,11 @@ namespace Caly.Core.Controls
         /// Defines the <see cref="UnloadPagePictureCommand"/> property.
         /// </summary>
         public static readonly StyledProperty<ICommand?> UnloadPagePictureCommandProperty = AvaloniaProperty.Register<PdfPageControl, ICommand?>(nameof(UnloadPagePictureCommand));
+
+        /// <summary>
+        /// Defines the <see cref="TextSelectionHandler"/> property.
+        /// </summary>
+        public static readonly StyledProperty<ITextSelectionHandler?> TextSelectionHandlerProperty = AvaloniaProperty.Register<PdfPageControl, ITextSelectionHandler?>(nameof(TextSelectionHandler), defaultBindingMode: BindingMode.TwoWay);
 
         public bool IsPageRendering
         {
@@ -114,6 +120,12 @@ namespace Caly.Core.Controls
         {
             get => GetValue(UnloadPagePictureCommandProperty);
             set => SetValue(UnloadPagePictureCommandProperty, value);
+        }
+
+        public ITextSelectionHandler? TextSelectionHandler
+        {
+            get => GetValue(TextSelectionHandlerProperty);
+            set => SetValue(TextSelectionHandlerProperty, value);
         }
 
         static PdfPageControl()

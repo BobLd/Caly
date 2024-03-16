@@ -13,7 +13,7 @@
         <Setter Property="ZoomLevel" Value="{Binding ZoomLevel}"/>
         <Setter Property="SelectedPageIndex" Value="{Binding SelectedPageIndex, Mode=TwoWay}"/>
         <Setter Property="SelectedBookmark" Value="{Binding SelectedBookmark, Mode=OneWay}"/>
-        <Setter Property="PdfTextSelection" Value="{Binding Selection, Mode=OneWay}"/>
+        <Setter Property="TextSelectionHandler" Value="{Binding TextSelectionHandler}"/>
 
         <Setter Property="Template">
             <ControlTemplate>
@@ -29,27 +29,29 @@
                     </ScrollViewer.KeyBindings>
 
 					<controls:CalyLayoutTransformControl Name="PART_LayoutTransformControl"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center">
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center">
 
                         <Grid>
 
-							<!-- TODO - Investigate ItemsControl -->
-							<ItemsRepeater Name="PART_ItemsRepeater"
-                                           HorizontalAlignment="Center"
-                                           ItemsSource="{TemplateBinding ItemsSource}">
+                            <ItemsControl Name="PART_ItemsControl"
+                                          HorizontalAlignment="Center"
+                                          ItemsSource="{TemplateBinding ItemsSource}">
+								
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+										<VirtualizingStackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+								</ItemsControl.ItemsPanel>
 
-								<ItemsRepeater.Layout>
-									<StackLayout Orientation="Vertical" Spacing="5" DisableVirtualization="False"/>
-								</ItemsRepeater.Layout>
+                                <ItemsControl.DataTemplates>
+                                    <DataTemplate x:DataType="viewModels:PdfPageViewModel">
+                                        <controls:PdfPageControl TextSelectionHandler="{Binding $parent[controls:PdfDocumentControl].TextSelectionHandler}"
+                                                                 Margin="0,0,0,5"/>
+                                    </DataTemplate>
+                                </ItemsControl.DataTemplates>
 
-								<ItemsRepeater.ItemTemplate>
-									<DataTemplate x:DataType="viewModels:PdfPageViewModel">
-                                        <controls:PdfPageControl/>
-									</DataTemplate>
-								</ItemsRepeater.ItemTemplate>
-
-							</ItemsRepeater>
+							</ItemsControl>
 
 						</Grid>
 

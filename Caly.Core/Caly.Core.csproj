@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.1.0-beta1" />
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.0-beta1" />
     <PackageReference Include="Avalonia.Skia" Version="11.1.0-beta1" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.0-beta1" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.0-beta1" />

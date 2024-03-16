@@ -19,14 +19,14 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media.Transformation;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
-using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
 using Caly.Core.Utilities;
@@ -36,7 +36,7 @@ namespace Caly.Core.Controls
 {
     [TemplatePart("PART_ScrollViewer", typeof(IScrollable))]
     [TemplatePart("PART_LayoutTransformControl", typeof(CalyLayoutTransformControl))]
-    [TemplatePart("PART_ItemsRepeater", typeof(ItemsRepeater))]
+    [TemplatePart("PART_ItemsControl", typeof(ItemsControl))]
     public class PdfDocumentControl : CalyTemplatedControl
     {
         private const double _zoomFactor = 1.1;
@@ -50,12 +50,10 @@ namespace Caly.Core.Controls
 
         private ScrollViewer? _scrollViewer;
         private CalyLayoutTransformControl? _layoutTransformControl;
-        private ItemsRepeater? _itemsRepeater;
+        private ItemsControl? _itemsControl;
 
-        private bool _isCheckingPageVisibility = false;
+        private bool _isSettingPageVisibility = false;
         private bool _isZooming = false;
-
-        internal ITextSelectionHandler? TextSelectionHandler;
 
         /// <summary>
         /// Defines the <see cref="ItemsSource"/> property.
@@ -83,9 +81,9 @@ namespace Caly.Core.Controls
         public static readonly StyledProperty<PdfBookmarkNode?> SelectedBookmarkProperty = AvaloniaProperty.Register<PdfDocumentControl, PdfBookmarkNode?>(nameof(SelectedBookmark), null);
 
         /// <summary>
-        /// Defines the <see cref="PdfTextSelection"/> property.
+        /// Defines the <see cref="TextSelectionHandler"/> property.
         /// </summary>
-        public static readonly StyledProperty<PdfTextSelection?> PdfTextSelectionProperty = AvaloniaProperty.Register<PdfDocumentControl, PdfTextSelection?>(nameof(PdfTextSelection));
+        public static readonly StyledProperty<ITextSelectionHandler?> TextSelectionHandlerProperty = AvaloniaProperty.Register<PdfDocumentControl, ITextSelectionHandler?>(nameof(TextSelectionHandler), defaultBindingMode: BindingMode.TwoWay);
 
         public int PageCount
         {
@@ -120,10 +118,11 @@ namespace Caly.Core.Controls
             set => SetValue(ItemsSourceProperty, value);
         }
 
-        public PdfTextSelection? PdfTextSelection
+
+        public ITextSelectionHandler? TextSelectionHandler
         {
-            get => GetValue(PdfTextSelectionProperty);
-            set => SetValue(PdfTextSelectionProperty, value);
+            get => GetValue(TextSelectionHandlerProperty);
+            set => SetValue(TextSelectionHandlerProperty, value, BindingPriority.Style);
         }
 
         public PdfDocumentControl()
@@ -151,16 +150,6 @@ namespace Caly.Core.Controls
                     SetCurrentValue(SelectedPageIndexProperty, SelectedBookmark.PageNumber.Value);
                 }
             }
-            else if (change.Property == PdfTextSelectionProperty && change.NewValue is PdfTextSelection selection)
-            {
-                TextSelectionHandler = new TextSelectionHandler(selection);
-                // We have a new TextSelectionHandler, we need to update the PdfPageTextLayerControls (virtualisation)
-                foreach (var textLayer in this.GetVisualDescendants().OfType<PdfPageTextLayerControl>())
-                {
-                    // The text layer is already attached, we update the TextSelectionHandler
-                    textLayer.AttachTextSelectionHandler(TextSelectionHandler);
-                }
-            }
         }
 
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -169,40 +158,44 @@ namespace Caly.Core.Controls
 
             _scrollViewer = e.NameScope.FindFromNameScope<ScrollViewer>("PART_ScrollViewer");
             _layoutTransformControl = e.NameScope.FindFromNameScope<CalyLayoutTransformControl>("PART_LayoutTransformControl");
-            _itemsRepeater = e.NameScope.FindFromNameScope<ItemsRepeater>("PART_ItemsRepeater");
+            _itemsControl = e.NameScope.FindFromNameScope<ItemsControl>("PART_ItemsControl");
 
             _scrollViewer.AddHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
             _scrollViewer.AddHandler(SizeChangedEvent, (_, _) => SetPagesVisibility(), RoutingStrategies.Direct);
             _scrollViewer.AddHandler(KeyDownEvent, _onKeyDownHandler);
             _layoutTransformControl.AddHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
-            _itemsRepeater.ElementPrepared += _onElementPrepared;
-            _itemsRepeater.ElementClearing += _onElementClearing;
 
-#if DEBUG
-            _itemsRepeater.ElementIndexChanged += (s, e) =>
-            {
-                if (e.Element is PdfPageControl pageControl && pageControl.DataContext is PdfPageViewModel vm)
-                {
-                    System.Diagnostics.Debug.WriteLine($"ElementIndexChanged: {vm.PageNumber}");
-                }
-            };
-#endif
+            _itemsControl.ContainerPrepared += _onContainerPrepared;
+            _itemsControl.ContainerClearing += _onContainerClearing;
         }
 
-        private void _onElementPrepared(object? sender, ItemsRepeaterElementPreparedEventArgs e)
+        private static void _onContainerPrepared(object? sender, ContainerPreparedEventArgs e)
         {
-            if (e.Element is PdfPageControl pageControl)
+            if (e.Container is not ContentPresenter { Content: PdfPageViewModel vm } cp)
             {
-                pageControl.SetCurrentValue(PdfPageControl.IsPagePreparedProperty, true);
+                return;
             }
+
+            cp.PropertyChanged += _onContainerPropertyChanged;
+            vm.IsPagePrepared = true;
         }
 
-        private void _onElementClearing(object? sender, ItemsRepeaterElementClearingEventArgs e)
+        private static void _onContainerClearing(object? sender, ContainerClearingEventArgs e)
         {
-            if (e.Element is PdfPageControl pageControl)
+            if (e.Container is not ContentPresenter cp)
             {
-                pageControl.SetCurrentValue(PdfPageControl.VisibleAreaProperty, null);
-                pageControl.SetCurrentValue(PdfPageControl.IsPagePreparedProperty, false);
+                return;
+            }
+
+            cp.PropertyChanged -= _onContainerPropertyChanged;
+        }
+
+        private static void _onContainerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Property == ContentPresenter.ContentProperty && e.OldValue is PdfPageViewModel vm)
+            {
+                vm.VisibleArea = null;
+                vm.IsPagePrepared = false;
             }
         }
 
@@ -246,10 +239,10 @@ namespace Caly.Core.Controls
             _scrollViewer?.RemoveHandler(KeyDownEvent, _onKeyDownHandler);
             _layoutTransformControl?.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
 
-            if (_itemsRepeater is not null)
+            if (_itemsControl is not null)
             {
-                _itemsRepeater.ElementClearing -= _onElementClearing;
-                _itemsRepeater.ElementPrepared -= _onElementPrepared;
+                _itemsControl.ContainerPrepared -= _onContainerPrepared;
+                _itemsControl.ContainerClearing -= _onContainerClearing;
             }
         }
 
@@ -258,23 +251,14 @@ namespace Caly.Core.Controls
         /// </summary>
         public void GoToPage(int number)
         {
-            if (_isCheckingPageVisibility || number <= 0 || number > PageCount || _scrollViewer is null ||
-                _scrollViewer.Viewport.Height == 0 || _scrollViewer.Viewport.Width == 0 || _itemsRepeater is null)
+            if (_scrollViewer is null || _itemsControl is null || _isSettingPageVisibility ||
+                number <= 0 || number > PageCount || _scrollViewer.Viewport.IsEmpty() ||
+                _itemsControl.ItemsView.Count == 0)
             {
                 return;
             }
 
-            if (_itemsRepeater.ItemsSourceView == null || _itemsRepeater.ItemsSourceView.Count == 0)
-            {
-                return;
-            }
-
-            // TODO - Check https://github.com/AvaloniaUI/Avalonia/pull/14538
-
-            // https://github.com/AvaloniaUI/Avalonia/blob/master/samples/ControlCatalog/Pages/ItemsRepeaterPage.xaml.cs
-            var element = _itemsRepeater.GetOrCreateElement(number - 1);
-            ((TopLevel)VisualRoot!).UpdateLayout();
-            element.BringIntoView();
+            _itemsControl.ScrollIntoView(number - 1);
         }
 
         private void ZoomTo(PointerWheelEventArgs e)
@@ -340,19 +324,20 @@ namespace Caly.Core.Controls
         public PdfPageControl? GetPdfPageControl(int pageNumber)
         {
             System.Diagnostics.Debug.WriteLine($"GetPdfPageControl {pageNumber}.");
-            if (_itemsRepeater!.TryGetElement(pageNumber - 1) is PdfPageControl pdfPage)
+            if (_itemsControl!.ContainerFromIndex(pageNumber - 1) is ContentPresenter presenter)
             {
-                return pdfPage;
+                return presenter.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
             }
+
             return null;
         }
 
         public PdfPageControl? GetPdfPageControlOver(PointerEventArgs e)
         {
-            Point point = e.GetPosition(_itemsRepeater);
+            Point point = e.GetPosition(_itemsControl);
 
             // Quick reject
-            if (!_itemsRepeater!.Bounds.Contains(point))
+            if (!_itemsControl!.Bounds.Contains(point))
             {
                 System.Diagnostics.Debug.WriteLine("GetPdfPageControlOver Quick reject.");
                 return null;
@@ -363,15 +348,15 @@ namespace Caly.Core.Controls
             bool isAfterSelectedPage = false;
 
             // Check selected current page
-            if (_itemsRepeater.TryGetElement(startIndex) is PdfPageControl currentPdfPage)
+            if (_itemsControl.ContainerFromIndex(startIndex) is ContentPresenter presenter)
             {
                 System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {startIndex + 1}.");
-                if (currentPdfPage.Bounds.Contains(point))
+                if (presenter.Bounds.Contains(point))
                 {
-                    return currentPdfPage;
+                    return presenter.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
                 }
 
-                isAfterSelectedPage = point.Y > currentPdfPage.Bounds.Bottom;
+                isAfterSelectedPage = point.Y > presenter.Bounds.Bottom;
             }
 
             if (isAfterSelectedPage)
@@ -380,17 +365,17 @@ namespace Caly.Core.Controls
                 for (int p = startIndex + 1; p < PageCount; ++p)
                 {
                     System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {p + 1}.");
-                    if (_itemsRepeater!.TryGetElement(p) is not PdfPageControl pdfPage)
+                    if (_itemsControl!.ContainerFromIndex(p) is not ContentPresenter cp)
                     {
                         continue;
                     }
 
-                    if (pdfPage.Bounds.Contains(point))
+                    if (cp.Bounds.Contains(point))
                     {
-                        return pdfPage;
+                        return cp.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
                     }
 
-                    if (point.Y < pdfPage.Bounds.Top)
+                    if (point.Y < cp.Bounds.Top)
                     {
                         return null;
                     }
@@ -402,17 +387,17 @@ namespace Caly.Core.Controls
                 for (int p = startIndex - 1; p >= 0; --p)
                 {
                     System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {p + 1}.");
-                    if (_itemsRepeater!.TryGetElement(p) is not PdfPageControl pdfPage)
+                    if (_itemsControl!.ContainerFromIndex(p) is not ContentPresenter cp)
                     {
                         continue;
                     }
 
-                    if (pdfPage.Bounds.Contains(point))
+                    if (cp.Bounds.Contains(point))
                     {
-                        return pdfPage;
+                        return cp.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
                     }
 
-                    if (point.Y > pdfPage.Bounds.Bottom)
+                    if (point.Y > cp.Bounds.Bottom)
                     {
                         return null;
                     }
@@ -424,7 +409,7 @@ namespace Caly.Core.Controls
 
         private void SetPagesVisibility()
         {
-            if (_isCheckingPageVisibility)
+            if (_isSettingPageVisibility)
             {
                 return;
             }
@@ -434,13 +419,8 @@ namespace Caly.Core.Controls
                 return;
             }
 
-            if (_layoutTransformControl is null || _scrollViewer is null || _itemsRepeater is null ||
-                _scrollViewer.Viewport.Height == 0 || _scrollViewer.Viewport.Width == 0)
-            {
-                return;
-            }
-
-            if (_itemsRepeater.ItemsSourceView == null || _itemsRepeater.ItemsSourceView.Count == 0)
+            if (_layoutTransformControl is null || _scrollViewer is null || _itemsControl is null ||
+                _scrollViewer.Viewport.IsEmpty() || _itemsControl.ItemsView.Count == 0)
             {
                 return;
             }
@@ -477,23 +457,22 @@ namespace Caly.Core.Controls
             {
                 isPageVisible = false;
 
-                if (_itemsRepeater.TryGetElement(p) is not PdfPageControl cp)
+                if (_itemsControl.ContainerFromIndex(p) is not ContentPresenter { Content: PdfPageViewModel vm } cp)
                 {
                     // Page is not realised
                     return !isPreviousPageVisible;
                 }
 
-                System.Diagnostics.Debug.Assert(cp.DataContext is PdfPageViewModel);
-
                 if (!needMoreChecks || cp.Bounds.IsEmpty())
                 {
-                    if (!cp.IsPageVisible)
+                    if (!vm.IsPageVisible)
                     {
                         // Page is not visible and no need for more checks.
                         // All following pages are already set to IsPageVisible = false
                         return false;
                     }
-                    cp.SetCurrentValue(PdfPageControl.VisibleAreaProperty, null);
+
+                    vm.VisibleArea = null;
                     return true;
                 }
 
@@ -502,7 +481,7 @@ namespace Caly.Core.Controls
                 if (view.Height == 0)
                 {
                     // No need for further checks, not visible
-                    cp.SetCurrentValue(PdfPageControl.VisibleAreaProperty, null);
+                    vm.VisibleArea = null;
                     return true;
                 }
 
@@ -521,7 +500,7 @@ namespace Caly.Core.Controls
                     // Actual check if page is visible
                     if (overlapArea == 0)
                     {
-                        cp.SetCurrentValue(PdfPageControl.VisibleAreaProperty, null);
+                        vm.VisibleArea = null;
                         // If previous page was visible but current page is not, we have the last visible page
                         needMoreChecks = !isPreviousPageVisible;
                         return true;
@@ -539,11 +518,12 @@ namespace Caly.Core.Controls
                     isPageVisible = true;
 
                     // Set overlap area (Translate and inverse transform)
-                    cp.SetCurrentValue(PdfPageControl.VisibleAreaProperty, view.Translate(new Vector(-left, -top)));
+                    vm.VisibleArea = view.Translate(new Vector(-left, -top));
+
                     return true;
                 }
 
-                cp.SetCurrentValue(PdfPageControl.VisibleAreaProperty, null);
+                vm.VisibleArea = null;
                 // If previous page was visible but current page is not, we have the last visible page
                 needMoreChecks = !isPreviousPageVisible;
                 return true;
@@ -574,40 +554,11 @@ namespace Caly.Core.Controls
 
             indexMaxOverlap++; // Switch to base 1 indexing
 
-            // TODO - There's a bug in Avalonia (it seems) where the offset is incorrectly reset to 0,0
-            // It should have been improved with commits 86bfc26 and acc3c3c but seems it's still there
-            // Use DeviceN_CS_test.pdf from PdfPig integration test
-            if (indexMaxOverlap == 0 && _scrollViewer.Offset == default)
-            {
-                try
-                {
-                    // TODO - Check why this is happening. It seems sometime the offset is incorrectly 0,0.
-                    // Hack to display the current page when no page is visible.
-                    _isCheckingPageVisibility = true;
-                    // https://github.com/AvaloniaUI/Avalonia/blob/master/samples/ControlCatalog/Pages/ItemsRepeaterPage.xaml.cs
-                    var element = _itemsRepeater.GetOrCreateElement(SelectedPageIndex - 1);
-                    ((TopLevel)VisualRoot!).UpdateLayout();
-                    element.BringIntoView();
-                    _isCheckingPageVisibility = false;
-
-                    // We need to check visibility again...
-                    // We need to be careful about stack overflow here as we
-                    // are calling the method from itself and _isCheckingPageVisibility is false
-                    Dispatcher.UIThread.Post(SetPagesVisibility);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    System.Diagnostics.Debug.WriteLine($"ERROR Something went wrong in the hack: {e}");
-                    return;
-                }
-            }
-
             if (indexMaxOverlap != -1 && SelectedPageIndex != indexMaxOverlap)
             {
-                _isCheckingPageVisibility = true;
+                _isSettingPageVisibility = true;
                 SetCurrentValue(SelectedPageIndexProperty, indexMaxOverlap);
-                _isCheckingPageVisibility = false;
+                _isSettingPageVisibility = false;
             }
         }
 

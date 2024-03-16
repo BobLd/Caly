@@ -44,6 +44,7 @@
 					<controls:PdfPageTextLayerControl
                         PdfPageTextLayer="{Binding PdfTextLayer}"
                         PageNumber="{Binding PageNumber}"
+                        TextSelectionHandler="{TemplateBinding TextSelectionHandler}"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"/>
 				</Grid>

@@ -21,6 +21,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Avalonia.Threading;
+using Caly.Core.Handlers;
+using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
 using Caly.Pdf.Models;
@@ -51,7 +54,26 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private double _zoomLevel = 1;
 
-        [ObservableProperty] private PdfTextSelection _selection;
+        private PdfTextSelection _selection;
+        public PdfTextSelection Selection
+        {
+            get => _selection;
+            set
+            {
+                if (!SetProperty(ref _selection, value))
+                {
+                    return;
+                }
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    TextSelectionHandler = new TextSelectionHandler(_selection);
+                    OnPropertyChanged(nameof(TextSelectionHandler));
+                });
+            }
+        }
+
+        public ITextSelectionHandler? TextSelectionHandler { get; private set; }
 
         private readonly Channel<PdfPageViewModel> _pageInfoChannel;
         private readonly ChannelWriter<PdfPageViewModel> _channelWriter;
@@ -112,7 +134,7 @@ namespace Caly.Core.ViewModels
             PageCount = _pdfService.NumberOfPages;
             FileName = _pdfService.FileName;
             LocalPath = _pdfService.LocalPath;
-            _selection = new PdfTextSelection(PageCount);
+            Selection = new PdfTextSelection(PageCount);
 
             _loadPagesTask = new Lazy<Task>(LoadPages);
             _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);

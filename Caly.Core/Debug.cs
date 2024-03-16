@@ -40,7 +40,7 @@ namespace Caly.Core
             }
         }
 
-        [Conditional("DEBUG")]
+        //[Conditional("DEBUG")]
         public static void WriteExceptionToFile(Exception? exception)
         {
             if (exception is null)
