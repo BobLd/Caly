@@ -32,7 +32,7 @@
         <StyleInclude Source="avares://Caly.Core/Controls/PdfDocumentControl.axaml"/>
         <StyleInclude Source="avares://Caly.Core/Controls/PdfDocumentThumbnailControl.axaml"/>
         <StyleInclude Source="avares://Caly.Core/Controls/PdfPageThumbnailControl.axaml"/>
-
+        <StyleInclude Source="avares://Caly.Core/Controls/PdfPageItemsControl.axaml"/>
 
 	</Application.Styles>
 </Application>

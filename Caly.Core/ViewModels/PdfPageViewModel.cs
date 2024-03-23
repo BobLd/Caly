@@ -31,6 +31,7 @@ namespace Caly.Core.ViewModels
 {
     public sealed partial class PdfPageViewModel : ViewModelBase, IAsyncDisposable
     {
+        private readonly AutoResetEvent _mutex = new AutoResetEvent(true);
         private readonly IPdfService _pdfService;
 
         private CancellationTokenSource? _cts = new();
@@ -41,6 +42,9 @@ namespace Caly.Core.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsPageRendering))]
         private IRef<SKPicture>? _pdfPicture;
+
+        //[ObservableProperty]
+        //private IRef<SKBitmap>? _pdfBitmap;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(ThumbnailHeight))]
@@ -107,22 +111,22 @@ namespace Caly.Core.ViewModels
         [RelayCommand]
         public async Task LoadPagePicture()
         {
-            // TODO - Make sure that loading / unloading the picture at the same time is properly handled
-
             await Task.Run(async () =>
             {
-                if (_cts is null)
-                {
-                    return;
-                }
-
-                if (PdfPicture?.Item is not null)
-                {
-                    return;
-                }
-
                 try
                 {
+                    _mutex.WaitOne();
+
+                    if (_cts is null)
+                    {
+                        return;
+                    }
+
+                    if (PdfPicture?.Item is not null)
+                    {
+                        return;
+                    }
+
                     _cts.Token.ThrowIfCancellationRequested();
 
                     PdfPicture = await _pdfService.GetRenderPageAsync(PageNumber, _cts.Token);
@@ -137,6 +141,7 @@ namespace Caly.Core.ViewModels
                             Height = h.Value;
                         }
 
+                        //await Task.WhenAll(LoadInteractiveLayer(_cts.Token), Task.Run(LoadBitmap, _cts.Token));
                         await LoadInteractiveLayer(_cts.Token);
                     }
                     //await LoadThumbnailFromPicture(ThumbnailWidth, _cts.Token);
@@ -149,6 +154,10 @@ namespace Caly.Core.ViewModels
                 {
                     DisposePictureSafely();
                     Exception = new ExceptionViewModel(e);
+                }
+                finally
+                {
+                    _mutex.Set();
                 }
             });
         }
@@ -167,12 +176,13 @@ namespace Caly.Core.ViewModels
 
                 try
                 {
+                    _mutex.WaitOne();
                     if (_cts.IsCancellationRequested)
                     {
                         return; // already cancelled
                     }
 
-                    _cts.Cancel(); // await _cts.CancelAsync();
+                    _cts.Cancel();
                     DisposePictureSafely();
                 }
                 catch (Exception e)
@@ -183,6 +193,7 @@ namespace Caly.Core.ViewModels
                 {
                     _cts.Dispose();
                     _cts = new CancellationTokenSource();
+                    _mutex.Set();
                 }
             });
         }
@@ -193,7 +204,33 @@ namespace Caly.Core.ViewModels
             PdfPicture = null;
             tempPicture?.Dispose();
             System.Diagnostics.Debug.Assert((tempPicture?.RefCount ?? 0) == 0);
+
+            //var tempBitmap = PdfBitmap;
+            //PdfBitmap = null;
+            //tempBitmap?.Dispose();
+            //System.Diagnostics.Debug.Assert((tempBitmap?.RefCount ?? 0) == 0);
         }
+
+        /*
+        private void LoadBitmap()
+        {
+            Debug.ThrowOnUiThread();
+
+            if (PdfPicture is null)
+            {
+                throw new ArgumentNullException(nameof(PdfPicture),
+                    "Please call LoadPagePicture() before calling LoadBitmap().");
+            }
+
+            var bitmap = new SKBitmap((int)PdfPicture.Item.CullRect.Width, (int)PdfPicture.Item.CullRect.Height);
+            using (var canvas = new SKCanvas(bitmap))
+            {
+                canvas.DrawPicture(PdfPicture.Item);
+            }
+
+            PdfBitmap = RefCountable.Create(bitmap);
+        }
+        */
 
         private Task LoadThumbnailFromPicture(int width, CancellationToken cancellationToken)
         {
@@ -239,6 +276,7 @@ namespace Caly.Core.ViewModels
             await UnloadPagePicture();
             _cts?.Dispose();
             _cts = null;
+            _mutex.Dispose(); // TODO - Check if right place
         }
     }
 }

@@ -1,0 +1,59 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Caly.Core.Controls"
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+
+	<Design.PreviewWith>
+		<StackPanel Width="400" Spacing="10">
+			<StackPanel Background="{DynamicResource SystemRegionBrush}">
+				<controls:PdfPageItemsControl />
+			</StackPanel>
+		</StackPanel>
+	</Design.PreviewWith>
+
+	<Style Selector="controls|PdfPageItemsControl" x:DataType="viewModels:PdfDocumentViewModel">
+		<Setter Property="Template">
+			<ControlTemplate>
+
+				<Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Padding="{TemplateBinding Padding}">
+					<Grid>
+						<ScrollViewer Name="PART_ScrollViewer"
+									  VerticalScrollBarVisibility="Auto"
+									  HorizontalScrollBarVisibility="Auto"
+									  Focusable="True"
+									  HorizontalAlignment="Stretch"
+									  VerticalAlignment="Stretch"
+									  IsScrollInertiaEnabled="True">
+
+							<ScrollViewer.KeyBindings>
+								<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
+							</ScrollViewer.KeyBindings>
+
+							<controls:CalyLayoutTransformControl Name="PART_LayoutTransformControl"
+																 HorizontalAlignment="Center"
+																 VerticalAlignment="Center"
+																 ClipToBounds="True">
+
+								<ItemsPresenter Name="PART_ItemsPresenter"
+												HorizontalAlignment="Center"
+												VerticalAlignment="Stretch"
+												ItemsPanel="{TemplateBinding ItemsPanel}"/>
+
+							</controls:CalyLayoutTransformControl>
+						</ScrollViewer>
+
+					</Grid>
+
+				</Border>
+
+			</ControlTemplate>
+		</Setter>
+	</Style>
+
+</Styles>

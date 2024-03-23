@@ -2,64 +2,40 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:Caly.Core.Controls"
         xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
-    <Design.PreviewWith>
-        <controls:PdfDocumentControl x:DataType="viewModels:PdfDocumentViewModel" Width="630" Height="1782"/>
-    </Design.PreviewWith>
+	<Design.PreviewWith>
+		<controls:PdfDocumentControl x:DataType="viewModels:PdfDocumentViewModel" Width="630" Height="1782"/>
+	</Design.PreviewWith>
 
-    <Style Selector="controls|PdfDocumentControl" x:DataType="viewModels:PdfDocumentViewModel">
+	<Style Selector="controls|PdfDocumentControl" x:DataType="viewModels:PdfDocumentViewModel">
 
-        <Setter Property="ItemsSource" Value="{Binding Pages}"/>
-        <Setter Property="PageCount" Value="{Binding PageCount}"/>
-        <Setter Property="ZoomLevel" Value="{Binding ZoomLevel}"/>
-        <Setter Property="SelectedPageIndex" Value="{Binding SelectedPageIndex, Mode=TwoWay}"/>
-        <Setter Property="SelectedBookmark" Value="{Binding SelectedBookmark, Mode=OneWay}"/>
-        <Setter Property="TextSelectionHandler" Value="{Binding TextSelectionHandler}"/>
+		<Setter Property="ItemsSource" Value="{Binding Pages}"/>
+		<Setter Property="PageCount" Value="{Binding PageCount}"/>
+		<Setter Property="ZoomLevel" Value="{Binding ZoomLevel}"/>
+		<Setter Property="SelectedPageIndex" Value="{Binding SelectedPageIndex, Mode=TwoWay}"/>
+		<Setter Property="SelectedBookmark" Value="{Binding SelectedBookmark, Mode=OneWay}"/>
+		<Setter Property="TextSelectionHandler" Value="{Binding TextSelectionHandler}"/>
+		<Setter Property="UseLayoutRounding" Value="True"/>
 
-        <Setter Property="Template">
-            <ControlTemplate>
+		<Setter Property="Template">
+			<ControlTemplate>
 
-                <ScrollViewer Name="PART_ScrollViewer"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Auto"
-                              Focusable="True"
-                              IsScrollInertiaEnabled="True">
+                <controls:PdfPageItemsControl Name="PART_ItemsControl"
+                                              HorizontalAlignment="Stretch"
+                                              ItemsSource="{TemplateBinding ItemsSource}"
+                                              PageCount="{TemplateBinding PageCount}"
+                                              SelectedPageIndex="{TemplateBinding SelectedPageIndex, Mode=TwoWay}"
+                                              ZoomLevel="{TemplateBinding ZoomLevel, Mode=TwoWay}">
 
-                    <ScrollViewer.KeyBindings>
-                        <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
-                    </ScrollViewer.KeyBindings>
+                    <controls:PdfPageItemsControl.DataTemplates>
+                        <DataTemplate x:DataType="viewModels:PdfPageViewModel">
+                            <controls:PdfPageControl TextSelectionHandler="{Binding $parent[controls:PdfDocumentControl].TextSelectionHandler}"
+                                                     Margin="0,0,0,5"/>
+                        </DataTemplate>
+                    </controls:PdfPageItemsControl.DataTemplates>
 
-					<controls:CalyLayoutTransformControl Name="PART_LayoutTransformControl"
-                                                         HorizontalAlignment="Center"
-                                                         VerticalAlignment="Center">
+                </controls:PdfPageItemsControl>
 
-                        <Grid>
-
-                            <ItemsControl Name="PART_ItemsControl"
-                                          HorizontalAlignment="Center"
-                                          ItemsSource="{TemplateBinding ItemsSource}">
-								
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-										<VirtualizingStackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-								</ItemsControl.ItemsPanel>
-
-                                <ItemsControl.DataTemplates>
-                                    <DataTemplate x:DataType="viewModels:PdfPageViewModel">
-                                        <controls:PdfPageControl TextSelectionHandler="{Binding $parent[controls:PdfDocumentControl].TextSelectionHandler}"
-                                                                 Margin="0,0,0,5"/>
-                                    </DataTemplate>
-                                </ItemsControl.DataTemplates>
-
-							</ItemsControl>
-
-						</Grid>
-
-					</controls:CalyLayoutTransformControl>
-
-                </ScrollViewer>
-
-            </ControlTemplate>
-        </Setter>
-    </Style>
+			</ControlTemplate>
+		</Setter>
+	</Style>
 </Styles>

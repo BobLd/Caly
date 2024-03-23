@@ -13,20 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using System;
 using System.Collections;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
-using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
-using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
-using Avalonia.Media.Transformation;
-using Avalonia.VisualTree;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
 using Caly.Core.Utilities;
@@ -36,24 +29,10 @@ namespace Caly.Core.Controls
 {
     [TemplatePart("PART_ScrollViewer", typeof(IScrollable))]
     [TemplatePart("PART_LayoutTransformControl", typeof(CalyLayoutTransformControl))]
-    [TemplatePart("PART_ItemsControl", typeof(ItemsControl))]
+    [TemplatePart("PART_ItemsControl", typeof(PdfPageItemsControl))]
     public class PdfDocumentControl : CalyTemplatedControl
     {
-        private const double _zoomFactor = 1.1;
-
-        /*
-         * See PDF Reference 1.7 - C.2 Architectural limits
-         * The magnification factor of a view should be constrained to be between approximately 8 percent and 6400 percent.
-         */
-        private const double _minZoom = 0.08;
-        private const double _maxZoom = 64;
-
-        private ScrollViewer? _scrollViewer;
-        private CalyLayoutTransformControl? _layoutTransformControl;
-        private ItemsControl? _itemsControl;
-
-        private bool _isSettingPageVisibility = false;
-        private bool _isZooming = false;
+        private PdfPageItemsControl? _itemsControl;
 
         /// <summary>
         /// Defines the <see cref="ItemsSource"/> property.
@@ -118,11 +97,10 @@ namespace Caly.Core.Controls
             set => SetValue(ItemsSourceProperty, value);
         }
 
-
         public ITextSelectionHandler? TextSelectionHandler
         {
             get => GetValue(TextSelectionHandlerProperty);
-            set => SetValue(TextSelectionHandlerProperty, value, BindingPriority.Style);
+            set => SetValue(TextSelectionHandlerProperty, value);
         }
 
         public PdfDocumentControl()
@@ -155,165 +133,16 @@ namespace Caly.Core.Controls
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
             base.OnApplyTemplate(e);
-
-            _scrollViewer = e.NameScope.FindFromNameScope<ScrollViewer>("PART_ScrollViewer");
-            _layoutTransformControl = e.NameScope.FindFromNameScope<CalyLayoutTransformControl>("PART_LayoutTransformControl");
-            _itemsControl = e.NameScope.FindFromNameScope<ItemsControl>("PART_ItemsControl");
-
-            _scrollViewer.AddHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
-            _scrollViewer.AddHandler(SizeChangedEvent, (_, _) => SetPagesVisibility(), RoutingStrategies.Direct);
-            _scrollViewer.AddHandler(KeyDownEvent, _onKeyDownHandler);
-            _layoutTransformControl.AddHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
-
-            _itemsControl.ContainerPrepared += _onContainerPrepared;
-            _itemsControl.ContainerClearing += _onContainerClearing;
-        }
-
-        private static void _onContainerPrepared(object? sender, ContainerPreparedEventArgs e)
-        {
-            if (e.Container is not ContentPresenter { Content: PdfPageViewModel vm } cp)
-            {
-                return;
-            }
-
-            cp.PropertyChanged += _onContainerPropertyChanged;
-            vm.IsPagePrepared = true;
-        }
-
-        private static void _onContainerClearing(object? sender, ContainerClearingEventArgs e)
-        {
-            if (e.Container is not ContentPresenter cp)
-            {
-                return;
-            }
-
-            cp.PropertyChanged -= _onContainerPropertyChanged;
-        }
-
-        private static void _onContainerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property == ContentPresenter.ContentProperty && e.OldValue is PdfPageViewModel vm)
-            {
-                vm.VisibleArea = null;
-                vm.IsPagePrepared = false;
-            }
-        }
-
-        private void _onKeyDownHandler(object? sender, KeyEventArgs e)
-        {
-            switch (e.Key)
-            {
-                case Key.Right:
-                    _scrollViewer!.PageDown();
-                    break;
-                case Key.Down:
-                    _scrollViewer!.LineDown();
-                    break;
-                case Key.Left:
-                    _scrollViewer!.PageUp();
-                    break;
-                case Key.Up:
-                    _scrollViewer!.LineUp();
-                    break;
-            }
-        }
-
-        // TODO use:
-        // public static KeyGesture? PasteGesture => Application.Current?.PlatformSettings?.HotkeyConfiguration.WholeWordTextActionModifiers.FirstOrDefault();
-
-        private void _onPointerWheelChangedHandler(object? sender, PointerWheelEventArgs e)
-        {
-            if (e.KeyModifiers == KeyModifiers.Control && e.Delta.Y != 0)
-            {
-                ZoomTo(e);
-                e.Handled = true;
-            }
-        }
-
-        protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
-        {
-            base.OnDetachedFromLogicalTree(e);
-
-            _scrollViewer?.RemoveHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
-            _scrollViewer?.RemoveHandler(SizeChangedEvent, (_, _) => SetPagesVisibility());
-            _scrollViewer?.RemoveHandler(KeyDownEvent, _onKeyDownHandler);
-            _layoutTransformControl?.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
-
-            if (_itemsControl is not null)
-            {
-                _itemsControl.ContainerPrepared -= _onContainerPrepared;
-                _itemsControl.ContainerClearing -= _onContainerClearing;
-            }
+            _itemsControl = e.NameScope.FindFromNameScope<PdfPageItemsControl>("PART_ItemsControl");
         }
 
         /// <summary>
-        /// Scrolls the content downward by one page.
+        /// Scrolls to the page number.
         /// </summary>
-        public void GoToPage(int number)
+        /// <param name="pageNumber">The page number. Starts at 1.</param>
+        public void GoToPage(int pageNumber)
         {
-            if (_scrollViewer is null || _itemsControl is null || _isSettingPageVisibility ||
-                number <= 0 || number > PageCount || _scrollViewer.Viewport.IsEmpty() ||
-                _itemsControl.ItemsView.Count == 0)
-            {
-                return;
-            }
-
-            _itemsControl.ScrollIntoView(number - 1);
-        }
-
-        private void ZoomTo(PointerWheelEventArgs e)
-        {
-            if (_layoutTransformControl is null || _scrollViewer is null)
-            {
-                return;
-            }
-
-            if (_isZooming)
-            {
-                return;
-            }
-
-            try
-            {
-                _isZooming = true;
-
-                double delta = e.Delta.Y;
-                double dZoom =  Math.Round(Math.Pow(_zoomFactor, delta), 4); // If IsScrollInertiaEnabled = false, Y is only 1 or -1
-                double newZoom = (_layoutTransformControl.LayoutTransform?.Value.M11 ?? 1.0) * dZoom;
-
-                if (newZoom < _minZoom || newZoom > _maxZoom)
-                {
-                    return;
-                }
-
-                var builder = TransformOperations.CreateBuilder(1);
-                builder.AppendScale(newZoom, newZoom);
-                _layoutTransformControl.LayoutTransform = builder.Build();
-
-                Point point = e.GetPosition(_layoutTransformControl);
-
-                var offset = _scrollViewer.Offset - GetOffset(dZoom, point.X, point.Y);
-                if (delta > 0)
-                {
-                    // When zooming-in, we need to re-arrange the scroll viewer
-                    _scrollViewer.Measure(Size.Infinity);
-                    _scrollViewer.Arrange(new Rect(_scrollViewer.DesiredSize));
-                }
-
-                _scrollViewer.SetCurrentValue(ScrollViewer.OffsetProperty, offset);
-
-                SetCurrentValue(ZoomLevelProperty, newZoom);
-            }
-            finally
-            {
-                _isZooming = false;
-            }
-        }
-
-        private static Vector GetOffset(double scale, double x, double y)
-        {
-            double s = 1 - scale;
-            return new Vector(x * s, y * s);
+            _itemsControl?.GoToPage(pageNumber);
         }
 
         /// <summary>
@@ -323,256 +152,12 @@ namespace Caly.Core.Controls
         /// <returns>The page control, or <c>null</c> if not found.</returns>
         public PdfPageControl? GetPdfPageControl(int pageNumber)
         {
-            System.Diagnostics.Debug.WriteLine($"GetPdfPageControl {pageNumber}.");
-            if (_itemsControl!.ContainerFromIndex(pageNumber - 1) is ContentPresenter presenter)
-            {
-                return presenter.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
-            }
-
-            return null;
+            return _itemsControl!.GetPdfPageControl(pageNumber);
         }
 
         public PdfPageControl? GetPdfPageControlOver(PointerEventArgs e)
         {
-            Point point = e.GetPosition(_itemsControl);
-
-            // Quick reject
-            if (!_itemsControl!.Bounds.Contains(point))
-            {
-                System.Diagnostics.Debug.WriteLine("GetPdfPageControlOver Quick reject.");
-                return null;
-            }
-
-            int startIndex = SelectedPageIndex - 1; // Switch from one-indexed to zero-indexed
-
-            bool isAfterSelectedPage = false;
-
-            // Check selected current page
-            if (_itemsControl.ContainerFromIndex(startIndex) is ContentPresenter presenter)
-            {
-                System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {startIndex + 1}.");
-                if (presenter.Bounds.Contains(point))
-                {
-                    return presenter.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
-                }
-
-                isAfterSelectedPage = point.Y > presenter.Bounds.Bottom;
-            }
-
-            if (isAfterSelectedPage)
-            {
-                // Start with checking forward
-                for (int p = startIndex + 1; p < PageCount; ++p)
-                {
-                    System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {p + 1}.");
-                    if (_itemsControl!.ContainerFromIndex(p) is not ContentPresenter cp)
-                    {
-                        continue;
-                    }
-
-                    if (cp.Bounds.Contains(point))
-                    {
-                        return cp.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
-                    }
-
-                    if (point.Y < cp.Bounds.Top)
-                    {
-                        return null;
-                    }
-                }
-            }
-            else
-            {
-                // Continue with checking backward
-                for (int p = startIndex - 1; p >= 0; --p)
-                {
-                    System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {p + 1}.");
-                    if (_itemsControl!.ContainerFromIndex(p) is not ContentPresenter cp)
-                    {
-                        continue;
-                    }
-
-                    if (cp.Bounds.Contains(point))
-                    {
-                        return cp.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
-                    }
-
-                    if (point.Y > cp.Bounds.Bottom)
-                    {
-                        return null;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private void SetPagesVisibility()
-        {
-            if (_isSettingPageVisibility)
-            {
-                return;
-            }
-
-            if (_isZooming)
-            {
-                return;
-            }
-
-            if (_layoutTransformControl is null || _scrollViewer is null || _itemsControl is null ||
-                _scrollViewer.Viewport.IsEmpty() || _itemsControl.ItemsView.Count == 0)
-            {
-                return;
-            }
-
-            Debug.AssertIsNullOrScale(_layoutTransformControl.LayoutTransform?.Value);
-
-            double invScale = 1.0 / (_layoutTransformControl.LayoutTransform?.Value.M11 ?? 1.0);
-            Matrix fastInverse = Matrix.CreateScale(invScale, invScale);
-
-            Rect viewPort = new Rect((Point)_scrollViewer.Offset ,_scrollViewer.Viewport).TransformToAABB(fastInverse);
-
-            // Use the following: not visible pages cannot be between visible pages
-            // We cannot have:
-            // nv - v - v - nv - v - nv
-            // We will always have:
-            // nv - v - v - v - nv - nv
-            //
-            // There are 3 possible splits:
-            // [nv] | [v] [nv]
-            // [nv] [v] | [nv]
-            //
-            // [nv] | [nv] [v] [nv]
-            // [nv] [v] [nv] | [nv]
-            //
-            // [nv] [v] | [v] [nv]
-
-            bool isPreviousPageVisible = false;
-            bool needMoreChecks = true;
-
-            double maxOverlap = double.MinValue;
-            int indexMaxOverlap = -1;
-
-            bool CheckPageVisibility(int p, out bool isPageVisible)
-            {
-                isPageVisible = false;
-
-                if (_itemsControl.ContainerFromIndex(p) is not ContentPresenter { Content: PdfPageViewModel vm } cp)
-                {
-                    // Page is not realised
-                    return !isPreviousPageVisible;
-                }
-
-                if (!needMoreChecks || cp.Bounds.IsEmpty())
-                {
-                    if (!vm.IsPageVisible)
-                    {
-                        // Page is not visible and no need for more checks.
-                        // All following pages are already set to IsPageVisible = false
-                        return false;
-                    }
-
-                    vm.VisibleArea = null;
-                    return true;
-                }
-
-                Rect view = cp.Bounds;
-
-                if (view.Height == 0)
-                {
-                    // No need for further checks, not visible
-                    vm.VisibleArea = null;
-                    return true;
-                }
-
-                double top = view.Top;
-                double left = view.Left;
-                double bottom = view.Bottom;
-
-                // Quick check if height overlap
-                if (OverlapsHeight(viewPort.Top, viewPort.Bottom, top, bottom))
-                {
-                    // Compute overlap
-                    view = view.Intersect(viewPort);
-
-                    double overlapArea = view.Height * view.Width;
-
-                    // Actual check if page is visible
-                    if (overlapArea == 0)
-                    {
-                        vm.VisibleArea = null;
-                        // If previous page was visible but current page is not, we have the last visible page
-                        needMoreChecks = !isPreviousPageVisible;
-                        return true;
-                    }
-
-                    System.Diagnostics.Debug.Assert(view.Height.Equals(Overlap(viewPort.Top, viewPort.Bottom, top, bottom)));
-
-                    if (overlapArea > maxOverlap)
-                    {
-                        maxOverlap = overlapArea;
-                        indexMaxOverlap = p;
-                    }
-
-                    isPreviousPageVisible = true;
-                    isPageVisible = true;
-
-                    // Set overlap area (Translate and inverse transform)
-                    vm.VisibleArea = view.Translate(new Vector(-left, -top));
-
-                    return true;
-                }
-
-                vm.VisibleArea = null;
-                // If previous page was visible but current page is not, we have the last visible page
-                needMoreChecks = !isPreviousPageVisible;
-                return true;
-            }
-
-            // Check current page visibility
-            int startIndex = SelectedPageIndex - 1; // Switch from one-indexed to zero-indexed
-            CheckPageVisibility(startIndex, out bool isSelectedPageVisible);
-
-            // Start with checking forward.
-            // TODO - While scrolling down, the current selected page can become invisible and force
-            // a full iteration if starting backward
-            isPreviousPageVisible = isSelectedPageVisible; // Previous page is SelectedPageIndex
-            int forwardIndex = startIndex + 1;
-            while (forwardIndex < PageCount && CheckPageVisibility(forwardIndex, out _))
-            {
-                forwardIndex++;
-            }
-
-            // Continue with checking backward
-            isPreviousPageVisible = isSelectedPageVisible; // Previous page is SelectedPageIndex
-            needMoreChecks = true;
-            int backwardIndex = startIndex - 1;
-            while (backwardIndex >= 0 && CheckPageVisibility(backwardIndex, out _))
-            {
-                backwardIndex--;
-            }
-
-            indexMaxOverlap++; // Switch to base 1 indexing
-
-            if (indexMaxOverlap != -1 && SelectedPageIndex != indexMaxOverlap)
-            {
-                _isSettingPageVisibility = true;
-                SetCurrentValue(SelectedPageIndexProperty, indexMaxOverlap);
-                _isSettingPageVisibility = false;
-            }
-        }
-
-        private static double Overlap(double top1, double bottom1, double top2, double bottom2)
-        {
-            return Math.Max(0, Math.Min(bottom1, bottom2) - Math.Max(top1, top2));
-        }
-
-        /// <summary>
-        /// Works for vertical scrolling.
-        /// </summary>
-        private static bool OverlapsHeight(double top1, double bottom1, double top2, double bottom2)
-        {
-            return !(top1 > bottom2 || bottom1 < top2);
+            return _itemsControl!.GetPdfPageControlOver(e);
         }
     }
 }
