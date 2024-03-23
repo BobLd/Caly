@@ -145,7 +145,7 @@ namespace Caly.Core.Controls
 
             _pagePreparedDisposable = this.GetObservable(IsPagePreparedProperty)
                 .DistinctUntilChanged()
-                .Throttle(TimeSpan.FromMilliseconds(250))
+                .Throttle(TimeSpan.FromMilliseconds(100))
                 .ObserveOn(SynchronizationContext.Current!) // UI thread - needed as we call the commands
                 .Subscribe(
                     onNext: isPrepared =>

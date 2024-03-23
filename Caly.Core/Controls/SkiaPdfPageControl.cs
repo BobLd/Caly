@@ -152,17 +152,12 @@ namespace Caly.Core.Controls
             }
 
             SKMatrix translate = SKMatrix.CreateTranslation((float)VisibleArea.Value.Left, (float)VisibleArea.Value.Top);
-
+            SKRect tile = VisibleArea.Value.ToSKRect();
+            var tileMode = SKShaderTileMode.Clamp;
             // TODO - Do we need to dispose shader and paint?
-            SKPaint paint = new SKPaint()
-            {
-                Shader = picture.Item.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, translate, VisibleArea.Value.ToSKRect())
-            };
 
-            using (context.PushClip(viewPort.Intersect(VisibleArea.Value)))
-            {
-                context.Custom(new SkiaDrawOperation(viewPort, VisibleArea.Value, paint));
-            }
+            SKPaint paint = new SKPaint() { Shader = picture.Item.ToShader(tileMode, tileMode, translate, tile) };
+            context.Custom(new SkiaDrawOperation(viewPort, VisibleArea.Value, paint));
 
             base.Render(context);
         }

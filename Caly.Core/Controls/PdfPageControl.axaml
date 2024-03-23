@@ -35,7 +35,7 @@
                                  IsEnabled="{Binding IsPageRendering}"
                                  IsVisible="{Binding IsPageRendering}"/>
 
-					<controls:SkiaRenderLoopPdfPageControl
+					<controls:SkiaPdfPageControl
                         Picture="{TemplateBinding Picture}"
 						VisibleArea="{TemplateBinding VisibleArea}"
                         HorizontalAlignment="Stretch"

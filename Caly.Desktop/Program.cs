@@ -18,6 +18,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Threading;
 using Caly.Core;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
@@ -130,7 +131,7 @@ class Program
             if (ex is null) return;
 
             var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
-            dialogService?.ShowExceptionWindow(ex);
+            Dispatcher.UIThread.Post(() => dialogService?.ShowExceptionWindow(ex));
         }
         catch
         {

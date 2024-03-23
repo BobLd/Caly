@@ -92,7 +92,9 @@ namespace Caly.Core.Controls
             }
         }
 
+        private readonly WaitHandle[] _handles;
         private readonly AutoResetEvent _renderAutoResetEvent;
+        private readonly AutoResetEvent _cancelAutoResetEvent;
         private readonly Task _renderTask;
         private bool _shouldRender = true;
         private int _requestsCount;
@@ -134,10 +136,15 @@ namespace Caly.Core.Controls
             ClipToBoundsProperty.OverrideDefaultValue<SkiaPdfPageControl>(true);
         }
 
+        private readonly CancellationTokenSource _ctr;
+
         public SkiaRenderLoopPdfPageControl()
         {
+            _ctr = new CancellationTokenSource();
             ResetBitmap();
             _renderAutoResetEvent = new AutoResetEvent(false);
+            _cancelAutoResetEvent = new AutoResetEvent(false);
+            _handles = new WaitHandle[] { _renderAutoResetEvent, _cancelAutoResetEvent };
             _renderTask = Task.Run(RenderingLoop);
         }
 
@@ -149,19 +156,50 @@ namespace Caly.Core.Controls
 
             while (_shouldRender)
             {
-                await Task.Delay(150);
-                if (RenderPage())
+                try
                 {
-                    Dispatcher.UIThread.Post(InvalidateVisual);
-                }
+                    int ar = WaitHandle.WaitAny(_handles);
 
-                _renderAutoResetEvent.WaitOne();
+                    if (ar == 0)
+                    {
+                        await Task.Delay(150, _ctr.Token);
+                        if (RenderPage())
+                        {
+                            Dispatcher.UIThread.Post(InvalidateVisual);
+                        }
+
+                        _ctr.Token.ThrowIfCancellationRequested();
+                    }
+                    else
+                    {
+                        // Cancel requested
+                        _shouldRender = false;
+                        _renderAutoResetEvent.Dispose();
+                        _cancelAutoResetEvent.Dispose();
+                        _ctr.Dispose();
+                        //Picture?.Dispose();
+                        return;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // No op
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteExceptionToFile(ex);
+                }
             }
         }
 
         private bool RenderPage()
         {
             Debug.ThrowOnUiThread();
+            if (!_shouldRender)
+            {
+                return false;
+            }
+
             if (_requestsCount == 0)
             {
                 return false;
@@ -199,20 +237,17 @@ namespace Caly.Core.Controls
             return _requestsCount == 0;
         }
 
-        private void RequestRendering()
-        {
-            _scaledImage = _defaultBitmap;
-            Dispatcher.UIThread.Post(InvalidateVisual);
-            Interlocked.Increment(ref _requestsCount);
-            _renderAutoResetEvent.Set();
-        }
-
         /// <summary>
         /// This operation is executed on UI thread.
         /// </summary>
         public override void Render(DrawingContext context)
         {
             Debug.ThrowNotOnUiThread();
+
+            if (!_shouldRender)
+            {
+                return;
+            }
 
             var viewPort = new Rect(Bounds.Size);
 
@@ -228,28 +263,75 @@ namespace Caly.Core.Controls
             base.Render(context);
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        protected override async void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
             base.OnPropertyChanged(change);
-            if (change.Property == PictureProperty)
+            try
             {
-                _picture = change.NewValue as IRef<SKPicture>;
-                RenderAsBitmap();
-                RequestRendering();
+                if (!_shouldRender)
+                {
+                    return;
+                }
+
+                if (change.Property == PictureProperty)
+                {
+                    if (change.OldValue is IRef<SKPicture> old)
+                    {
+                        old.Dispose();
+                    }
+
+                    _picture = (change.NewValue as IRef<SKPicture>)?.Clone();
+
+                    await RenderAsBitmap().ContinueWith(_ => RequestRendering());
+                }
+                else if (change.Property == VisibleAreaProperty)
+                {
+                    _visibleArea = change.NewValue as Rect?;
+                    await RequestRendering();
+                }
+                else if (change.Property == DataContextProperty)
+                {
+                    ResetBitmap();
+                }
             }
-            else if (change.Property == VisibleAreaProperty)
+            catch (OperationCanceledException)
             {
-                _visibleArea = change.NewValue as Rect?;
-                RequestRendering();
+                // No op
             }
-            else if (change.Property == DataContextProperty)
+            catch (Exception ex)
             {
-                ResetBitmap();
+
             }
+        }
+
+        private Task RequestRendering()
+        {
+            if (!_shouldRender)
+            {
+                return Task.CompletedTask;
+            }
+
+            return Task.Run(() =>
+            {
+                if (!_shouldRender)
+                {
+                    return;
+                }
+
+                _scaledImage = _defaultBitmap;
+                Dispatcher.UIThread.Post(InvalidateVisual);
+                Interlocked.Increment(ref _requestsCount);
+                _renderAutoResetEvent.Set();
+            }, _ctr.Token);
         }
 
         private void ResetBitmap()
         {
+            if (!_shouldRender)
+            {
+                return;
+            }
+
             _defaultBitmap = new SKPaint()
             {
 #if DEBUG
@@ -261,35 +343,53 @@ namespace Caly.Core.Controls
             _scaledImage = _defaultBitmap;
         }
 
-        private void RenderAsBitmap()
+        private Task RenderAsBitmap()
         {
-            var picture = _picture;
-            if (picture?.Item is null || picture.Item.CullRect.IsEmpty)
+            if (!_shouldRender)
             {
-                return;
+                return Task.CompletedTask;
             }
 
-            using (var bitmap = new SKBitmap((int)picture.Item.CullRect.Width, (int)picture.Item.CullRect.Height))
-            using (var canvas = new SKCanvas(bitmap))
+            return Task.Run(() =>
             {
-                canvas.DrawPicture(picture.Item);
-                _defaultBitmap = new SKPaint()
+                Debug.ThrowOnUiThread();
+
+                if (!_shouldRender)
                 {
-                    Shader = bitmap.ToShader(),
-                    FilterQuality = SKFilterQuality.Low
-                };
-                _scaledImage = _defaultBitmap;
-            }
+                    return;
+                }
+
+                var picture = _picture;
+                if (picture?.Item is null || picture.Item.CullRect.IsEmpty)
+                {
+                    return;
+                }
+
+                using (var bitmap = new SKBitmap((int)picture.Item.CullRect.Width, (int)picture.Item.CullRect.Height))
+                using (var canvas = new SKCanvas(bitmap))
+                {
+                    canvas.DrawPicture(picture.Item);
+                    _defaultBitmap = new SKPaint()
+                    {
+                        Shader = bitmap.ToShader(),
+                        FilterQuality = SKFilterQuality.Low
+                    };
+                    _scaledImage = _defaultBitmap;
+                }
+            }, _ctr.Token);
         }
 
         protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
         {
-            base.OnDetachedFromLogicalTree(e);
             GC.KeepAlive(_renderTask);
-            _shouldRender = false;
-            _renderAutoResetEvent.Set();
-            _renderAutoResetEvent.Dispose();
-            Picture?.Dispose();
+            base.OnDetachedFromLogicalTree(e);
+
+            if (!_shouldRender)
+            {
+                return;
+            }
+            _cancelAutoResetEvent.Set();
+            _ctr.Cancel();
         }
     }
 }
