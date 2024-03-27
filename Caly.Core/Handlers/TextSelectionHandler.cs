@@ -373,8 +373,8 @@ namespace Caly.Core.Handlers
             control.InvalidateVisual();
 
             _isSelecting = _selection.IsValid() &&
-                (_selection.AnchorWord != _selection.FocusWord ||
-                 _selection.AnchorOffset != _selection.FocusOffset);
+                           (_selection.AnchorWord != _selection.FocusWord || // Multiple words selected
+                            (_selection.AnchorOffset != -1 && _selection.FocusOffset != -1)); // Selection within same word
         }
 
         /// <summary>
