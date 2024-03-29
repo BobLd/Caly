@@ -29,7 +29,7 @@ namespace Caly.Core.Controls
 {
     [TemplatePart("PART_ScrollViewer", typeof(IScrollable))]
     [TemplatePart("PART_LayoutTransformControl", typeof(CalyLayoutTransformControl))]
-    [TemplatePart("PART_ItemsControl", typeof(PdfPageItemsControl))]
+    [TemplatePart("PART_PdfPageItemsControl", typeof(PdfPageItemsControl))]
     public class PdfDocumentControl : CalyTemplatedControl
     {
         private PdfPageItemsControl? _itemsControl;
@@ -52,17 +52,17 @@ namespace Caly.Core.Controls
         /// <summary>
         /// Defines the <see cref="SelectedPageIndex"/> property. Starts at 1.
         /// </summary>
-        public static readonly StyledProperty<int> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfDocumentControl, int>(nameof(SelectedPageIndex), 1, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+        public static readonly StyledProperty<int> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfDocumentControl, int>(nameof(SelectedPageIndex), 1, defaultBindingMode: BindingMode.TwoWay);
 
         /// <summary>
         /// Defines the <see cref="SelectedBookmark"/> property.
         /// </summary>
-        public static readonly StyledProperty<PdfBookmarkNode?> SelectedBookmarkProperty = AvaloniaProperty.Register<PdfDocumentControl, PdfBookmarkNode?>(nameof(SelectedBookmark), null);
+        public static readonly StyledProperty<PdfBookmarkNode?> SelectedBookmarkProperty = AvaloniaProperty.Register<PdfDocumentControl, PdfBookmarkNode?>(nameof(SelectedBookmark));
 
         /// <summary>
         /// Defines the <see cref="TextSelectionHandler"/> property.
         /// </summary>
-        public static readonly StyledProperty<ITextSelectionHandler?> TextSelectionHandlerProperty = AvaloniaProperty.Register<PdfDocumentControl, ITextSelectionHandler?>(nameof(TextSelectionHandler), defaultBindingMode: BindingMode.TwoWay);
+        public static readonly StyledProperty<ITextSelectionHandler?> TextSelectionHandlerProperty = AvaloniaProperty.Register<PdfDocumentControl, ITextSelectionHandler?>(nameof(TextSelectionHandler));
 
         public int PageCount
         {
@@ -133,7 +133,7 @@ namespace Caly.Core.Controls
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
             base.OnApplyTemplate(e);
-            _itemsControl = e.NameScope.FindFromNameScope<PdfPageItemsControl>("PART_ItemsControl");
+            _itemsControl = e.NameScope.FindFromNameScope<PdfPageItemsControl>("PART_PdfPageItemsControl");
         }
 
         /// <summary>
@@ -150,14 +150,14 @@ namespace Caly.Core.Controls
         /// </summary>
         /// <param name="pageNumber">The page number. Starts at 1.</param>
         /// <returns>The page control, or <c>null</c> if not found.</returns>
-        public PdfPageControl? GetPdfPageControl(int pageNumber)
+        public PdfPageItem? GetPdfPageItem(int pageNumber)
         {
-            return _itemsControl!.GetPdfPageControl(pageNumber);
+            return _itemsControl!.GetPdfPageItem(pageNumber);
         }
 
-        public PdfPageControl? GetPdfPageControlOver(PointerEventArgs e)
+        public PdfPageItem? GetPdfPageItemOver(PointerEventArgs e)
         {
-            return _itemsControl!.GetPdfPageControlOver(e);
+            return _itemsControl!.GetPdfPageItemOver(e);
         }
     }
 }

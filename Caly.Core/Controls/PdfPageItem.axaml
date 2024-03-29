@@ -1,0 +1,57 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Caly.Core.Controls"
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+	<Design.PreviewWith>
+		<StackPanel>
+			<controls:PdfPageItem x:DataType="viewModels:PdfPageViewModel"
+                                     Picture="{Binding PdfPicture}"
+                                     IsPageRendering="{Binding IsPageRendering}"/>
+		</StackPanel>
+	</Design.PreviewWith>
+
+
+	<Style Selector="controls|PdfPageItem" x:DataType="viewModels:PdfPageViewModel">
+        <Setter Property="Exception" Value="{Binding Exception}"/>
+		<Setter Property="LoadPagePictureCommand" Value="{Binding LoadPagePictureCommand}"/>
+		<Setter Property="UnloadPagePictureCommand" Value="{Binding UnloadPagePictureCommand}"/>
+		<Setter Property="Width" Value="{Binding Width}"/>
+		<Setter Property="Height" Value="{Binding Height}"/>
+		<Setter Property="Picture" Value="{Binding PdfPicture}"/>
+		<Setter Property="VisibleArea" Value="{Binding VisibleArea}"/>
+		<Setter Property="IsPageRendering" Value="{Binding IsPageRendering}"/>
+		<Setter Property="IsPageVisible" Value="{Binding IsPageVisible}"/>
+		<Setter Property="IsPagePrepared" Value="{Binding IsPagePrepared}"/>
+        <Setter Property="Margin" Value="0,0,0,5"></Setter>
+
+		<Setter Property="Template">
+			<ControlTemplate>
+				<ContentPresenter Name="PART_ContentPresenter">
+					<ContentPresenter.Content>
+						<Grid Background="White">
+							<ProgressBar Width="50"
+										 IsIndeterminate="{Binding IsPageRendering}"
+										 IsEnabled="{Binding IsPageRendering}"
+										 IsVisible="{Binding IsPageRendering}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"/>
+
+							<controls:SkiaPdfPageControl Picture="{Binding PdfPicture}"
+                                                         VisibleArea="{Binding VisibleArea}"
+                                                         HorizontalAlignment="Stretch"
+                                                         VerticalAlignment="Stretch"/>
+
+							<controls:PdfPageTextLayerControl Name="PART_PdfPageTextLayerControl"
+                                                              PdfPageTextLayer="{Binding PdfTextLayer}"
+                                                              PageNumber="{Binding PageNumber}"
+                                                              TextSelectionHandler="{Binding TextSelectionHandler}"
+                                                              HorizontalAlignment="Stretch"
+                                                              VerticalAlignment="Stretch"/>
+						</Grid>
+					</ContentPresenter.Content>
+				</ContentPresenter>
+			</ControlTemplate>
+		</Setter>
+
+	</Style>
+</Styles>
