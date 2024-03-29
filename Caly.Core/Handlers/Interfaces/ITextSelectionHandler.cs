@@ -16,11 +16,14 @@
 using Avalonia.Input;
 using Avalonia.Media;
 using Caly.Core.Controls;
+using Caly.Core.Models;
 
 namespace Caly.Core.Handlers.Interfaces
 {
     public interface ITextSelectionHandler
     {
+        PdfTextSelection Selection { get; }
+
         void OnPointerMoved(PointerEventArgs e);
 
         void OnPointerPressed(PointerPressedEventArgs e);

@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
@@ -10,7 +9,6 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media.Transformation;
-using Avalonia.VisualTree;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 
@@ -118,12 +116,12 @@ public class PdfPageItemsControl : ItemsControl
     /// </summary>
     /// <param name="pageNumber">The page number. Starts at 1.</param>
     /// <returns>The page control, or <c>null</c> if not found.</returns>
-    public PdfPageControl? GetPdfPageControl(int pageNumber)
+    public PdfPageItem? GetPdfPageItem(int pageNumber)
     {
-        System.Diagnostics.Debug.WriteLine($"GetPdfPageControl {pageNumber}.");
-        if (ContainerFromIndex(pageNumber - 1) is ContentPresenter presenter)
+        System.Diagnostics.Debug.WriteLine($"GetPdfPageItem {pageNumber}.");
+        if (ContainerFromIndex(pageNumber - 1) is PdfPageItem presenter)
         {
-            return presenter.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
+            return presenter;
         }
 
         return null;
@@ -147,7 +145,7 @@ public class PdfPageItemsControl : ItemsControl
     {
         base.PrepareContainerForItemOverride(container, item, index);
 
-        if (container is not ContentPresenter cp || item is not PdfPageViewModel vm)
+        if (container is not PdfPageItem cp || item is not PdfPageViewModel vm)
         {
             return;
         }
@@ -161,12 +159,22 @@ public class PdfPageItemsControl : ItemsControl
     {
         base.ClearContainerForItemOverride(container);
 
-        if (container is not ContentPresenter cp)
+        if (container is not PdfPageItem cp)
         {
             return;
         }
 
         cp.PropertyChanged -= _onContainerPropertyChanged;
+    }
+
+    protected override Control CreateContainerForItemOverride(object? item, int index, object? recycleKey)
+    {
+        return new PdfPageItem();
+    }
+
+    protected override bool NeedsContainerOverride(object? item, int index, out object? recycleKey)
+    {
+        return NeedsContainer<PdfPageItem>(item, out recycleKey);
     }
 
     private static void _onContainerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -203,7 +211,7 @@ public class PdfPageItemsControl : ItemsControl
         return PageCount;
     }
 
-    public PdfPageControl? GetPdfPageControlOver(PointerEventArgs e)
+    public PdfPageItem? GetPdfPageItemOver(PointerEventArgs e)
     {
         if (Presenter is null)
         {
@@ -216,7 +224,7 @@ public class PdfPageItemsControl : ItemsControl
         // Quick reject
         if (!Presenter.Bounds.Contains(point))
         {
-            System.Diagnostics.Debug.WriteLine("GetPdfPageControlOver Quick reject.");
+            System.Diagnostics.Debug.WriteLine("GetPdfPageItemOver Quick reject.");
             return null;
         }
 
@@ -228,12 +236,12 @@ public class PdfPageItemsControl : ItemsControl
         bool isAfterSelectedPage = false;
 
         // Check selected current page
-        if (ContainerFromIndex(startIndex) is ContentPresenter presenter)
+        if (ContainerFromIndex(startIndex) is PdfPageItem presenter)
         {
-            System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {startIndex + 1}.");
+            System.Diagnostics.Debug.WriteLine($"GetPdfPageItemOver page {startIndex + 1}.");
             if (presenter.Bounds.Contains(point))
             {
-                return presenter.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
+                return presenter;
             }
 
             isAfterSelectedPage = point.Y > presenter.Bounds.Bottom;
@@ -244,15 +252,15 @@ public class PdfPageItemsControl : ItemsControl
             // Start with checking forward
             for (int p = startIndex + 1; p < maxPageIndex; ++p)
             {
-                System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {p + 1}.");
-                if (ContainerFromIndex(p) is not ContentPresenter cp)
+                System.Diagnostics.Debug.WriteLine($"GetPdfPageItemOver page {p + 1}.");
+                if (ContainerFromIndex(p) is not PdfPageItem cp)
                 {
                     continue;
                 }
 
                 if (cp.Bounds.Contains(point))
                 {
-                    return cp.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
+                    return cp;
                 }
 
                 if (point.Y < cp.Bounds.Top)
@@ -266,15 +274,15 @@ public class PdfPageItemsControl : ItemsControl
             // Continue with checking backward
             for (int p = startIndex - 1; p >= minPageIndex; --p)
             {
-                System.Diagnostics.Debug.WriteLine($"GetPdfPageControlOver page {p + 1}.");
-                if (ContainerFromIndex(p) is not ContentPresenter cp)
+                System.Diagnostics.Debug.WriteLine($"GetPdfPageItemOver page {p + 1}.");
+                if (ContainerFromIndex(p) is not PdfPageItem cp)
                 {
                     continue;
                 }
 
                 if (cp.Bounds.Contains(point))
                 {
-                    return cp.GetVisualDescendants().OfType<PdfPageControl>().SingleOrDefault();
+                    return cp;
                 }
 
                 if (point.Y > cp.Bounds.Bottom)
@@ -378,7 +386,7 @@ public class PdfPageItemsControl : ItemsControl
         {
             isPageVisible = false;
 
-            if (ContainerFromIndex(p) is not ContentPresenter { Content: PdfPageViewModel vm } cp)
+            if (ContainerFromIndex(p) is not PdfPageItem { Content: PdfPageViewModel vm } cp)
             {
                 // Page is not realised
                 return !isPreviousPageVisible;

@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
 using Caly.Pdf.Models;
@@ -67,6 +68,9 @@ namespace Caly.Core.ViewModels
         [NotifyPropertyChangedFor(nameof(IsPageVisible))]
         private Rect? _visibleArea;
 
+        [ObservableProperty]
+        private ITextSelectionHandler _textSelectionHandler;
+
         public bool IsPageVisible => VisibleArea.HasValue;
 
         public int ThumbnailWidth { get; } = 100;
@@ -92,10 +96,13 @@ namespace Caly.Core.ViewModels
         }
 #endif
 
-        public PdfPageViewModel(int pageNumber, IPdfService pdfService)
+        public PdfPageViewModel(int pageNumber, IPdfService pdfService, ITextSelectionHandler textSelectionHandler)
         {
+            ArgumentNullException.ThrowIfNull(textSelectionHandler, nameof(textSelectionHandler));
+
             PageNumber = pageNumber;
             _pdfService = pdfService;
+            TextSelectionHandler = textSelectionHandler;
         }
 
         public async Task LoadPageSize(CancellationToken cancellationToken)

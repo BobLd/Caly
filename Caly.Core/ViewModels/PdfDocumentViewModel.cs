@@ -21,7 +21,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
@@ -54,26 +53,7 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private double _zoomLevel = 1;
 
-        private PdfTextSelection _selection;
-        public PdfTextSelection Selection
-        {
-            get => _selection;
-            set
-            {
-                if (!SetProperty(ref _selection, value))
-                {
-                    return;
-                }
-
-                Dispatcher.UIThread.Post(() =>
-                {
-                    TextSelectionHandler = new TextSelectionHandler(_selection);
-                    OnPropertyChanged(nameof(TextSelectionHandler));
-                });
-            }
-        }
-
-        public ITextSelectionHandler? TextSelectionHandler { get; private set; }
+        [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
 
         private readonly Channel<PdfPageViewModel> _pageInfoChannel;
         private readonly ChannelWriter<PdfPageViewModel> _channelWriter;
@@ -134,7 +114,8 @@ namespace Caly.Core.ViewModels
             PageCount = _pdfService.NumberOfPages;
             FileName = _pdfService.FileName;
             LocalPath = _pdfService.LocalPath;
-            Selection = new PdfTextSelection(PageCount);
+
+            TextSelectionHandler = new TextSelectionHandler(PageCount);
 
             _loadPagesTask = new Lazy<Task>(LoadPages);
             _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);
@@ -166,7 +147,7 @@ namespace Caly.Core.ViewModels
             await Task.Run(async () =>
             {
                 // Use 1st page size as default page size
-                var firstPage = new PdfPageViewModel(1, _pdfService);
+                var firstPage = new PdfPageViewModel(1, _pdfService, TextSelectionHandler);
                 await firstPage.LoadPageSize(_cts.Token);
                 double defaultWidth = firstPage.Width;
                 double defaultHeight = firstPage.Height;
@@ -176,7 +157,11 @@ namespace Caly.Core.ViewModels
                 for (int p = 2; p <= PageCount; p++)
                 {
                     _cts.Token.ThrowIfCancellationRequested();
-                    var newPage = new PdfPageViewModel(p, _pdfService) { Height = defaultHeight, Width = defaultWidth };
+                    var newPage = new PdfPageViewModel(p, _pdfService, TextSelectionHandler)
+                    {
+                        Height = defaultHeight,
+                        Width = defaultWidth
+                    };
                     Pages.Add(newPage);
 
                     if (p <= _initialPagesInfoToLoad)
@@ -217,7 +202,7 @@ namespace Caly.Core.ViewModels
         {
             try
             {
-                var selection = Selection;
+                var selection = TextSelectionHandler.Selection;
 
                 if (!selection.HasStarted())
                 {

@@ -39,8 +39,6 @@ namespace Caly.Core.Handlers
     {
         private static readonly Brush _selectionBrush = new SolidColorBrush(Color.FromArgb(0xa9, 0x33, 0x99, 0xFF));
 
-        private readonly PdfTextSelection _selection;
-
         /// <summary>
         /// <c>true</c> if we are currently selecting text. <c>false</c> otherwise.
         /// </summary>
@@ -51,9 +49,11 @@ namespace Caly.Core.Handlers
         /// </summary>
         private bool _isMultipleClickSelection;
 
-        public TextSelectionHandler(PdfTextSelection selection)
+        public PdfTextSelection Selection { get; }
+
+        public TextSelectionHandler(int numberOfPages)
         {
-            _selection = selection;
+            Selection = new PdfTextSelection(numberOfPages);
         }
 
         public void SelectTextToEndInPage(PdfPageTextLayerControl control)
@@ -63,16 +63,16 @@ namespace Caly.Core.Handlers
                 return;
             }
 
-            _selection.Extend(control.PageNumber.Value, control.PdfPageTextLayer[_selection.GetLastWordIndex()]);
-            _selection.SelectWordsInRange(control);
+            Selection.Extend(control.PageNumber.Value, control.PdfPageTextLayer[Selection.GetLastWordIndex()]);
+            Selection.SelectWordsInRange(control);
         }
 
         private void ClearSelection(PdfPageTextLayerControl currentTextLayer)
         {
-            bool isBackward = _selection.IsBackward;
-            int anchorPage = _selection.AnchorPageIndex;
-            int focusPage = _selection.FocusPageIndex;
-            _selection.ResetSelection();
+            bool isBackward = Selection.IsBackward;
+            int anchorPage = Selection.AnchorPageIndex;
+            int focusPage = Selection.FocusPageIndex;
+            Selection.ResetSelection();
 
             if (anchorPage == -1 || focusPage == -1)
             {
@@ -103,11 +103,8 @@ namespace Caly.Core.Handlers
                     return;
                 }
 
-                var page = pdfDocumentControl?.GetPdfPageControl(pageNumber);
-                var layer = page?.GetVisualDescendants()
-                    .OfType<PdfPageTextLayerControl>()
-                    .FirstOrDefault();
-
+                var page = pdfDocumentControl?.GetPdfPageItem(pageNumber);
+                var layer = page?.TextLayer;
                 layer?.InvalidateVisual();
             }
         }
@@ -117,7 +114,7 @@ namespace Caly.Core.Handlers
             // TODO - Unselect when skipping pages from outside
 
             var pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>();
-            var pdfPage = pdfDocumentControl?.GetPdfPageControlOver(e);
+            var pdfPage = pdfDocumentControl?.GetPdfPageItemOver(e);
 
             if (pdfPage is null)
             {
@@ -125,9 +122,7 @@ namespace Caly.Core.Handlers
                 return false;
             }
 
-            var endTextLayer = pdfPage.GetVisualDescendants()
-                .OfType<PdfPageTextLayerControl>()
-                .FirstOrDefault();
+            var endTextLayer = pdfPage.TextLayer;
 
             if (endTextLayer is null)
             {
@@ -147,7 +142,7 @@ namespace Caly.Core.Handlers
 
             // Update current page selection
             bool endAfterCurrent = endTextLayer.PageNumber > currentTextLayer.PageNumber;
-            bool isExtendsSelection = _selection.IsBackward ? !endAfterCurrent : endAfterCurrent;
+            bool isExtendsSelection = Selection.IsBackward ? !endAfterCurrent : endAfterCurrent;
 
             if (isExtendsSelection)
             {
@@ -155,8 +150,8 @@ namespace Caly.Core.Handlers
                 if (currentTextLayer.PdfPageTextLayer.Count > 0)
                 {
                     // Only if any word in the page
-                    _selection.Extend(currentTextLayer.PageNumber.Value, currentTextLayer.PdfPageTextLayer[_selection.GetLastWordIndex()]);
-                    _selection.SelectWordsInRange(currentTextLayer);
+                    Selection.Extend(currentTextLayer.PageNumber.Value, currentTextLayer.PdfPageTextLayer[Selection.GetLastWordIndex()]);
+                    Selection.SelectWordsInRange(currentTextLayer);
                 }
             }
             else
@@ -165,9 +160,9 @@ namespace Caly.Core.Handlers
                 // TODO - see above. Need to make sure endTextLayer.PdfPageTextLayer is loaded and not null
                 if (endTextLayer.PdfPageTextLayer.Count > 0)
                 {
-                    _selection.Extend(endTextLayer.PageNumber.Value, endTextLayer.PdfPageTextLayer[_selection.GetLastWordIndex()]);
+                    Selection.Extend(endTextLayer.PageNumber.Value, endTextLayer.PdfPageTextLayer[Selection.GetLastWordIndex()]);
                 }
-                _selection.ClearSelectedWordsForPage(currentTextLayer.PageNumber.Value);
+                Selection.ClearSelectedWordsForPage(currentTextLayer.PageNumber.Value);
             }
 
             currentTextLayer.InvalidateVisual();
@@ -178,10 +173,8 @@ namespace Caly.Core.Handlers
             {
                 void UpdatePage(int pageNumber)
                 {
-                    var page = pdfDocumentControl?.GetPdfPageControl(pageNumber);
-                    var layer = page?.GetVisualDescendants()
-                        .OfType<PdfPageTextLayerControl>()
-                        .FirstOrDefault();
+                    var page = pdfDocumentControl?.GetPdfPageItem(pageNumber);
+                    var layer = page?.TextLayer;
 
                     if (layer is null)
                     {
@@ -192,7 +185,7 @@ namespace Caly.Core.Handlers
                     layer.InvalidateVisual();
                 }
 
-                if (_selection.IsBackward)
+                if (Selection.IsBackward)
                 {
                     for (int p = currentTextLayer.PageNumber.Value - 1; p > endTextLayer.PageNumber.Value; p--)
                     {
@@ -331,7 +324,7 @@ namespace Caly.Core.Handlers
             PdfTextLine? lineBox = control.PdfPageTextLayer!.FindLineOver(loc.X, loc.Y);
 
             PdfWord? word = null;
-            if (_selection.HasStarted() && lineBox is null)
+            if (Selection.HasStarted() && lineBox is null)
             {
                 // Try to find the closest line as we are already selecting something
                 word = FindNearestWordWhileSelecting(loc, control.PdfPageTextLayer);
@@ -360,21 +353,21 @@ namespace Caly.Core.Handlers
             bool allowPartialSelect = !_isMultipleClickSelection;
 
             Point? partialSelectLoc = allowPartialSelect ? loc : null;
-            if (!_selection.HasStarted())
+            if (!Selection.HasStarted())
             {
-                _selection.Start(control.PageNumber!.Value, word, partialSelectLoc);
+                Selection.Start(control.PageNumber!.Value, word, partialSelectLoc);
             }
 
             // Always set the focus word
-            _selection.Extend(control.PageNumber!.Value, word, partialSelectLoc);
-            _selection.SelectWordsInRange(control);
+            Selection.Extend(control.PageNumber!.Value, word, partialSelectLoc);
+            Selection.SelectWordsInRange(control);
 
             control.SetIbeamCursor();
             control.InvalidateVisual();
 
-            _isSelecting = _selection.IsValid() &&
-                           (_selection.AnchorWord != _selection.FocusWord || // Multiple words selected
-                            (_selection.AnchorOffset != -1 && _selection.FocusOffset != -1)); // Selection within same word
+            _isSelecting = Selection.IsValid() &&
+                           (Selection.AnchorWord != Selection.FocusWord || // Multiple words selected
+                            (Selection.AnchorOffset != -1 && Selection.FocusOffset != -1)); // Selection within same word
         }
 
         /// <summary>
@@ -443,9 +436,9 @@ namespace Caly.Core.Handlers
             ClearSelection(control);
 
             int pageNumber = control.PageNumber!.Value;
-            _selection.Start(pageNumber, startWord);
-            _selection.Extend(pageNumber, endWord);
-            _selection.SelectWordsInRange(control);
+            Selection.Start(pageNumber, startWord);
+            Selection.Extend(pageNumber, endWord);
+            Selection.SelectWordsInRange(control);
 
             control.InvalidateVisual();
 
@@ -472,7 +465,7 @@ namespace Caly.Core.Handlers
             {
                 PdfWord? word = control.PdfPageTextLayer.FindWordOver(point.X, point.Y);
 
-                if (word != null && _selection.IsWordSelected(control.PageNumber!.Value, word))
+                if (word != null && Selection.IsWordSelected(control.PageNumber!.Value, word))
                 {
                     clearSelection = e.ClickCount == 1; // Clear selection if single click
                     HandleMultipleClick(control, e, word); // TODO - we pass 1 click here too
@@ -624,7 +617,7 @@ namespace Caly.Core.Handlers
 
             var selectionBrush = _selectionBrush.ToImmutable();
 
-            foreach (var g in _selection.GetPageSelectionAs(control.PageNumber!.Value, GetGeometry, GetGeometry))
+            foreach (var g in Selection.GetPageSelectionAs(control.PageNumber!.Value, GetGeometry, GetGeometry))
             {
                 context.DrawGeometry(selectionBrush, null, g);
             }

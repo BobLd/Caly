@@ -26,7 +26,7 @@ namespace Caly.Core.Controls
         /// Defines the <see cref="Exception"/> property.
         /// </summary>
         public static readonly StyledProperty<ExceptionViewModel?> ExceptionProperty =
-            AvaloniaProperty.Register<CalyTemplatedControl, ExceptionViewModel?>(nameof(ExceptionProperty),
+            AvaloniaProperty.Register<CalyTemplatedControl, ExceptionViewModel?>(nameof(Exception),
                 defaultBindingMode: BindingMode.TwoWay);
 
         public ExceptionViewModel? Exception

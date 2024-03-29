@@ -19,58 +19,73 @@ using System.Threading;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Metadata;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.LogicalTree;
-using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using SkiaSharp;
 
 namespace Caly.Core.Controls
 {
-    public class PdfPageControl : CalyTemplatedControl
+    [TemplatePart("PART_PdfPageTextLayerControl", typeof(PdfPageTextLayerControl))]
+    public class PdfPageItem : ContentControl
     {
         private readonly IDisposable _pagePreparedDisposable;
 
         /// <summary>
         /// Defines the <see cref="IsPageRendering"/> property.
         /// </summary>
-        public static readonly StyledProperty<bool> IsPageRenderingProperty = AvaloniaProperty.Register<PdfPageControl, bool>(nameof(IsPageRendering));
+        public static readonly StyledProperty<bool> IsPageRenderingProperty = AvaloniaProperty.Register<PdfPageItem, bool>(nameof(IsPageRendering));
 
         /// <summary>
         /// Defines the <see cref="Picture"/> property.
         /// </summary>
-        public static readonly StyledProperty<IRef<SKPicture>?> PictureProperty = AvaloniaProperty.Register<PdfPageControl, IRef<SKPicture>?>(nameof(Picture), defaultBindingMode: BindingMode.OneWay);
+        public static readonly StyledProperty<IRef<SKPicture>?> PictureProperty = AvaloniaProperty.Register<PdfPageItem, IRef<SKPicture>?>(nameof(Picture), defaultBindingMode: BindingMode.OneWay);
 
         /// <summary>
         /// Defines the <see cref="IsPageVisible"/> property.
         /// </summary>
-        public static readonly StyledProperty<bool> IsPageVisibleProperty = AvaloniaProperty.Register<PdfPageControl, bool>(nameof(IsPageVisible), false);
+        public static readonly StyledProperty<bool> IsPageVisibleProperty = AvaloniaProperty.Register<PdfPageItem, bool>(nameof(IsPageVisible), false);
 
         /// <summary>
         /// Defines the <see cref="IsPagePrepared"/> property.
         /// </summary>
-        public static readonly StyledProperty<bool> IsPagePreparedProperty = AvaloniaProperty.Register<PdfPageControl, bool>(nameof(IsPagePrepared), false, defaultBindingMode: BindingMode.TwoWay);
+        public static readonly StyledProperty<bool> IsPagePreparedProperty = AvaloniaProperty.Register<PdfPageItem, bool>(nameof(IsPagePrepared), false, defaultBindingMode: BindingMode.TwoWay);
 
         /// <summary>
         /// Defines the <see cref="VisibleArea"/> property.
         /// </summary>
-        public static readonly StyledProperty<Rect?> VisibleAreaProperty = AvaloniaProperty.Register<PdfPageControl, Rect?>(nameof(VisibleArea), null, defaultBindingMode: BindingMode.TwoWay);
+        public static readonly StyledProperty<Rect?> VisibleAreaProperty = AvaloniaProperty.Register<PdfPageItem, Rect?>(nameof(VisibleArea), null, defaultBindingMode: BindingMode.TwoWay);
 
         /// <summary>
         /// Defines the <see cref="LoadPagePictureCommand"/> property.
         /// </summary>
-        public static readonly StyledProperty<ICommand?> LoadPagePictureCommandProperty = AvaloniaProperty.Register<PdfPageControl, ICommand?>(nameof(LoadPagePictureCommand));
+        public static readonly StyledProperty<ICommand?> LoadPagePictureCommandProperty = AvaloniaProperty.Register<PdfPageItem, ICommand?>(nameof(LoadPagePictureCommand));
 
         /// <summary>
         /// Defines the <see cref="UnloadPagePictureCommand"/> property.
         /// </summary>
-        public static readonly StyledProperty<ICommand?> UnloadPagePictureCommandProperty = AvaloniaProperty.Register<PdfPageControl, ICommand?>(nameof(UnloadPagePictureCommand));
+        public static readonly StyledProperty<ICommand?> UnloadPagePictureCommandProperty = AvaloniaProperty.Register<PdfPageItem, ICommand?>(nameof(UnloadPagePictureCommand));
 
         /// <summary>
-        /// Defines the <see cref="TextSelectionHandler"/> property.
+        /// Defines the <see cref="Exception"/> property.
         /// </summary>
-        public static readonly StyledProperty<ITextSelectionHandler?> TextSelectionHandlerProperty = AvaloniaProperty.Register<PdfPageControl, ITextSelectionHandler?>(nameof(TextSelectionHandler), defaultBindingMode: BindingMode.TwoWay);
+        public static readonly StyledProperty<ExceptionViewModel?> ExceptionProperty = AvaloniaProperty.Register<PdfPageItem, ExceptionViewModel?>(nameof(Exception), defaultBindingMode: BindingMode.TwoWay);
+
+        /// <summary>
+        /// Defines the <see cref="PdfPageTextLayerControl"/> property.
+        /// </summary>
+        public static readonly DirectProperty<PdfPageItem, PdfPageTextLayerControl?> TextLayerProperty =
+            AvaloniaProperty.RegisterDirect<PdfPageItem, PdfPageTextLayerControl?>(nameof(LayoutTransformControl), o => o.TextLayer);
+
+        private PdfPageTextLayerControl? _textLayer;
+
+        static PdfPageItem()
+        {
+            AffectsRender<PdfPageItem>(PictureProperty, IsPageVisibleProperty);
+        }
 
         public bool IsPageRendering
         {
@@ -122,18 +137,22 @@ namespace Caly.Core.Controls
             set => SetValue(UnloadPagePictureCommandProperty, value);
         }
 
-        public ITextSelectionHandler? TextSelectionHandler
+        public ExceptionViewModel? Exception
         {
-            get => GetValue(TextSelectionHandlerProperty);
-            set => SetValue(TextSelectionHandlerProperty, value);
+            get => GetValue(ExceptionProperty);
+            set => SetValue(ExceptionProperty, value);
         }
 
-        static PdfPageControl()
+        /// <summary>
+        /// Gets the text layer.
+        /// </summary>
+        public PdfPageTextLayerControl? TextLayer
         {
-            AffectsRender<PdfPageControl>(PictureProperty, IsPageVisibleProperty);
+            get => _textLayer;
+            private set => SetAndRaise(TextLayerProperty, ref _textLayer, value);
         }
 
-        public PdfPageControl()
+        public PdfPageItem()
         {
 #if DEBUG
             if (Design.IsDesignMode)
@@ -198,6 +217,12 @@ namespace Caly.Core.Controls
                 System.Diagnostics.Debug.Assert(pic.RefCount == 0);
             }
 #endif
+        }
+
+        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        {
+            base.OnApplyTemplate(e);
+            TextLayer = e.NameScope.FindFromNameScope<PdfPageTextLayerControl>("PART_PdfPageTextLayerControl");
         }
 
         protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
