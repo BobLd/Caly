@@ -5,6 +5,7 @@ using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
@@ -19,13 +20,6 @@ namespace Caly.Core.Controls;
 public class PdfPageItemsControl : ItemsControl
 {
     private const double _zoomFactor = 1.1;
-
-    /*
-     * See PDF Reference 1.7 - C.2 Architectural limits
-     * The magnification factor of a view should be constrained to be between approximately 8 percent and 6400 percent.
-     */
-    private const double _minZoom = 0.08;
-    private const double _maxZoom = 64;
 
     private bool _isSettingPageVisibility = false;
     private bool _isZooming = false;
@@ -55,12 +49,22 @@ public class PdfPageItemsControl : ItemsControl
     /// <summary>
     /// Defines the <see cref="SelectedPageIndex"/> property. Starts at 1.
     /// </summary>
-    public static readonly StyledProperty<int> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfPageItemsControl, int>(nameof(SelectedPageIndex), 1, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+    public static readonly StyledProperty<int> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfPageItemsControl, int>(nameof(SelectedPageIndex), 1, defaultBindingMode: BindingMode.TwoWay);
+
+    /// <summary>
+    /// Defines the <see cref="MinZoomLevel"/> property.
+    /// </summary>
+    public static readonly StyledProperty<double> MinZoomLevelProperty = AvaloniaProperty.Register<PdfPageItemsControl, double>(nameof(MinZoomLevel));
+
+    /// <summary>
+    /// Defines the <see cref="MaxZoomLevel"/> property.
+    /// </summary>
+    public static readonly StyledProperty<double> MaxZoomLevelProperty = AvaloniaProperty.Register<PdfPageItemsControl, double>(nameof(MaxZoomLevel), 1);
 
     /// <summary>
     /// Defines the <see cref="ZoomLevel"/> property.
     /// </summary>
-    public static readonly StyledProperty<double> ZoomLevelProperty = AvaloniaProperty.Register<PdfPageItemsControl, double>(nameof(ZoomLevel), 1, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+    public static readonly StyledProperty<double> ZoomLevelProperty = AvaloniaProperty.Register<PdfPageItemsControl, double>(nameof(ZoomLevel), 1, defaultBindingMode: BindingMode.TwoWay);
 
     private ScrollViewer? _scroll;
     private CalyLayoutTransformControl? _layoutTransformControl;
@@ -103,6 +107,18 @@ public class PdfPageItemsControl : ItemsControl
     {
         get => GetValue(SelectedPageIndexProperty);
         set => SetValue(SelectedPageIndexProperty, value);
+    }
+
+    public double MinZoomLevel
+    {
+        get => GetValue(MinZoomLevelProperty);
+        set => SetValue(MinZoomLevelProperty, value);
+    }
+
+    public double MaxZoomLevel
+    {
+        get => GetValue(MaxZoomLevelProperty);
+        set => SetValue(MaxZoomLevelProperty, value);
     }
 
     public double ZoomLevel
@@ -538,7 +554,7 @@ public class PdfPageItemsControl : ItemsControl
         }
     }
 
-    private void ZoomTo(PointerWheelEventArgs e)
+    internal void ZoomTo(double dZoom, Point point)
     {
         if (LayoutTransformControl is null || Scroll is null)
         {
@@ -553,38 +569,67 @@ public class PdfPageItemsControl : ItemsControl
         try
         {
             _isZooming = true;
-
-            double delta = e.Delta.Y;
-            double dZoom = Math.Round(Math.Pow(_zoomFactor, delta), 4); // If IsScrollInertiaEnabled = false, Y is only 1 or -1
-            double newZoom = (LayoutTransformControl.LayoutTransform?.Value.M11 ?? 1.0) * dZoom;
-
-            if (newZoom < _minZoom || newZoom > _maxZoom)
-            {
-                return;
-            }
-
-            var builder = TransformOperations.CreateBuilder(1);
-            builder.AppendScale(newZoom, newZoom);
-            LayoutTransformControl.LayoutTransform = builder.Build();
-
-            Point point = e.GetPosition(LayoutTransformControl);
-
-            var offset = Scroll.Offset - GetOffset(dZoom, point.X, point.Y);
-            if (delta > 0)
-            {
-                // When zooming-in, we need to re-arrange the scroll viewer
-                Scroll.Measure(Size.Infinity);
-                Scroll.Arrange(new Rect(Scroll.DesiredSize));
-            }
-
-            Scroll.SetCurrentValue(ScrollViewer.OffsetProperty, offset);
-
-            SetCurrentValue(ZoomLevelProperty, newZoom);
+            ZoomToInternal(dZoom, point);
         }
         finally
         {
             _isZooming = false;
         }
+    }
+
+    private void ZoomTo(PointerWheelEventArgs e)
+    {
+        if (LayoutTransformControl is null)
+        {
+            return;
+        }
+
+        if (_isZooming)
+        {
+            return;
+        }
+
+        try
+        {
+            _isZooming = true;
+            double dZoom = Math.Round(Math.Pow(_zoomFactor, e.Delta.Y), 4); // If IsScrollInertiaEnabled = false, Y is only 1 or -1
+            ZoomToInternal(dZoom, e.GetPosition(LayoutTransformControl));
+            SetCurrentValue(ZoomLevelProperty, LayoutTransformControl.LayoutTransform?.Value.M11);
+        }
+        finally
+        {
+            _isZooming = false;
+        }
+    }
+
+    private void ZoomToInternal(double dZoom, Point point)
+    {
+        if (LayoutTransformControl is null || Scroll is null)
+        {
+            return;
+        }
+
+        double oldZoom = LayoutTransformControl.LayoutTransform?.Value.M11 ?? 1.0;
+        double newZoom = oldZoom * dZoom;
+
+        if (newZoom < MinZoomLevel || newZoom > MaxZoomLevel)
+        {
+            return;
+        }
+
+        var builder = TransformOperations.CreateBuilder(1);
+        builder.AppendScale(newZoom, newZoom);
+        LayoutTransformControl.LayoutTransform = builder.Build();
+
+        var offset = Scroll.Offset - GetOffset(dZoom, point.X, point.Y);
+        if (newZoom > oldZoom)
+        {
+            // When zooming-in, we need to re-arrange the scroll viewer
+            Scroll.Measure(Size.Infinity);
+            Scroll.Arrange(new Rect(Scroll.DesiredSize));
+        }
+
+        Scroll.SetCurrentValue(ScrollViewer.OffsetProperty, offset);
     }
 
     private static Vector GetOffset(double scale, double x, double y)

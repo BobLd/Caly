@@ -12,7 +12,10 @@
 	</Design.PreviewWith>
 
 	<Style Selector="controls|PdfPageItemsControl" x:DataType="viewModels:PdfDocumentViewModel">
-		<Setter Property="Template">
+        <Setter Property="MinZoomLevel" Value="{Binding MinZoomLevel}"/>
+		<Setter Property="MaxZoomLevel" Value="{Binding MaxZoomLevel}"/>
+
+        <Setter Property="Template">
 			<ControlTemplate>
 
 				<Border Background="{TemplateBinding Background}"
