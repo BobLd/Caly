@@ -37,6 +37,14 @@ public sealed partial class MainViewModel : ViewModelBase
 
     [ObservableProperty] private int _selectedDocumentIndex;
 
+    [ObservableProperty] private bool _isPaneOpen;
+
+    [RelayCommand]
+    private void TogglePane()
+    {
+        IsPaneOpen = !IsPaneOpen;
+    }
+
     private readonly IDisposable documentCollectionDisposable;
 
     public MainViewModel()

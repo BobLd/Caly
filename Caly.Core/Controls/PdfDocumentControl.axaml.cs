@@ -20,6 +20,7 @@ using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
+using Avalonia.VisualTree;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
 using Caly.Core.Utilities;
@@ -32,7 +33,7 @@ namespace Caly.Core.Controls
     [TemplatePart("PART_PdfPageItemsControl", typeof(PdfPageItemsControl))]
     public class PdfDocumentControl : CalyTemplatedControl
     {
-        private PdfPageItemsControl? _itemsControl;
+        private PdfPageItemsControl? _pdfPageItemsControl;
 
         /// <summary>
         /// Defines the <see cref="ItemsSource"/> property.
@@ -47,7 +48,7 @@ namespace Caly.Core.Controls
         /// <summary>
         /// Defines the <see cref="ZoomLevel"/> property.
         /// </summary>
-        public static readonly StyledProperty<double> ZoomLevelProperty = AvaloniaProperty.Register<PdfDocumentControl, double>(nameof(ZoomLevel), 1, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+        public static readonly StyledProperty<double> ZoomLevelProperty = AvaloniaProperty.Register<PdfDocumentControl, double>(nameof(ZoomLevel), 1, defaultBindingMode: BindingMode.TwoWay);
 
         /// <summary>
         /// Defines the <see cref="SelectedPageIndex"/> property. Starts at 1.
@@ -123,17 +124,48 @@ namespace Caly.Core.Controls
             }
             else if (change.Property == SelectedBookmarkProperty)
             {
-                if (SelectedBookmark?.PageNumber.HasValue == true && SelectedBookmark.PageNumber.Value != SelectedPageIndex)
+                if (SelectedBookmark?.PageNumber.HasValue == true &&
+                    SelectedBookmark.PageNumber.Value != SelectedPageIndex)
                 {
                     SetCurrentValue(SelectedPageIndexProperty, SelectedBookmark.PageNumber.Value);
                 }
+            }
+            else if (change.Property == ZoomLevelProperty)
+            {
+                if (_pdfPageItemsControl?.LayoutTransformControl is null || change.NewValue is not double newZoom)
+                {
+                    return;
+                }
+
+                if (!_pdfPageItemsControl.LayoutTransformControl.IsAttachedToVisualTree())
+                {
+                    return;
+                }
+
+                var pixelPoint = new PixelPoint();
+                if (!_pdfPageItemsControl.DesiredSize.IsEmpty())
+                {
+                    _pdfPageItemsControl.DesiredSize.Deconstruct(out double w, out double h);
+                    pixelPoint = new PixelPoint((int)(w / 2.0), (int)(h / 2.0));
+                }
+                else if (!_pdfPageItemsControl.Bounds.Size.IsEmpty())
+                {
+                    _pdfPageItemsControl.Bounds.Size.Deconstruct(out double w, out double h);
+                    pixelPoint = new PixelPoint((int)(w / 2.0), (int)(h / 2.0));
+                }
+
+                var point = _pdfPageItemsControl.LayoutTransformControl.PointToClient(pixelPoint);
+
+                double oldZoom = (double?)change.OldValue ?? 1.0;
+                double dZoom = newZoom / oldZoom;
+                _pdfPageItemsControl?.ZoomTo(dZoom, point);
             }
         }
 
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
             base.OnApplyTemplate(e);
-            _itemsControl = e.NameScope.FindFromNameScope<PdfPageItemsControl>("PART_PdfPageItemsControl");
+            _pdfPageItemsControl = e.NameScope.FindFromNameScope<PdfPageItemsControl>("PART_PdfPageItemsControl");
         }
 
         /// <summary>
@@ -142,7 +174,7 @@ namespace Caly.Core.Controls
         /// <param name="pageNumber">The page number. Starts at 1.</param>
         public void GoToPage(int pageNumber)
         {
-            _itemsControl?.GoToPage(pageNumber);
+            _pdfPageItemsControl?.GoToPage(pageNumber);
         }
 
         /// <summary>
@@ -152,12 +184,12 @@ namespace Caly.Core.Controls
         /// <returns>The page control, or <c>null</c> if not found.</returns>
         public PdfPageItem? GetPdfPageItem(int pageNumber)
         {
-            return _itemsControl!.GetPdfPageItem(pageNumber);
+            return _pdfPageItemsControl!.GetPdfPageItem(pageNumber);
         }
 
         public PdfPageItem? GetPdfPageItemOver(PointerEventArgs e)
         {
-            return _itemsControl!.GetPdfPageItemOver(e);
+            return _pdfPageItemsControl!.GetPdfPageItemOver(e);
         }
     }
 }

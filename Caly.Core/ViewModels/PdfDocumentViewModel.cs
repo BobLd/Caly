@@ -55,6 +55,15 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
 
+        /*
+         * See PDF Reference 1.7 - C.2 Architectural limits
+         * The magnification factor of a view should be constrained to be between approximately 8 percent and 6400 percent.
+         */
+#pragma warning disable CA1822
+        public double MinZoomLevel => 0.08;
+        public double MaxZoomLevel => 64;
+#pragma warning restore CA1822
+
         private readonly Channel<PdfPageViewModel> _pageInfoChannel;
         private readonly ChannelWriter<PdfPageViewModel> _channelWriter;
         private readonly ChannelReader<PdfPageViewModel> _channelReader;
@@ -195,6 +204,30 @@ namespace Caly.Core.ViewModels
             {
                 yield return word.Letters![l].Value;
             }
+        }
+
+        [RelayCommand]
+        private void GoToPreviousPage()
+        {
+            SelectedPageIndex = Math.Max(1, SelectedPageIndex - 1);
+        }
+
+        [RelayCommand]
+        private void GoToNextPage()
+        {
+            SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex + 1);
+        }
+
+        [RelayCommand]
+        private void ZoomIn()
+        {
+            ZoomLevel = Math.Min(MaxZoomLevel, Math.Round(ZoomLevel * 1.25, 2));
+        }
+
+        [RelayCommand]
+        private void ZoomOut()
+        {
+            ZoomLevel = Math.Max(MinZoomLevel, Math.Round(ZoomLevel * 0.75, 2));
         }
 
         [RelayCommand]
