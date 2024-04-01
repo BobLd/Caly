@@ -79,7 +79,7 @@
                                 </PathIcon>
                             </Button>
 
-                            <TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:P0}}"
+                            <TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"/>
                         </StackPanel>
