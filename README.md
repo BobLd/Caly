@@ -25,7 +25,7 @@ Feel free to contribute to the project! You can also help Caly Pdf Reader by con
 - https://github.com/UglyToad/PdfPig
 - https://github.com/BobLd/PdfPig.Rendering.Skia
 
-## 
+## Clone and build
 Caly Pdf Reader uses submodules, you will need to run the following after cloning it:
 ```
 git submodule update --init --recursive
@@ -35,3 +35,7 @@ Caly Pdf Reader is a net8.0 application with Native AOT (ahead of time compilati
 ```
 dotnet publish -r win-x64 -c Release -f net8.0
 ```
+
+## Preview
+![image](https://github.com/BobLd/Caly/assets/38405645/b7511f10-8f18-4249-829e-923b79bad219)
+
