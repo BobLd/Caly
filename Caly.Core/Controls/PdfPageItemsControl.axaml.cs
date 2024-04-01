@@ -612,9 +612,25 @@ public class PdfPageItemsControl : ItemsControl
         double oldZoom = LayoutTransformControl.LayoutTransform?.Value.M11 ?? 1.0;
         double newZoom = oldZoom * dZoom;
 
-        if (newZoom < MinZoomLevel || newZoom > MaxZoomLevel)
+        if (newZoom < MinZoomLevel)
         {
-            return;
+            if (oldZoom.Equals(MinZoomLevel))
+            {
+                return;
+            }
+
+            newZoom = MinZoomLevel;
+            dZoom = newZoom / oldZoom;
+        }
+        else if (newZoom > MaxZoomLevel)
+        {
+            if (oldZoom.Equals(MaxZoomLevel))
+            {
+                return;
+            }
+
+            newZoom = MaxZoomLevel;
+            dZoom = newZoom / oldZoom;
         }
 
         var builder = TransformOperations.CreateBuilder(1);

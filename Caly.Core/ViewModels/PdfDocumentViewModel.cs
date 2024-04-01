@@ -218,16 +218,44 @@ namespace Caly.Core.ViewModels
             SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex + 1);
         }
 
+        private readonly double[] _zoomLevelsDiscrete = [0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64];
+
         [RelayCommand]
         private void ZoomIn()
         {
-            ZoomLevel = Math.Min(MaxZoomLevel, Math.Round(ZoomLevel * 1.25, 2));
+            var index = Array.BinarySearch(_zoomLevelsDiscrete, ZoomLevel);
+            if (index < -1)
+            {
+                ZoomLevel = Math.Min(MaxZoomLevel, _zoomLevelsDiscrete[~index]);
+            }
+            else
+            {
+                if (index >= _zoomLevelsDiscrete.Length - 1)
+                {
+                    return;
+                }
+
+                ZoomLevel = Math.Min(MaxZoomLevel, _zoomLevelsDiscrete[index + 1]);
+            }
         }
 
         [RelayCommand]
         private void ZoomOut()
         {
-            ZoomLevel = Math.Max(MinZoomLevel, Math.Round(ZoomLevel * 0.75, 2));
+            var index = Array.BinarySearch(_zoomLevelsDiscrete, ZoomLevel);
+            if (index < -1)
+            {
+                ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[~index - 1]);
+            }
+            else
+            {
+                if (index == 0)
+                {
+                    return;
+                }
+
+                ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[index - 1]);
+            }
         }
 
         [RelayCommand]
