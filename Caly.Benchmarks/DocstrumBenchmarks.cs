@@ -60,6 +60,7 @@ namespace Caly.Benchmarks
             return CalyDocstrum.Instance.GetBlocks(_calyWords, CancellationToken.None);
         }
 
+
         //[Benchmark]
         //public IReadOnlyList<PdfTextBlock> Caly2()
         //{
