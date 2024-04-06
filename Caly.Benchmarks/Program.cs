@@ -22,7 +22,6 @@ namespace Caly.Benchmarks
         static void Main(string[] args)
         {
             var summary = BenchmarkRunner.Run<DocstrumBenchmarks>();
-
             Console.ReadKey();
         }
     }
