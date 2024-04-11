@@ -1,16 +1,12 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:Caly.Core.Controls"
-        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels"
-        xmlns:converters="using:Caly.Core.Converters">
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
 	<Design.PreviewWith>
 		<controls:PdfDocumentThumbnailControl x:DataType="viewModels:PdfDocumentViewModel" Width="200" Height="891" />
 	</Design.PreviewWith>
 
 	<Style Selector="controls|PdfDocumentThumbnailControl">
-		<Style.Resources>
-			<converters:ZeroPageIndexConverter x:Key="zeroPageIndexConverter"/>
-		</Style.Resources>
 
 		<Setter Property="Template">
 			<ControlTemplate x:DataType="viewModels:PdfDocumentViewModel">
