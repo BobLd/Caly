@@ -17,7 +17,12 @@
 	</Design.DataContext>
 
 	<UserControl.Resources>
-		<converters:NumericUpDownPdfPageConverter x:Key="numericUpDownPdfPageConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Controls/PdfPageButtonSpinner.axaml"/>
+		</ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+		
 	</UserControl.Resources>
 
 	<tabalonia:TabsControl Background="Transparent"
@@ -46,17 +51,17 @@
 								</PathIcon>
 							</ToggleButton>
 
-							<NumericUpDown Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
-										   MinWidth="120"
-										   MaxWidth="200"
-										   Minimum="1"
-										   Maximum="{Binding PageCount}"
-										   ClipValueToMinMax="True"
-										   ButtonSpinnerLocation="Left"
-										   FormatString="0"
-										   ParsingNumberStyle="Integer"
-										   VerticalContentAlignment="Center"
-										   HorizontalContentAlignment="Center"/>
+                            <NumericUpDown Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
+                                           MinWidth="120"
+                                           MaxWidth="200"
+                                           Minimum="1"
+                                           Maximum="{Binding PageCount}"
+                                           ClipValueToMinMax="True"
+                                           ButtonSpinnerLocation="Left"
+                                           FormatString="0"
+                                           ParsingNumberStyle="Integer"
+                                           VerticalContentAlignment="Center"
+                                           HorizontalContentAlignment="Center"/>
 
 							<TextBlock VerticalAlignment="Center"
                                        HorizontalAlignment="Center"
