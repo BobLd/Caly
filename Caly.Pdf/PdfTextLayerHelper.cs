@@ -22,6 +22,48 @@ namespace Caly.Pdf
 {
     public static class PdfTextLayerHelper
     {
+        public static bool IsStroke(this TextRenderingMode textRenderingMode)
+        {
+            switch (textRenderingMode)
+            {
+                case TextRenderingMode.Stroke:
+                case TextRenderingMode.StrokeClip:
+                case TextRenderingMode.FillThenStroke:
+                case TextRenderingMode.FillThenStrokeClip:
+                    return true;
+
+                case TextRenderingMode.Fill:
+                case TextRenderingMode.FillClip:
+                case TextRenderingMode.NeitherClip:
+                case TextRenderingMode.Neither:
+                    return false;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsFill(this TextRenderingMode textRenderingMode)
+        {
+            switch (textRenderingMode)
+            {
+                case TextRenderingMode.Fill:
+                case TextRenderingMode.FillClip:
+                case TextRenderingMode.FillThenStroke:
+                case TextRenderingMode.FillThenStrokeClip:
+                    return true;
+
+                case TextRenderingMode.Stroke:
+                case TextRenderingMode.StrokeClip:
+                case TextRenderingMode.NeitherClip:
+                case TextRenderingMode.Neither:
+                    return false;
+
+                default:
+                    return false;
+            }
+        }
+
         public static PdfTextLayer GetTextLayer(PageTextLayerContent page, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
