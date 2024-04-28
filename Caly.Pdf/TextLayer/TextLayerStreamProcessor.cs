@@ -44,8 +44,7 @@ namespace Caly.Pdf.TextLayer
         public TextLayerStreamProcessor(int pageNumber, IResourceStore resourceStore, IPdfTokenScanner pdfScanner,
             IPageContentParser pageContentParser, ILookupFilterProvider filterProvider, CropBox cropBox,
             UserSpaceUnit userSpaceUnit, PageRotationDegrees rotation, TransformationMatrix initialMatrix,
-            double pageWidth, double pageHeight,
-            ParsingOptions parsingOptions)
+            double pageWidth, double pageHeight, ParsingOptions parsingOptions)
             : base(pageNumber, resourceStore, pdfScanner, pageContentParser, filterProvider, cropBox, userSpaceUnit,
                 rotation, initialMatrix, parsingOptions)
         {
@@ -95,9 +94,9 @@ namespace Caly.Pdf.TextLayer
             int code,
             string unicode,
             long currentOffset,
-            TransformationMatrix renderingMatrix,
-            TransformationMatrix textMatrix,
-            TransformationMatrix transformationMatrix,
+            in TransformationMatrix renderingMatrix,
+            in TransformationMatrix textMatrix,
+            in TransformationMatrix transformationMatrix,
             CharacterBoundingBox characterBoundingBox)
         {
             PdfLetter? letter = null;
@@ -153,7 +152,7 @@ namespace Caly.Pdf.TextLayer
             // No op
         }
 
-        public override void EndInlineImage(IReadOnlyList<byte> bytes)
+        public override void EndInlineImage(ReadOnlyMemory<byte> bytes)
         {
             // No op
         }
