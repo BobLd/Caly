@@ -19,6 +19,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Avalonia.VisualTree;
 using Caly.Core.Controls;
 using Caly.Core.Handlers.Interfaces;
@@ -37,7 +38,7 @@ namespace Caly.Core.Handlers
 
     public sealed class TextSelectionHandler : ITextSelectionHandler
     {
-        private static readonly Brush _selectionBrush = new SolidColorBrush(Color.FromArgb(0xa9, 0x33, 0x99, 0xFF));
+        private static readonly Color _selectionColor = Color.FromArgb(0xa9, 0x33, 0x99, 0xFF);
 
         /// <summary>
         /// <c>true</c> if we are currently selecting text. <c>false</c> otherwise.
@@ -615,7 +616,7 @@ namespace Caly.Core.Handlers
             }
 #endif
 
-            var selectionBrush = _selectionBrush.ToImmutable();
+            var selectionBrush = new ImmutableSolidColorBrush(_selectionColor);
 
             foreach (var g in Selection.GetPageSelectionAs(control.PageNumber!.Value, GetGeometry, GetGeometry))
             {

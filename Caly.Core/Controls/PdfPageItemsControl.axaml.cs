@@ -322,6 +322,12 @@ public class PdfPageItemsControl : ItemsControl
         Scroll.AddHandler(SizeChangedEvent, (_, _) => SetPagesVisibility(), RoutingStrategies.Direct);
         Scroll.AddHandler(KeyDownEvent, _onKeyDownHandler);
         LayoutTransformControl.AddHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
+
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            LayoutTransformControl.GestureRecognizers.Add(new PinchGestureRecognizer());
+            LayoutTransformControl.AddHandler(Gestures.PinchEvent, _onPinchChangedHandler);
+        }
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -351,6 +357,11 @@ public class PdfPageItemsControl : ItemsControl
         Scroll?.RemoveHandler(KeyDownEvent, _onKeyDownHandler);
         LayoutTransformControl?.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
         ItemsPanelRoot!.DataContextChanged -= ItemsPanelRoot_DataContextChanged;
+
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            LayoutTransformControl?.RemoveHandler(Gestures.PinchEvent, _onPinchChangedHandler);
+        }
     }
 
     private void SetPagesVisibility()
@@ -542,6 +553,15 @@ public class PdfPageItemsControl : ItemsControl
         }
     }
 
+    private void _onPinchChangedHandler(object? sender, PinchEventArgs e)
+    {
+        if (e.Scale != 0)
+        {
+            ZoomTo(e);
+            e.Handled = true;
+        }
+    }
+
     private void _onPointerWheelChangedHandler(object? sender, PointerWheelEventArgs e)
     {
         var hotkeys = Application.Current!.PlatformSettings?.HotkeyConfiguration;
@@ -570,6 +590,33 @@ public class PdfPageItemsControl : ItemsControl
         {
             _isZooming = true;
             ZoomToInternal(dZoom, point);
+        }
+        finally
+        {
+            _isZooming = false;
+        }
+    }
+
+    private void ZoomTo(PinchEventArgs e)
+    {
+        if (LayoutTransformControl is null)
+        {
+            return;
+        }
+
+        if (_isZooming)
+        {
+            return;
+        }
+
+        try
+        {
+            // TODO - Still not very good. Need to better handle scale
+            _isZooming = true;
+            double delta = e.Scale >= 1 ? 0.5 : -0.5;
+            double dZoom = Math.Round(Math.Pow(_zoomFactor, delta), 4); // If IsScrollInertiaEnabled = false, Y is only 1 or -1
+            ZoomToInternal(dZoom, e.ScaleOrigin); // e.GetPosition(LayoutTransformControl)); // TODO
+            SetCurrentValue(ZoomLevelProperty, LayoutTransformControl.LayoutTransform?.Value.M11);
         }
         finally
         {

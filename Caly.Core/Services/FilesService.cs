@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Caly.Core.Services.Interfaces;
@@ -25,17 +26,23 @@ namespace Caly.Core.Services
 
     internal sealed class FilesService : IFilesService
     {
-        private readonly Window _target;
+        private readonly Visual _target;
         private readonly IReadOnlyList<FilePickerFileType> _pdfFileFilter = new[] { FilePickerFileTypes.Pdf };
 
-        public FilesService(Window target)
+        public FilesService(Visual target)
         {
             _target = target;
         }
 
         public async Task<IStorageFile?> OpenPdfFileAsync()
         {
-            var files = await _target.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            var top = TopLevel.GetTopLevel(_target);
+            if (top is null)
+            {
+                return null;
+            }
+
+            var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
                 Title = "Open",
                 AllowMultiple = false,
@@ -47,7 +54,13 @@ namespace Caly.Core.Services
 
         public async Task<IStorageFile?> SavePdfFileAsync()
         {
-            return await _target.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+            var top = TopLevel.GetTopLevel(_target);
+            if (top is null)
+            {
+                return null;
+            }
+
+            return await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
                 Title = "Save Pdf File"
             });
@@ -55,7 +68,12 @@ namespace Caly.Core.Services
 
         public Task<IStorageFile?> TryGetFileFromPathAsync(string path)
         {
-            return _target.StorageProvider.TryGetFileFromPathAsync(path);
+            var top = TopLevel.GetTopLevel(_target);
+            if (top is null)
+            {
+                return null;
+            }
+            return top.StorageProvider.TryGetFileFromPathAsync(path);
         }
     }
 }

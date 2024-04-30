@@ -15,6 +15,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
@@ -27,14 +28,17 @@ namespace Caly.Core.Services
     internal sealed class DialogService : IDialogService
     {
         private readonly TimeSpan _annotationExpiration = TimeSpan.FromSeconds(20);
-        private readonly Window _target;
+        private readonly Visual _target;
 
         private WindowNotificationManager? _windowNotificationManager;
 
-        public DialogService(Window target)
+        public DialogService(Visual target)
         {
             _target = target;
-            _target.Loaded += _window_Loaded; // TODO - Unsubscribe
+            if (_target is Window w)
+            {
+                w.Loaded += _window_Loaded; // TODO - Unsubscribe
+            }
         }
 
         private void _window_Loaded(object? sender, RoutedEventArgs e)
@@ -51,7 +55,12 @@ namespace Caly.Core.Services
 
         public Task<string?> ShowPdfPasswordDialogAsync()
         {
-            return new PdfPasswordWindow().ShowDialog<string?>(_target);
+            if (_target is Window w)
+            {
+                return new PdfPasswordWindow().ShowDialog<string?>(w);
+            }
+
+            return Task.FromResult<string?>(string.Empty);
         }
 
         private string? _previousNotificationMessage;
@@ -86,11 +95,13 @@ namespace Caly.Core.Services
 
             System.Diagnostics.Debug.WriteLine(exception.ToString());
 
-            var window = new MessageWindow
+            if (_target is not Window w)
             {
-                DataContext = exception
-            };
-            await window.ShowDialog(_target);
+                return;
+            }
+
+            var window = new MessageWindow { DataContext = exception };
+            await window.ShowDialog(w);
         }
 
         public void ShowExceptionWindow(Exception exception)

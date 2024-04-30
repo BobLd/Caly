@@ -30,7 +30,7 @@ namespace Caly.Core.Services
         // PdfPig only allow to read 1 page at a time for now
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
-        private FileStream? fileStream;
+        private MemoryStream? fileStream;
         private PdfDocument? document;
         private Uri? filePath;
 
@@ -65,12 +65,18 @@ namespace Caly.Core.Services
 
                 if (Path.GetExtension(storageFile.Path.LocalPath) != ".pdf")
                 {
-                    throw new ArgumentOutOfRangeException($"The loaded file '{Path.GetFileName(storageFile.Path.LocalPath)}' is not a pdf document.");
+                    //throw new ArgumentOutOfRangeException($"The loaded file '{Path.GetFileName(storageFile.Path.LocalPath)}' is not a pdf document.");
                 }
 
                 filePath = storageFile.Path;
                 System.Diagnostics.Debug.WriteLine($"[INFO] Opening {FileName}...");
-                fileStream = (FileStream)await storageFile.OpenReadAsync();
+
+                fileStream = new MemoryStream();
+                await using (var fs = await storageFile.OpenReadAsync())
+                {
+                    await fs.CopyToAsync(fileStream, cancellationToken);
+                    fileStream.Position = 0;
+                }
 
                 return await Task.Run(() =>
                 {
