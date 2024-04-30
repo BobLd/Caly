@@ -70,12 +70,7 @@ public partial class App : Application
                 DataContext = new MainViewModel()
             };
 
-            services.AddSingleton(_ => desktop.MainWindow);
-            services.AddSingleton<IFilesService, FilesService>();
-            services.AddSingleton<IDialogService, DialogService>();
-            services.AddSingleton<IClipboardService, ClipboardService>();
-            services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
-
+            services.AddSingleton(_ => (Visual)desktop.MainWindow);
             desktop.Startup += Desktop_Startup;
             desktop.Exit += Desktop_Exit;
 #if DEBUG
@@ -88,8 +83,13 @@ public partial class App : Application
             {
                 DataContext = new MainViewModel()
             };
+            services.AddSingleton(_ => (Visual)singleViewPlatform.MainView);
         }
 
+        services.AddSingleton<IFilesService, FilesService>();
+        services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
         services.AddTransient<IPdfService, PdfPigPdfService>();
 
         Services = services.BuildServiceProvider();

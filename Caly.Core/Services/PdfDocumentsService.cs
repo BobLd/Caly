@@ -21,6 +21,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -33,7 +34,7 @@ namespace Caly.Core.Services
 {
     internal sealed class PdfDocumentsService : IPdfDocumentsService
     {
-        private readonly Window _target;
+        private readonly Visual _target;
         private readonly MainViewModel _mainViewModel;
         private readonly IFilesService _filesService;
         private readonly IDialogService _dialogService;
@@ -75,7 +76,7 @@ namespace Caly.Core.Services
             }
         }
 
-        public PdfDocumentsService(Window target, IFilesService filesService, IDialogService dialogService)
+        public PdfDocumentsService(Visual target, IFilesService filesService, IDialogService dialogService)
         {
             Debug.ThrowNotOnUiThread();
 
@@ -93,9 +94,7 @@ namespace Caly.Core.Services
 
             _fileChannel = Channel.CreateUnbounded<IStorageFile?>(new UnboundedChannelOptions()
             {
-                AllowSynchronousContinuations = false,
-                SingleReader = false,
-                SingleWriter = false
+                AllowSynchronousContinuations = false, SingleReader = false, SingleWriter = false
             });
             _channelWriter = _fileChannel.Writer;
             _channelReader = _fileChannel.Reader;
@@ -162,7 +161,7 @@ namespace Caly.Core.Services
             {
                 throw new Exception($"Invalid {nameof(document.LocalPath)} value for view model.");
             }
-            
+
             await document.CancelAsync();
 
             _mainViewModel.PdfDocuments.RemoveSafely(document);
@@ -249,14 +248,19 @@ namespace Caly.Core.Services
 
         private void BringMainWindowToFront()
         {
-            _target.Activate(); // Bring window to front
+            if (_target is not Window w)
+            {
+                return;
+            }
+
+            w.Activate(); // Bring window to front
 
             Dispatcher.UIThread.Post(() =>
             {
                 // Popup from taskbar
-                if (_target.WindowState == WindowState.Minimized)
+                if (w.WindowState == WindowState.Minimized)
                 {
-                    _target.WindowState = WindowState.Normal;
+                    w.WindowState = WindowState.Normal;
                 }
             });
         }
