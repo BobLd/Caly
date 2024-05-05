@@ -23,21 +23,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Caly.Core.Services.Interfaces;
+using Caly.Core.Utilities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
-using SkiaSharp;
 using Tabalonia.Controls;
 
 namespace Caly.Core.ViewModels;
 
 public sealed partial class MainViewModel : ViewModelBase
 {
+    private readonly IDisposable _documentCollectionDisposable;
+
     public ObservableCollection<PdfDocumentViewModel> PdfDocuments { get; } = new();
 
     [ObservableProperty] private int _selectedDocumentIndex;
 
-    [ObservableProperty] private bool _isPaneOpen = true;
+    [ObservableProperty] private bool _isPaneOpen;
 
     [RelayCommand]
     private void TogglePane()
@@ -45,12 +47,12 @@ public sealed partial class MainViewModel : ViewModelBase
         IsPaneOpen = !IsPaneOpen;
     }
 
-    private readonly IDisposable documentCollectionDisposable;
-
     public MainViewModel()
     {
+        _isPaneOpen = !CalyExtensions.IsMobilePlatform();
+
         // TODO - Dispose to unsubscribe
-        documentCollectionDisposable = PdfDocuments
+        _documentCollectionDisposable = PdfDocuments
             .GetWeakCollectionChangedObservable()
             .ObserveOn(Scheduler.Default)
             .Subscribe(async e =>
@@ -101,12 +103,6 @@ public sealed partial class MainViewModel : ViewModelBase
             Debug.WriteExceptionToFile(e);
             Exception = new ExceptionViewModel(e);
         }
-    }
-
-    [RelayCommand]
-    private void Purge()
-    {
-        SKGraphics.PurgeAllCaches();
     }
 
     [RelayCommand]

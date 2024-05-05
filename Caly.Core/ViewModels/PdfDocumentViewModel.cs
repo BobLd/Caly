@@ -218,7 +218,7 @@ namespace Caly.Core.ViewModels
             SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex + 1);
         }
 
-        private readonly double[] _zoomLevelsDiscrete = [0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64];
+        private static readonly double[] _zoomLevelsDiscrete = [0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64];
 
         [RelayCommand]
         private void ZoomIn()
