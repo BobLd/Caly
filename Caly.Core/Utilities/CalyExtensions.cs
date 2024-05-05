@@ -23,6 +23,11 @@ namespace Caly.Core.Utilities
 {
     internal static class CalyExtensions
     {
+        public static bool IsMobilePlatform()
+        {
+            return OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+        }
+
         public static T FindFromNameScope<T>(this INameScope e, string name) where T : Control
         {
             var element = e.Find<T>(name);

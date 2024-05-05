@@ -18,6 +18,11 @@ public class MainActivity : AvaloniaMainActivity<App>
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
+            .WithInterFont()
+            .UseSkia()
+            .With(new AndroidPlatformOptions()
+            {
+                RenderingMode = new[] { AndroidRenderingMode.Software }
+            });
     }
 }
