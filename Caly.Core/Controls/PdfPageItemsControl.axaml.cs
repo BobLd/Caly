@@ -326,8 +326,9 @@ public class PdfPageItemsControl : ItemsControl
         if (CalyExtensions.IsMobilePlatform())
         {
             LayoutTransformControl.GestureRecognizers.Add(new PinchGestureRecognizer());
-            LayoutTransformControl.AddHandler(Gestures.PinchEvent, _onPinchChangedHandler);
-            LayoutTransformControl.AddHandler(Gestures.PinchEndedEvent, _onPinchEndedHandler);
+            Gestures.AddPinchHandler(LayoutTransformControl, _onPinchChangedHandler);
+            Gestures.AddPinchEndedHandler(LayoutTransformControl, _onPinchEndedHandler);
+            Gestures.AddHoldingHandler(LayoutTransformControl, _onHoldingChangedHandler);
         }
     }
 
@@ -359,10 +360,12 @@ public class PdfPageItemsControl : ItemsControl
         LayoutTransformControl?.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
         ItemsPanelRoot!.DataContextChanged -= ItemsPanelRoot_DataContextChanged;
 
-        if (CalyExtensions.IsMobilePlatform())
+        if (CalyExtensions.IsMobilePlatform() && LayoutTransformControl is not null)
         {
-            LayoutTransformControl?.RemoveHandler(Gestures.PinchEvent, _onPinchChangedHandler);
-            LayoutTransformControl?.RemoveHandler(Gestures.PinchEndedEvent, _onPinchEndedHandler);
+            Gestures.RemovePinchHandler(LayoutTransformControl, _onPinchChangedHandler);
+            Gestures.RemovePinchEndedHandler(LayoutTransformControl, _onPinchEndedHandler);
+            LayoutTransformControl.RemoveHandler(Gestures.HoldingEvent, _onHoldingChangedHandler);
+            //Gestures.RemoveHoldingHandler(LayoutTransformControl, _onHoldingChangedHandler);
         }
     }
 
@@ -555,7 +558,13 @@ public class PdfPageItemsControl : ItemsControl
         }
     }
 
-    #region Pinch handling
+    #region Mobile handling
+
+    private void _onHoldingChangedHandler(object? sender, HoldingRoutedEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"Holding {e.HoldingState}: {e.Position.X}, {e.Position.Y}");
+    }
+
     private double _pinchZoomReference = 1.0;
     private void _onPinchEndedHandler(object? sender, PinchEndedEventArgs e)
     {
