@@ -45,6 +45,7 @@
                                                               PdfPageTextLayer="{Binding PdfTextLayer}"
                                                               PageNumber="{Binding PageNumber}"
                                                               TextSelectionHandler="{Binding TextSelectionHandler}"
+                                                              SelectionChangedFlag="{Binding SelectionChangedFlag}"
                                                               HorizontalAlignment="Stretch"
                                                               VerticalAlignment="Stretch"/>
 						</Grid>

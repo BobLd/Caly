@@ -46,6 +46,9 @@ namespace Caly.Core.Controls
         public static readonly StyledProperty<ITextSelectionHandler?> TextSelectionHandlerProperty =
             AvaloniaProperty.Register<PdfPageTextLayerControl, ITextSelectionHandler?>(nameof(TextSelectionHandler));
 
+        public static readonly StyledProperty<bool> SelectionChangedFlagProperty =
+            AvaloniaProperty.Register<PdfPageTextLayerControl, bool>(nameof(SelectionChangedFlag));
+
         public PdfTextLayer? PdfPageTextLayer
         {
             get => GetValue(PdfPageTextLayerProperty);
@@ -64,9 +67,15 @@ namespace Caly.Core.Controls
             set => SetValue(TextSelectionHandlerProperty, value);
         }
 
+        public bool SelectionChangedFlag
+        {
+            get => GetValue(SelectionChangedFlagProperty);
+            set => SetValue(SelectionChangedFlagProperty, value);
+        }
+
         static PdfPageTextLayerControl()
         {
-            AffectsRender<PdfPageTextLayerControl>(PdfPageTextLayerProperty);
+            AffectsRender<PdfPageTextLayerControl>(PdfPageTextLayerProperty, SelectionChangedFlagProperty);
         }
 
         internal void SetIbeamCursor()
@@ -97,11 +106,6 @@ namespace Caly.Core.Controls
             }
 
             Cursor = Cursor.Default;
-        }
-
-        internal void SelectTextToEnd()
-        {
-            TextSelectionHandler?.SelectTextToEndInPage(this);
         }
 
         public override void Render(DrawingContext context)

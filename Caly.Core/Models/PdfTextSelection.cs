@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
-using Caly.Core.Controls;
+using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Geometry;
@@ -133,7 +133,7 @@ namespace Caly.Core.Models
         }
 
         /// <summary>
-        /// Get the index of the last word, taking in account the selection direction.
+        /// Get the index of the last word in a page, taking in account the selection direction.
         /// </summary>
         internal Index GetLastWordIndex()
         {
@@ -141,7 +141,7 @@ namespace Caly.Core.Models
         }
 
         /// <summary>
-        /// Get the index of the first word, taking in account the selection direction.
+        /// Get the index of the first word in a page, taking in account the selection direction.
         /// </summary>
         internal Index GetFirstWordIndex()
         {
@@ -245,18 +245,22 @@ namespace Caly.Core.Models
         /// <summary>
         /// Clear selected words in the document, but do not reset selection information.
         /// </summary>
-        public void ClearSelectedWords()
+        public IEnumerable<int> ClearSelectedWords()
         {
             for (int p = 0; p < _selectedWords.Length; ++p)
             {
-                _selectedWords[p] = null;
+                if (_selectedWords[p] is not null)
+                {
+                    _selectedWords[p] = null;
+                    yield return p + 1;
+                }
             }
         }
 
         /// <summary>
         /// Reset document selection: anchor and focus words, page indexes, offsets, indexes and clears selected words.
         /// </summary>
-        public void ResetSelection()
+        public int[] ResetSelection()
         {
             AnchorOffsetDistance = -1;
             AnchorOffset = -1;
@@ -268,39 +272,63 @@ namespace Caly.Core.Models
             AnchorPoint = null;
             AnchorWord = null;
             FocusWord = null;
-            ClearSelectedWords();
+            return ClearSelectedWords().ToArray(); // TODO - check if need toa array here
+        }
+
+        public bool IsPageInSelection(int pageNumber)
+        {
+            int start = IsForward ? AnchorPageIndex : FocusPageIndex;
+            int end = IsForward ? FocusPageIndex : AnchorPageIndex;
+            return pageNumber >= start && pageNumber <= end;
+        }
+
+        public void SelectWordsInRange(PdfPageViewModel pageViewModel)
+        {
+            if (pageViewModel.PdfTextLayer is null)
+            {
+                return;
+            }
+
+            SelectWordsInRange(pageViewModel.PdfTextLayer, pageViewModel.PageNumber);
+            pageViewModel.FlagSelectionChanged();
         }
 
         /// <summary>
-        /// Select all the words that are between the current <paramref name="selectionStart"/> word and <paramref name="selectionEnd"/> word in the DOM hierarchy,
-        /// after having checked for selection direction.
+        /// Select all the words that are between the current anchor word and focus word, after having checked for selection direction.
         /// </summary>
-        public void SelectWordsInRange(PdfPageTextLayerControl control)
+        private void SelectWordsInRange(PdfTextLayer pdfPageTextLayer, int pageNumber)
         {
-            PdfWord? anchor = AnchorPageIndex == control.PageNumber ? AnchorWord : control.PdfPageTextLayer![GetFirstWordIndex()];
-            SelectWordsInRange(control, IsBackward ? FocusWord : anchor, IsBackward ? anchor : FocusWord);
+            if (!IsPageInSelection(pageNumber))
+            {
+                ClearSelectedWordsForPage(pageNumber);
+                return;
+            }
+
+            PdfWord? anchor = AnchorPageIndex == pageNumber ? AnchorWord : pdfPageTextLayer![GetFirstWordIndex()];
+            PdfWord? focus = FocusPageIndex == pageNumber ? FocusWord : pdfPageTextLayer![GetLastWordIndex()];
+            SelectWordsInRange(pdfPageTextLayer, pageNumber, IsBackward ? focus : anchor, IsBackward ? anchor : focus);
         }
 
         /// <summary>
         /// Select all the words that are between <paramref name="selectionStart"/> word and <paramref name="selectionEnd"/> word in the DOM hierarchy.<br/>
         /// </summary>
         /// <param name="control">The text layer control.</param>
+        /// <param name="pageNumber"></param>
         /// <param name="selectionStart">selection start word limit</param>
         /// <param name="selectionEnd">selection end word limit</param>
-        private void SelectWordsInRange(PdfPageTextLayerControl control, PdfWord? selectionStart, PdfWord? selectionEnd)
+        private void SelectWordsInRange(PdfTextLayer? control, int pageNumber, PdfWord? selectionStart, PdfWord? selectionEnd)
         {
 #if DEBUG
-            System.Diagnostics.Debug.Assert(control.PageNumber!.Value <= NumberOfPages);
+            System.Diagnostics.Debug.Assert(pageNumber <= NumberOfPages);
 #endif
 
-            if (control.PdfPageTextLayer is null || selectionStart is null)
+            if (control is null || selectionStart is null)
             {
-                ClearSelectedWords();
+               _ = ClearSelectedWords().ToArray(); // TODO - Check if we should do that here
             }
             else
             {
-                SetSelectedWordsForPage(control.PageNumber!.Value,
-                    control.PdfPageTextLayer.GetWords(selectionStart, selectionEnd!).ToArray());
+                SetSelectedWordsForPage(pageNumber, control.GetWords(selectionStart, selectionEnd!).ToArray());
             }
         }
 
@@ -441,7 +469,14 @@ namespace Caly.Core.Models
             var firstWord = selectedWords[0];
             if (wordStartIndex != -1 && wordStartIndex != 0)
             {
-                yield return processPartial(firstWord, wordStartIndex, firstWord.Letters!.Count - 1);
+                int endIndex = firstWord.Letters!.Count - 1;
+                if (wordStartIndex > endIndex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"ERROR: wordStartIndex {wordStartIndex} is larger than {endIndex}.");
+                    wordStartIndex = endIndex;
+                }
+
+                yield return processPartial(firstWord, wordStartIndex, endIndex);
             }
             else
             {
@@ -456,7 +491,7 @@ namespace Caly.Core.Models
             }
 
             // Do last word
-            var lastWord = selectedWords[selectedWords.Count - 1];
+            var lastWord = selectedWords[^1];
             if (wordEndIndex != -1 && wordEndIndex != lastWord.Letters!.Count - 1)
             {
                 yield return processPartial(lastWord, 0, wordEndIndex);
@@ -467,28 +502,42 @@ namespace Caly.Core.Models
             }
         }
 
-        public IEnumerable<T> GetDocumentSelectionAs<T>(Func<PdfWord, T> fullWord, Func<PdfWord, int, int, T> partialWord)
+        public IEnumerable<int> GetSelectedPagesIndexes()
         {
-            int startDocumentPage;
-            int endDocumentPage;
+            if (!IsValid())
+            {
+                yield break;
+            }
 
             if (IsForward)
             {
-                startDocumentPage = AnchorPageIndex;
-                endDocumentPage = FocusPageIndex;
+                if (AnchorPageIndex > FocusPageIndex)
+                {
+                    throw new ArgumentOutOfRangeException($"The selection's start page ({AnchorPageIndex}) is after the end page ({FocusPageIndex}).");
+                }
+
+                for (int p = AnchorPageIndex; p <= FocusPageIndex; ++p)
+                {
+                    yield return p;
+                }
             }
             else
             {
-                startDocumentPage = FocusPageIndex;
-                endDocumentPage = AnchorPageIndex;
-            }
+                if (FocusPageIndex > AnchorPageIndex)
+                {
+                    throw new ArgumentOutOfRangeException($"The selection's start page ({FocusPageIndex}) is after the end page ({AnchorPageIndex}).");
+                }
 
-            if (startDocumentPage > endDocumentPage)
-            {
-                throw new ArgumentOutOfRangeException($"The selection's start page ({startDocumentPage}) is after the end page ({endDocumentPage}).");
+                for (int p = FocusPageIndex; p <= AnchorPageIndex; ++p)
+                {
+                    yield return p;
+                }
             }
+        }
 
-            for (int p = startDocumentPage; p <= endDocumentPage; ++p)
+        public IEnumerable<T> GetDocumentSelectionAs<T>(Func<PdfWord, T> fullWord, Func<PdfWord, int, int, T> partialWord)
+        {
+            foreach (int p in GetSelectedPagesIndexes())
             {
                 foreach (var b in GetPageSelectionAs(p, fullWord, partialWord))
                 {
