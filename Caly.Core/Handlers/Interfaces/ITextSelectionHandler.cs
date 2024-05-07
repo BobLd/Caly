@@ -31,11 +31,6 @@ namespace Caly.Core.Handlers.Interfaces
         void OnPointerReleased(PointerReleasedEventArgs e);
 
         /// <summary>
-        /// Select text to end of page. If selection has not started, select the whole page text.
-        /// </summary>
-        void SelectTextToEndInPage(PdfPageTextLayerControl control);
-
-        /// <summary>
         /// TODO - Should not be in selection handler.
         /// </summary>
         void RenderPage(PdfPageTextLayerControl control, DrawingContext context);
