@@ -44,9 +44,6 @@ namespace Caly.Core.ViewModels
         [NotifyPropertyChangedFor(nameof(IsPageRendering))]
         private IRef<SKPicture>? _pdfPicture;
 
-        //[ObservableProperty]
-        //private IRef<SKBitmap>? _pdfBitmap;
-
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(ThumbnailHeight))]
         private double _width;
@@ -67,6 +64,9 @@ namespace Caly.Core.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsPageVisible))]
         private Rect? _visibleArea;
+
+        [ObservableProperty]
+        private bool _selectionChangedFlag;
 
         [ObservableProperty]
         private ITextSelectionHandler _textSelectionHandler;
@@ -113,6 +113,11 @@ namespace Caly.Core.ViewModels
                 Width = info.Value.Width;
                 Height = info.Value.Height;
             }
+        }
+
+        public void FlagSelectionChanged()
+        {
+            SelectionChangedFlag = !SelectionChangedFlag;
         }
 
         [RelayCommand]
@@ -267,6 +272,11 @@ namespace Caly.Core.ViewModels
             try
             {
                 PdfTextLayer ??= await _pdfService.GetTextLayerAsync(PageNumber, cancellationToken);
+                if (PdfTextLayer is not null)
+                {
+                    // We ensure the correct selection is set now that we have the text layer
+                    TextSelectionHandler.Selection.SelectWordsInRange(this);
+                }
             }
             catch (OperationCanceledException)
             {

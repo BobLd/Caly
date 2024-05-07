@@ -24,6 +24,7 @@ using Avalonia.VisualTree;
 using Caly.Core.Controls;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
+using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
@@ -57,150 +58,43 @@ namespace Caly.Core.Handlers
             Selection = new PdfTextSelection(numberOfPages);
         }
 
-        public void SelectTextToEndInPage(PdfPageTextLayerControl control)
-        {
-            if (control.PdfPageTextLayer is null || !control.PageNumber.HasValue)
-            {
-                return;
-            }
-
-            Selection.Extend(control.PageNumber.Value, control.PdfPageTextLayer[Selection.GetLastWordIndex()]);
-            Selection.SelectWordsInRange(control);
-        }
-
         private void ClearSelection(PdfPageTextLayerControl currentTextLayer)
         {
-            bool isBackward = Selection.IsBackward;
-            int anchorPage = Selection.AnchorPageIndex;
-            int focusPage = Selection.FocusPageIndex;
-            Selection.ResetSelection();
+            int start = Selection.IsForward ? Selection.AnchorPageIndex : Selection.FocusPageIndex;
+            int end = Selection.IsForward ? Selection.FocusPageIndex : Selection.AnchorPageIndex;
 
-            if (anchorPage == -1 || focusPage == -1)
+            System.Diagnostics.Debug.Assert(start <= end);
+
+            var indexes =  Selection.ResetSelection();
+
+            if (start == -1 || end == -1 || indexes.Length == 0)
             {
                 return;
             }
 
-            var pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>();
+            var pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>() ??
+                                     throw new NullReferenceException($"{typeof(PdfDocumentControl)} not found.");
 
-            if (isBackward)
+            for (int pageNumber = start; pageNumber <= end; ++pageNumber)
             {
-                for (int p = anchorPage; p >= focusPage; --p)
+                if (pdfDocumentControl.GetPdfPageItem(pageNumber)?.DataContext is PdfPageViewModel vm)
                 {
-                    InvalidatePage(p);
+                    vm.FlagSelectionChanged();
                 }
-            }
-            else
-            {
-                for (int p = anchorPage; p <= focusPage; ++p)
-                {
-                    InvalidatePage(p);
-                }
-            }
-
-            void InvalidatePage(int pageNumber)
-            {
-                if (pageNumber == currentTextLayer.PageNumber)
-                {
-                    return;
-                }
-
-                var page = pdfDocumentControl?.GetPdfPageItem(pageNumber);
-                var layer = page?.TextLayer;
-                layer?.InvalidateVisual();
             }
         }
 
-        private bool TrySwitchCapture(PdfPageTextLayerControl currentTextLayer, PointerEventArgs e)
+        private static bool TrySwitchCapture(PdfPageTextLayerControl currentTextLayer, PointerEventArgs e)
         {
-            // TODO - Unselect when skipping pages from outside
-
-            var pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>();
-            var pdfPage = pdfDocumentControl?.GetPdfPageItemOver(e);
-
-            if (pdfPage is null)
+            PdfPageItem? endPdfPage = currentTextLayer.FindAncestorOfType<PdfDocumentControl>()?.GetPdfPageItemOver(e);
+            if (endPdfPage is null)
             {
                 // Cursor is not over any page, do nothing
                 return false;
             }
 
-            var endTextLayer = pdfPage.TextLayer;
-
-            if (endTextLayer is null)
-            {
-                throw new NullReferenceException($"{typeof(PdfPageTextLayerControl)} not found.");
-            }
-
-            if (!endTextLayer.PageNumber.HasValue)
-            {
-                System.Diagnostics.Debug.WriteLine("WARNING the page number of the end text layer is not set.");
-            }
-
-            if (endTextLayer.PdfPageTextLayer is null)
-            {
-                // TODO - properly handle that. TO CHECK - only required when selection shortens
-                System.Diagnostics.Debug.WriteLine("WARNING the PdfPageTextLayer of the end text layer is not set.");
-            }
-
-            // Update current page selection
-            bool endAfterCurrent = endTextLayer.PageNumber > currentTextLayer.PageNumber;
-            bool isExtendsSelection = Selection.IsBackward ? !endAfterCurrent : endAfterCurrent;
-
-            if (isExtendsSelection)
-            {
-                // Extends selection: Set text selection to start of page
-                if (currentTextLayer.PdfPageTextLayer.Count > 0)
-                {
-                    // Only if any word in the page
-                    Selection.Extend(currentTextLayer.PageNumber.Value, currentTextLayer.PdfPageTextLayer[Selection.GetLastWordIndex()]);
-                    Selection.SelectWordsInRange(currentTextLayer);
-                }
-            }
-            else
-            {
-                // Shortens selection: Set text selection to none
-                // TODO - see above. Need to make sure endTextLayer.PdfPageTextLayer is loaded and not null
-                if (endTextLayer.PdfPageTextLayer.Count > 0)
-                {
-                    Selection.Extend(endTextLayer.PageNumber.Value, endTextLayer.PdfPageTextLayer[Selection.GetLastWordIndex()]);
-                }
-                Selection.ClearSelectedWordsForPage(currentTextLayer.PageNumber.Value);
-            }
-
-            currentTextLayer.InvalidateVisual();
-
-            // Update every page between the current page, and the page (excluded) that will receive capture
-            bool hasPagesBetween = Math.Abs(currentTextLayer.PageNumber.Value - endTextLayer.PageNumber.Value) > 1;
-            if (hasPagesBetween)
-            {
-                void UpdatePage(int pageNumber)
-                {
-                    var page = pdfDocumentControl?.GetPdfPageItem(pageNumber);
-                    var layer = page?.TextLayer;
-
-                    if (layer is null)
-                    {
-                        return;
-                    }
-
-                    layer.SelectTextToEnd();
-                    layer.InvalidateVisual();
-                }
-
-                if (Selection.IsBackward)
-                {
-                    for (int p = currentTextLayer.PageNumber.Value - 1; p > endTextLayer.PageNumber.Value; p--)
-                    {
-                        UpdatePage(p);
-                    }
-                }
-                else
-                {
-                    for (int p = currentTextLayer.PageNumber.Value + 1; p < endTextLayer.PageNumber.Value; p++)
-                    {
-                        UpdatePage(p);
-                    }
-                }
-            }
+            PdfPageTextLayerControl? endTextLayer = endPdfPage.TextLayer ??
+                                                    throw new NullReferenceException($"{typeof(PdfPageTextLayerControl)} not found.");
 
             e.Pointer.Capture(endTextLayer); // Switch capture to new page
             return true;
@@ -306,7 +200,7 @@ namespace Caly.Core.Handlers
 
         private void HandleMouseMoveSelection(PdfPageTextLayerControl control, PointerEventArgs e, Point loc)
         {
-            if (_isMultipleClickSelection)
+            if (_isMultipleClickSelection || control.DataContext is not PdfPageViewModel cvm)
             {
                 return;
             }
@@ -315,6 +209,7 @@ namespace Caly.Core.Handlers
             {
                 if (TrySwitchCapture(control, e))
                 {
+                    // Update all pages
                     return;
                 }
 
@@ -353,6 +248,7 @@ namespace Caly.Core.Handlers
             // if there is matching word
             bool allowPartialSelect = !_isMultipleClickSelection;
 
+            int focusPageIndex = Selection.FocusPageIndex;
             Point? partialSelectLoc = allowPartialSelect ? loc : null;
             if (!Selection.HasStarted())
             {
@@ -361,10 +257,32 @@ namespace Caly.Core.Handlers
 
             // Always set the focus word
             Selection.Extend(control.PageNumber!.Value, word, partialSelectLoc);
-            Selection.SelectWordsInRange(control);
+            Selection.SelectWordsInRange(cvm);
+
+            // Check for change of focus page
+            if (focusPageIndex != -1 && focusPageIndex != Selection.FocusPageIndex)
+            {
+                PdfDocumentControl pdfDocumentControl = control.FindAncestorOfType<PdfDocumentControl>() ??
+                                                        throw new ArgumentNullException($"{typeof(PdfDocumentControl)} not found.");
+
+                // Focus page has changed
+                int start = Math.Min(focusPageIndex, Selection.FocusPageIndex);
+                int end = Math.Max(focusPageIndex, Selection.FocusPageIndex);
+                for (int i = start; i <= end; ++i) // TODO - do not always do end page, only if deselecting
+                {
+                    var textLayerControl = pdfDocumentControl.GetPdfPageItem(i)?.DataContext;
+
+                    if (textLayerControl is not PdfPageViewModel vm)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Skipping page {i} as not loaded.");
+                        continue;
+                    }
+
+                    Selection.SelectWordsInRange(vm);
+                }
+            }
 
             control.SetIbeamCursor();
-            control.InvalidateVisual();
 
             _isSelecting = Selection.IsValid() &&
                            (Selection.AnchorWord != Selection.FocusWord || // Multiple words selected
@@ -397,6 +315,11 @@ namespace Caly.Core.Handlers
 
         private void HandleMultipleClick(PdfPageTextLayerControl control, PointerPressedEventArgs e, PdfWord word)
         {
+            if (control.PdfPageTextLayer is null || control.DataContext is not PdfPageViewModel vm)
+            {
+                return;
+            }
+
             if (e.ClickCount < 2)
             {
                 //throw new ArgumentException($"Click count should be 2 or more. Got {e.ClickCount} click(s).");
@@ -414,7 +337,7 @@ namespace Caly.Core.Handlers
             else if (e.ClickCount == 3)
             {
                 // Select whole line
-                var block = control.PdfPageTextLayer!.TextBlocks![word.TextBlockIndex];
+                var block = control.PdfPageTextLayer.TextBlocks![word.TextBlockIndex];
                 var line = block.TextLines![word.TextLineIndex - block.TextLines[0].IndexInPage];
 
                 startWord = line.Words![0];
@@ -423,7 +346,7 @@ namespace Caly.Core.Handlers
             else if (e.ClickCount == 4)
             {
                 // Select whole paragraph
-                var block = control.PdfPageTextLayer!.TextBlocks![word.TextBlockIndex];
+                var block = control.PdfPageTextLayer.TextBlocks![word.TextBlockIndex];
 
                 startWord = block.TextLines![0].Words![0];
                 endWord = block.TextLines![^1].Words![^1];
@@ -439,9 +362,7 @@ namespace Caly.Core.Handlers
             int pageNumber = control.PageNumber!.Value;
             Selection.Start(pageNumber, startWord);
             Selection.Extend(pageNumber, endWord);
-            Selection.SelectWordsInRange(control);
-
-            control.InvalidateVisual();
+            Selection.SelectWordsInRange(vm);
 
             System.Diagnostics.Debug.WriteLine($"HandleMultipleClick: {startWord} -> {endWord}.");
         }
@@ -489,7 +410,6 @@ namespace Caly.Core.Handlers
             if (clearSelection)
             {
                 ClearSelection(control);
-                control.InvalidateVisual();
             }
         }
 
@@ -506,7 +426,6 @@ namespace Caly.Core.Handlers
             if (!ignore && pointerPoint.Properties.PointerUpdateKind == PointerUpdateKind.LeftButtonReleased)
             {
                 ClearSelection(control);
-                control.InvalidateVisual();
 
                 // TODO - Get link under cursor, and execute link if need be
             }
