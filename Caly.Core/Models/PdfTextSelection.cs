@@ -37,7 +37,7 @@ namespace Caly.Core.Models
     /// </para>
     /// See <see href="https://developer.mozilla.org/en-US/docs/Web/API/Selection"/>.
     /// </summary>
-    public sealed class PdfTextSelection
+    public sealed partial class PdfTextSelection
     {
         /*
          * Note: Anchor and focus should not be confused with the start and end positions of a selection.
@@ -146,6 +146,22 @@ namespace Caly.Core.Models
         internal Index GetFirstWordIndex()
         {
             return new Index(IsBackward ? 1 : 0, IsBackward);
+        }
+
+        /// <summary>
+        /// Get the start page index, after having checked for selection direction.
+        /// </summary>
+        public int GetStartPageIndex()
+        {
+            return IsForward ? AnchorPageIndex : FocusPageIndex;
+        }
+
+        /// <summary>
+        /// Get the end page index, after having checked for selection direction.
+        /// </summary>
+        public int GetEndPageIndex()
+        {
+            return IsForward ? FocusPageIndex : AnchorPageIndex;
         }
 
         /// <summary>
@@ -279,6 +295,32 @@ namespace Caly.Core.Models
             return pageNumber >= GetStartPageIndex() && pageNumber <= GetEndPageIndex();
         }
 
+        public bool IsWordSelected(int pageNumber, PdfWord word)
+        {
+#if DEBUG
+            System.Diagnostics.Debug.Assert(pageNumber <= NumberOfPages);
+#endif
+
+            // TODO - handle word sub selection
+            if (!IsValid())
+            {
+                return false;
+            }
+
+            // TODO - Need proper testing
+            if (!IsPageInSelection(pageNumber))
+            {
+                return false;
+            }
+
+            if (IsBackward)
+            {
+                return word.IndexInPage >= FocusWord!.IndexInPage && word.IndexInPage <= AnchorWord!.IndexInPage;
+            }
+
+            return word.IndexInPage >= AnchorWord!.IndexInPage && word.IndexInPage <= FocusWord!.IndexInPage;
+        }
+
         public void SelectWordsInRange(PdfPageViewModel pageViewModel)
         {
             if (pageViewModel.PdfTextLayer is null || pageViewModel.PdfTextLayer.Count == 0)
@@ -383,181 +425,6 @@ namespace Caly.Core.Models
             }
         }
 
-        public bool IsWordSelected(int pageNumber, PdfWord word)
-        {
-#if DEBUG
-            System.Diagnostics.Debug.Assert(pageNumber <= NumberOfPages);
-#endif
-
-            // TODO - handle word sub selection
-            if (!IsValid())
-            {
-                return false;
-            }
-
-            if (pageNumber < AnchorPageIndex || pageNumber > FocusPageIndex)
-            {
-                return false;
-            }
-
-            return word.IndexInPage >= AnchorWord.IndexInPage && word.IndexInPage <= FocusWord.IndexInPage;
-        }
-
-        public IEnumerable<T> GetPageSelectionAs<T>(int pageNumber, Func<PdfWord, T> processFull, Func<PdfWord, int, int, T> processPartial)
-        {
-            // TODO - merge words on same line
-#if DEBUG
-            System.Diagnostics.Debug.Assert(pageNumber <= NumberOfPages);
-#endif
-
-            var selectedWords = GetPageSelectedWords(pageNumber);
-            if (selectedWords is null)
-            {
-                // TODO - We need to load the layer
-                yield break;
-            }
-
-            if (selectedWords.Count == 0)
-            {
-                yield break;
-            }
-
-            int wordStartIndex;
-            int wordEndIndex;
-
-            if (IsBackward)
-            {
-                wordStartIndex = FocusPageIndex == pageNumber ? FocusOffset : -1;
-                wordEndIndex = AnchorPageIndex == pageNumber ? AnchorOffset : -1;
-            }
-            else
-            {
-                wordStartIndex = AnchorPageIndex == pageNumber ? AnchorOffset : -1;
-                wordEndIndex = FocusPageIndex == pageNumber ? FocusOffset : -1;
-            }
-
-            if (wordStartIndex == -1 && wordEndIndex == -1)
-            {
-                // Only whole words
-                foreach (var word in selectedWords)
-                {
-                    yield return processFull(word); // Return full words
-                }
-                yield break; // We are done
-            }
-
-            if (selectedWords.Count == 1)
-            {
-                // Single word selected
-                var word = selectedWords[0];
-                int lastIndex = word.Letters!.Count - 1;
-                if ((wordStartIndex == -1 || wordStartIndex == 0) && (wordEndIndex == -1 || wordEndIndex == lastIndex))
-                {
-                    yield return processFull(word);
-                }
-                else
-                {
-                    yield return processPartial(word, wordStartIndex == -1 ? 0 : wordStartIndex, wordEndIndex == -1 ? lastIndex : wordEndIndex);
-                }
-                yield break;
-            }
-
-            // Do first word
-            var firstWord = selectedWords[0];
-            if (wordStartIndex != -1 && wordStartIndex != 0)
-            {
-                int endIndex = firstWord.Letters!.Count - 1;
-                if (wordStartIndex > endIndex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"ERROR: wordStartIndex {wordStartIndex} is larger than {endIndex}.");
-                    wordStartIndex = endIndex;
-                }
-
-                yield return processPartial(firstWord, wordStartIndex, endIndex);
-            }
-            else
-            {
-                yield return processFull(firstWord);
-            }
-
-            // Do words in the middle
-            for (int i = 1; i < selectedWords.Count - 1; ++i)
-            {
-                var word = selectedWords[i];
-                yield return processFull(word);
-            }
-
-            // Do last word
-            var lastWord = selectedWords[^1];
-            if (wordEndIndex != -1 && wordEndIndex != lastWord.Letters!.Count - 1)
-            {
-                yield return processPartial(lastWord, 0, wordEndIndex);
-            }
-            else
-            {
-                yield return processFull(lastWord);
-            }
-        }
-
-        /// <summary>
-        /// Get the start page index, after having checked for selection direction.
-        /// </summary>
-        public int GetStartPageIndex()
-        {
-            return IsForward ? AnchorPageIndex : FocusPageIndex;
-        }
-
-        /// <summary>
-        /// Get the end page index, after having checked for selection direction.
-        /// </summary>
-        public int GetEndPageIndex()
-        {
-            return IsForward ? FocusPageIndex : AnchorPageIndex;
-        }
-
-        public IEnumerable<int> GetSelectedPagesIndexes()
-        {
-            if (!IsValid())
-            {
-                yield break;
-            }
-
-            int start = GetStartPageIndex();
-            int end = GetEndPageIndex();
-
-            System.Diagnostics.Debug.Assert(start <= end);
-
-            if (start > end)
-            {
-                throw new ArgumentOutOfRangeException($"The selection's start page ({start}) is after the end page ({end}).");
-            }
-
-            for (int p = start; p <= end; ++p)
-            {
-                yield return p;
-            }
-        }
-
-        public IEnumerable<T> GetDocumentSelectionAs<T>(Func<PdfWord, T> fullWord, Func<PdfWord, int, int, T> partialWord)
-        {
-            foreach (int p in GetSelectedPagesIndexes())
-            {
-                foreach (var b in GetPageSelectionAs(p, fullWord, partialWord))
-                {
-                    yield return b;
-                }
-            }
-        }
-
-        private IReadOnlyList<PdfWord>? GetPageSelectedWords(int pageNumber)
-        {
-#if DEBUG
-            System.Diagnostics.Debug.Assert(pageNumber <= NumberOfPages);
-#endif
-
-            return _selectedWords[pageNumber - 1];
-        }
-
         /// <summary>
         /// Calculate the character index and offset by characters for the given word and given offset.<br/>
         /// If the location is below the word line then set the selection to the end.<br/>
@@ -602,7 +469,6 @@ namespace Caly.Core.Models
         }
 
         // TODO - Put the below in helper class
-
         // https://stackoverflow.com/questions/54009832/scala-orthogonal-projection-of-a-point-onto-a-line
         /* Projects point `p` on line going through two points `line1` and `line2`. */
         internal static PdfPoint? ProjectPointOnLine(PdfPoint line1, PdfPoint line2, PdfPoint p, out double s)
@@ -621,6 +487,7 @@ namespace Caly.Core.Models
 
             return line1.Add(new PdfPoint(d.X * s, d.Y * s));
         }
+
         internal static double ProjectPointOnLineM(PdfPoint line1, PdfPoint line2, PdfPoint p)
         {
             PdfPoint v = p.Subtract(line1);
