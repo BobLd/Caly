@@ -42,7 +42,7 @@
                                                          VerticalAlignment="Stretch"/>
 
 							<controls:PdfPageTextLayerControl Name="PART_PdfPageTextLayerControl"
-                                                              PdfPageTextLayer="{Binding PdfTextLayer}"
+                                                              PdfTextLayer="{Binding PdfTextLayer}"
                                                               PageNumber="{Binding PageNumber}"
                                                               TextSelectionHandler="{Binding TextSelectionHandler}"
                                                               SelectionChangedFlag="{Binding SelectionChangedFlag}"

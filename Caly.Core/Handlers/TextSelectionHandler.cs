@@ -60,20 +60,20 @@ namespace Caly.Core.Handlers
 
         private void ClearSelection(PdfPageTextLayerControl currentTextLayer)
         {
-            int start = Selection.IsForward ? Selection.AnchorPageIndex : Selection.FocusPageIndex;
-            int end = Selection.IsForward ? Selection.FocusPageIndex : Selection.AnchorPageIndex;
+            int start = Selection.GetStartPageIndex();
+            int end = Selection.GetEndPageIndex();
 
             System.Diagnostics.Debug.Assert(start <= end);
 
-            var indexes =  Selection.ResetSelection();
+            Selection.ResetSelection();
 
-            if (start == -1 || end == -1 || indexes.Length == 0)
+            if (start == -1 || end == -1)
             {
                 return;
             }
 
-            var pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>() ??
-                                     throw new NullReferenceException($"{typeof(PdfDocumentControl)} not found.");
+            PdfDocumentControl pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>() ??
+                                                    throw new NullReferenceException($"{typeof(PdfDocumentControl)} not found.");
 
             for (int pageNumber = start; pageNumber <= end; ++pageNumber)
             {
@@ -93,8 +93,8 @@ namespace Caly.Core.Handlers
                 return false;
             }
 
-            PdfPageTextLayerControl? endTextLayer = endPdfPage.TextLayer ??
-                                                    throw new NullReferenceException($"{typeof(PdfPageTextLayerControl)} not found.");
+            PdfPageTextLayerControl endTextLayer = endPdfPage.TextLayer ??
+                                                   throw new NullReferenceException($"{typeof(PdfPageTextLayerControl)} not found.");
 
             e.Pointer.Capture(endTextLayer); // Switch capture to new page
             return true;
@@ -180,7 +180,7 @@ namespace Caly.Core.Handlers
             focusLine = null;
 #endif
             // Needs to be on UI thread to access
-            if (e.Source is not PdfPageTextLayerControl control || control.PdfPageTextLayer is null)
+            if (e.Source is not PdfPageTextLayerControl control || control.PdfTextLayer is null)
             {
                 return;
             }
@@ -217,13 +217,13 @@ namespace Caly.Core.Handlers
             }
 
             // Get the line under the mouse or nearest from the top
-            PdfTextLine? lineBox = control.PdfPageTextLayer!.FindLineOver(loc.X, loc.Y);
+            PdfTextLine? lineBox = control.PdfTextLayer!.FindLineOver(loc.X, loc.Y);
 
             PdfWord? word = null;
             if (Selection.HasStarted() && lineBox is null)
             {
                 // Try to find the closest line as we are already selecting something
-                word = FindNearestWordWhileSelecting(loc, control.PdfPageTextLayer);
+                word = FindNearestWordWhileSelecting(loc, control.PdfTextLayer);
             }
 
             if (lineBox == null && word is null) return;
@@ -301,7 +301,7 @@ namespace Caly.Core.Handlers
             }
             else
             {
-                PdfWord? word = control.PdfPageTextLayer!.FindWordOver(loc.X, loc.Y);
+                PdfWord? word = control.PdfTextLayer!.FindWordOver(loc.X, loc.Y);
                 if (word != null)
                 {
                     control.SetIbeamCursor();
@@ -315,7 +315,7 @@ namespace Caly.Core.Handlers
 
         private void HandleMultipleClick(PdfPageTextLayerControl control, PointerPressedEventArgs e, PdfWord word)
         {
-            if (control.PdfPageTextLayer is null || control.DataContext is not PdfPageViewModel vm)
+            if (control.PdfTextLayer is null || control.DataContext is not PdfPageViewModel vm)
             {
                 return;
             }
@@ -337,7 +337,7 @@ namespace Caly.Core.Handlers
             else if (e.ClickCount == 3)
             {
                 // Select whole line
-                var block = control.PdfPageTextLayer.TextBlocks![word.TextBlockIndex];
+                var block = control.PdfTextLayer.TextBlocks![word.TextBlockIndex];
                 var line = block.TextLines![word.TextLineIndex - block.TextLines[0].IndexInPage];
 
                 startWord = line.Words![0];
@@ -346,7 +346,7 @@ namespace Caly.Core.Handlers
             else if (e.ClickCount == 4)
             {
                 // Select whole paragraph
-                var block = control.PdfPageTextLayer.TextBlocks![word.TextBlockIndex];
+                var block = control.PdfTextLayer.TextBlocks![word.TextBlockIndex];
 
                 startWord = block.TextLines![0].Words![0];
                 endWord = block.TextLines![^1].Words![^1];
@@ -371,7 +371,7 @@ namespace Caly.Core.Handlers
         {
             Debug.ThrowNotOnUiThread();
 
-            if (e.Source is not PdfPageTextLayerControl control || control.PdfPageTextLayer is null)
+            if (e.Source is not PdfPageTextLayerControl control || control.PdfTextLayer is null)
             {
                 return;
             }
@@ -385,7 +385,7 @@ namespace Caly.Core.Handlers
 
             if (pointerPoint.Properties.IsLeftButtonPressed)
             {
-                PdfWord? word = control.PdfPageTextLayer.FindWordOver(point.X, point.Y);
+                PdfWord? word = control.PdfTextLayer.FindWordOver(point.X, point.Y);
 
                 if (word != null && Selection.IsWordSelected(control.PageNumber!.Value, word))
                 {
@@ -415,7 +415,7 @@ namespace Caly.Core.Handlers
 
         public void OnPointerReleased(PointerReleasedEventArgs e)
         {
-            if (e.Source is not PdfPageTextLayerControl control || control.PdfPageTextLayer is null)
+            if (e.Source is not PdfPageTextLayerControl control || control.PdfTextLayer is null)
             {
                 return;
             }
@@ -485,7 +485,7 @@ namespace Caly.Core.Handlers
 
         public void RenderPage(PdfPageTextLayerControl control, DrawingContext context)
         {
-            if (control.PdfPageTextLayer is null)
+            if (control.PdfTextLayer is null)
             {
                 return;
             }
@@ -500,7 +500,7 @@ namespace Caly.Core.Handlers
 
             PdfWord? previousWord = null;
 
-            foreach (var block in control.PdfPageTextLayer.TextBlocks)
+            foreach (var block in control.PdfTextLayer.TextBlocks)
             {
                 context.DrawGeometry(greenBrush, greenPen, GetGeometry(block.BoundingBox, true));
 

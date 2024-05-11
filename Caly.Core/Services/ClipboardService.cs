@@ -33,16 +33,16 @@ namespace Caly.Core.Services
 
         public async Task SetAsync(string text)
         {
-            var _clipboard = TopLevel.GetTopLevel(_target)?.Clipboard ??
-                             throw new ArgumentNullException($"Could not find {typeof(IClipboard)}");
-            await _clipboard.SetTextAsync(text);
+            IClipboard clipboard = TopLevel.GetTopLevel(_target)?.Clipboard ??
+                                   throw new ArgumentNullException($"Could not find {typeof(IClipboard)}");
+            await clipboard.SetTextAsync(text);
         }
 
         public async Task ClearAsync()
         {
-            var _clipboard = TopLevel.GetTopLevel(_target)?.Clipboard ??
-                             throw new ArgumentNullException($"Could not find {typeof(IClipboard)}");
-            await _clipboard.ClearAsync();
+            IClipboard clipboard = TopLevel.GetTopLevel(_target)?.Clipboard ??
+                                   throw new ArgumentNullException($"Could not find {typeof(IClipboard)}");
+            await clipboard.ClearAsync();
         }
     }
 }

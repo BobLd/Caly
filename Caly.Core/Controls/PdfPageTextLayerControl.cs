@@ -37,8 +37,8 @@ namespace Caly.Core.Controls
         private IDisposable? _pointerPressedDisposable;
         private IDisposable? _pointerReleasedDisposable;
 
-        public static readonly StyledProperty<PdfTextLayer?> PdfPageTextLayerProperty =
-            AvaloniaProperty.Register<PdfPageTextLayerControl, PdfTextLayer?>(nameof(PdfPageTextLayer));
+        public static readonly StyledProperty<PdfTextLayer?> PdfTextLayerProperty =
+            AvaloniaProperty.Register<PdfPageTextLayerControl, PdfTextLayer?>(nameof(PdfTextLayer));
 
         public static readonly StyledProperty<int?> PageNumberProperty =
             AvaloniaProperty.Register<PdfPageTextLayerControl, int?>(nameof(PageNumber));
@@ -49,10 +49,10 @@ namespace Caly.Core.Controls
         public static readonly StyledProperty<bool> SelectionChangedFlagProperty =
             AvaloniaProperty.Register<PdfPageTextLayerControl, bool>(nameof(SelectionChangedFlag));
 
-        public PdfTextLayer? PdfPageTextLayer
+        public PdfTextLayer? PdfTextLayer
         {
-            get => GetValue(PdfPageTextLayerProperty);
-            set => SetValue(PdfPageTextLayerProperty, value);
+            get => GetValue(PdfTextLayerProperty);
+            set => SetValue(PdfTextLayerProperty, value);
         }
 
         public int? PageNumber
@@ -75,7 +75,7 @@ namespace Caly.Core.Controls
 
         static PdfPageTextLayerControl()
         {
-            AffectsRender<PdfPageTextLayerControl>(PdfPageTextLayerProperty, SelectionChangedFlagProperty);
+            AffectsRender<PdfPageTextLayerControl>(PdfTextLayerProperty, SelectionChangedFlagProperty);
         }
 
         internal void SetIbeamCursor()

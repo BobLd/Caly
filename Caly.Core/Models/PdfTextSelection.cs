@@ -245,14 +245,13 @@ namespace Caly.Core.Models
         /// <summary>
         /// Clear selected words in the document, but do not reset selection information.
         /// </summary>
-        public IEnumerable<int> ClearSelectedWords()
+        public void ClearSelectedWords()
         {
             for (int p = 0; p < _selectedWords.Length; ++p)
             {
                 if (_selectedWords[p] is not null)
                 {
                     _selectedWords[p] = null;
-                    yield return p + 1;
                 }
             }
         }
@@ -260,7 +259,7 @@ namespace Caly.Core.Models
         /// <summary>
         /// Reset document selection: anchor and focus words, page indexes, offsets, indexes and clears selected words.
         /// </summary>
-        public int[] ResetSelection()
+        public void ResetSelection()
         {
             AnchorOffsetDistance = -1;
             AnchorOffset = -1;
@@ -272,14 +271,12 @@ namespace Caly.Core.Models
             AnchorPoint = null;
             AnchorWord = null;
             FocusWord = null;
-            return ClearSelectedWords().ToArray(); // TODO - check if need toa array here
+            ClearSelectedWords();
         }
 
         public bool IsPageInSelection(int pageNumber)
         {
-            int start = IsForward ? AnchorPageIndex : FocusPageIndex;
-            int end = IsForward ? FocusPageIndex : AnchorPageIndex;
-            return pageNumber >= start && pageNumber <= end;
+            return pageNumber >= GetStartPageIndex() && pageNumber <= GetEndPageIndex();
         }
 
         public void SelectWordsInRange(PdfPageViewModel pageViewModel)
@@ -296,7 +293,7 @@ namespace Caly.Core.Models
         /// <summary>
         /// Select all the words that are between the current anchor word and focus word, after having checked for selection direction.
         /// </summary>
-        private void SelectWordsInRange(PdfTextLayer pdfPageTextLayer, int pageNumber)
+        private void SelectWordsInRange(PdfTextLayer pdfTextLayer, int pageNumber)
         {
             if (!IsPageInSelection(pageNumber))
             {
@@ -304,13 +301,13 @@ namespace Caly.Core.Models
                 return;
             }
 
-            PdfWord? anchor = AnchorPageIndex == pageNumber ? AnchorWord : pdfPageTextLayer[GetFirstWordIndex()];
-            PdfWord? focus = FocusPageIndex == pageNumber ? FocusWord : pdfPageTextLayer[GetLastWordIndex()];
-            SelectWordsInRange(pdfPageTextLayer, pageNumber, IsBackward ? focus : anchor, IsBackward ? anchor : focus);
+            PdfWord? anchor = AnchorPageIndex == pageNumber ? AnchorWord : pdfTextLayer[GetFirstWordIndex()];
+            PdfWord? focus = FocusPageIndex == pageNumber ? FocusWord : pdfTextLayer[GetLastWordIndex()];
+            SelectWordsInRange(pdfTextLayer, pageNumber, IsBackward ? focus : anchor, IsBackward ? anchor : focus);
         }
 
         /// <summary>
-        /// Select all the words that are between <paramref name="selectionStart"/> word and <paramref name="selectionEnd"/> word in the DOM hierarchy.<br/>
+        /// Select all the words that are between <paramref name="selectionStart"/> word and <paramref name="selectionEnd"/> word.<br/>
         /// </summary>
         /// <param name="control">The text layer control.</param>
         /// <param name="pageNumber"></param>
@@ -324,7 +321,7 @@ namespace Caly.Core.Models
 
             if (control is null || selectionStart is null)
             {
-               _ = ClearSelectedWords().ToArray(); // TODO - Check if we should do that here
+                ClearSelectedWords(); // TODO - Check if we should do that here
             }
             else
             {
@@ -502,6 +499,22 @@ namespace Caly.Core.Models
             }
         }
 
+        /// <summary>
+        /// Get the start page index, after having checked for selection direction.
+        /// </summary>
+        public int GetStartPageIndex()
+        {
+            return IsForward ? AnchorPageIndex : FocusPageIndex;
+        }
+
+        /// <summary>
+        /// Get the end page index, after having checked for selection direction.
+        /// </summary>
+        public int GetEndPageIndex()
+        {
+            return IsForward ? FocusPageIndex : AnchorPageIndex;
+        }
+
         public IEnumerable<int> GetSelectedPagesIndexes()
         {
             if (!IsValid())
@@ -509,29 +522,19 @@ namespace Caly.Core.Models
                 yield break;
             }
 
-            if (IsForward)
-            {
-                if (AnchorPageIndex > FocusPageIndex)
-                {
-                    throw new ArgumentOutOfRangeException($"The selection's start page ({AnchorPageIndex}) is after the end page ({FocusPageIndex}).");
-                }
+            int start = GetStartPageIndex();
+            int end = GetEndPageIndex();
 
-                for (int p = AnchorPageIndex; p <= FocusPageIndex; ++p)
-                {
-                    yield return p;
-                }
+            System.Diagnostics.Debug.Assert(start <= end);
+
+            if (start > end)
+            {
+                throw new ArgumentOutOfRangeException($"The selection's start page ({start}) is after the end page ({end}).");
             }
-            else
-            {
-                if (FocusPageIndex > AnchorPageIndex)
-                {
-                    throw new ArgumentOutOfRangeException($"The selection's start page ({FocusPageIndex}) is after the end page ({AnchorPageIndex}).");
-                }
 
-                for (int p = FocusPageIndex; p <= AnchorPageIndex; ++p)
-                {
-                    yield return p;
-                }
+            for (int p = start; p <= end; ++p)
+            {
+                yield return p;
             }
         }
 
