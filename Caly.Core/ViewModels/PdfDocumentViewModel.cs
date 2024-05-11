@@ -280,12 +280,12 @@ namespace Caly.Core.ViewModels
 
                 System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync");
 
-                string text = await Task.Run(() =>
+                string text = await Task.Run(async () =>
                 {
                     System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync: Get text");
                     var sb = new StringBuilder();
 
-                    foreach (var word in selection.GetDocumentSelectionAs(FullWord, PartialWord))
+                    await foreach (var word in selection.GetDocumentSelectionAsAsync(FullWord, PartialWord, this, token))
                     {
                         // TODO - optimise IsWhiteSpace check
                         var isWhiteSpace = word.All(l => l.Span.IsEmpty || l.Span.IsWhiteSpace());
@@ -303,6 +303,7 @@ namespace Caly.Core.ViewModels
                             sb.Append(' ');
                         }
                     }
+
                     sb.Length--; // Last char added was a space
                     return sb.ToString();
                 }, token);
@@ -311,6 +312,8 @@ namespace Caly.Core.ViewModels
 
                 await clipboardService.SetAsync(text);
                 System.Diagnostics.Debug.WriteLine("Ended SetClipboardAsync");
+
+                // TODO - We could unload the selection from memory
             }
             catch (Exception e)
             {
