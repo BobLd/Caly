@@ -284,7 +284,7 @@ namespace Caly.Core.Models
 
         public void SelectWordsInRange(PdfPageViewModel pageViewModel)
         {
-            if (pageViewModel.PdfTextLayer is null)
+            if (pageViewModel.PdfTextLayer is null || pageViewModel.PdfTextLayer.Count == 0)
             {
                 return;
             }
@@ -304,8 +304,8 @@ namespace Caly.Core.Models
                 return;
             }
 
-            PdfWord? anchor = AnchorPageIndex == pageNumber ? AnchorWord : pdfPageTextLayer![GetFirstWordIndex()];
-            PdfWord? focus = FocusPageIndex == pageNumber ? FocusWord : pdfPageTextLayer![GetLastWordIndex()];
+            PdfWord? anchor = AnchorPageIndex == pageNumber ? AnchorWord : pdfPageTextLayer[GetFirstWordIndex()];
+            PdfWord? focus = FocusPageIndex == pageNumber ? FocusWord : pdfPageTextLayer[GetLastWordIndex()];
             SelectWordsInRange(pdfPageTextLayer, pageNumber, IsBackward ? focus : anchor, IsBackward ? anchor : focus);
         }
 
