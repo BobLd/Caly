@@ -164,7 +164,11 @@ public partial class App : Application
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
                 var dialogService = Services?.GetRequiredService<IDialogService>();
-                dialogService?.ShowNotification("Cannot open file", "The file does not exist or the path is invalid.", NotificationType.Error);
+                if (dialogService is not null)
+                {
+                    Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Cannot open file",
+                        "The file does not exist or the path is invalid.", NotificationType.Error));
+                }
 
                 // TODO - Log
 
@@ -189,7 +193,10 @@ public partial class App : Application
                 if (ex is null) return;
 
                 var dialogService = Services?.GetRequiredService<IDialogService>();
-                dialogService?.ShowNotification("Error", ex.Message, NotificationType.Error);
+                if (dialogService is not null)
+                {
+                    Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Error", ex.Message, NotificationType.Error));
+                }
             }
             catch
             {
