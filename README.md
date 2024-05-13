@@ -17,8 +17,8 @@ Other plans for later:
 - Table extraction
 
 
-## Windows, Linux and MacOS compatible
-As of now, only the Windows version has been tested. There are also future plans for mobile versions.
+## Windows, Linux, MacOS and mobile compatible
+As of now, only the Windows, Linux and Android versions have been tested. Android version runs, but is not optimised for the platfotm. Better mobile support is planned, including iOS.
 
 ## Contributions are welcome
 Feel free to contribute to the project! You can also help Caly Pdf Reader by contributing to:
