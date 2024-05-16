@@ -34,6 +34,8 @@ namespace Caly.Core.ViewModels
 {
     public sealed partial class PdfDocumentViewModel : ViewModelBase
     {
+        private static readonly double[] _zoomLevelsDiscrete = [0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64];
+
         private const int _initialPagesInfoToLoad = 25;
 
         private readonly IPdfService _pdfService;
@@ -64,7 +66,6 @@ namespace Caly.Core.ViewModels
         public double MaxZoomLevel => 64;
 #pragma warning restore CA1822
 
-        private readonly Channel<PdfPageViewModel> _pageInfoChannel;
         private readonly ChannelWriter<PdfPageViewModel> _channelWriter;
         private readonly ChannelReader<PdfPageViewModel> _channelReader;
 
@@ -107,15 +108,15 @@ namespace Caly.Core.ViewModels
             }
 
             // TODO - We could optimise here as we only need the channel if we have more than 1 page in the document
-            _pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(new BoundedChannelOptions(_initialPagesInfoToLoad)
+            Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(new BoundedChannelOptions(_initialPagesInfoToLoad)
             {
                 AllowSynchronousContinuations = false,
                 FullMode = BoundedChannelFullMode.DropWrite,
                 SingleReader = false,
                 SingleWriter = true
             });
-            _channelWriter = _pageInfoChannel.Writer;
-            _channelReader = _pageInfoChannel.Reader;
+            _channelWriter = pageInfoChannel.Writer;
+            _channelReader = pageInfoChannel.Reader;
 
             Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
 
@@ -217,8 +218,6 @@ namespace Caly.Core.ViewModels
         {
             SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex + 1);
         }
-
-        private static readonly double[] _zoomLevelsDiscrete = [0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64];
 
         [RelayCommand]
         private void ZoomIn()
