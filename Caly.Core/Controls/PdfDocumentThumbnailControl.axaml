@@ -18,7 +18,7 @@
 					<ListBox Name="PART_ListBox"
 							 Background="Transparent"
                              SelectionMode="Single,AlwaysSelected"
-                             HorizontalAlignment="Stretch"
+                             HorizontalAlignment="Center"
 							 VerticalAlignment="Stretch"
                              BorderThickness="0"
                              ItemsSource="{Binding Pages}"

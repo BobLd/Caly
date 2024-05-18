@@ -39,18 +39,10 @@ public sealed partial class MainViewModel : ViewModelBase
 
     [ObservableProperty] private int _selectedDocumentIndex;
 
-    [ObservableProperty] private bool _isPaneOpen;
-
-    [RelayCommand]
-    private void TogglePane()
-    {
-        IsPaneOpen = !IsPaneOpen;
-    }
+    [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
 
     public MainViewModel()
     {
-        _isPaneOpen = !CalyExtensions.IsMobilePlatform();
-
         // TODO - Dispose to unsubscribe
         _documentCollectionDisposable = PdfDocuments
             .GetWeakCollectionChangedObservable()

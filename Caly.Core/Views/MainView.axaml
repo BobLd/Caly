@@ -45,7 +45,7 @@
 
 					<DockPanel Grid.Row="0" Background="#3b3b3b">
 						<StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-							<ToggleButton Command="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).TogglePaneCommand}">
+							<ToggleButton IsChecked="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).IsPaneOpen}">
 								<PathIcon Data="{StaticResource line_horizontal_3_regular}">
 									<ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
 								</PathIcon>
