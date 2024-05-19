@@ -15,82 +15,81 @@
 
 using System;
 using System.Globalization;
-using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 
 namespace Caly.Core.Converters
 {
-    // This is very hackish - need to implement our own NumericUpDown control
     public sealed class NumericUpDownPdfPageConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is null)
+            return value switch
             {
-                return 1.ToString();
-            }
-
-            if (value is int i)
-            {
-                return i.ToString();
-            }
-
-            return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
+                null => null,
+                int i => i.ToString("D", CultureInfo.InvariantCulture),
+                _ => new BindingNotification(new InvalidCastException($"Got '{value}'."), BindingErrorType.Error)
+            };
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            int max = int.MaxValue;
-            if (parameter is Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindingExtension ext && ext.DefaultAnchor?.Target is NumericUpDown numUpDown && numUpDown.Maximum < max)
-            {
-                max = (int)numUpDown.Maximum;
-            }
-
             if (value is null || string.IsNullOrEmpty((string)value))
             {
-                return max + 1;
+                return null;
             }
 
             if (value is int i)
             {
+                if (i <= 0)
+                {
+                    return null;
+                }
+
                 return i;
             }
 
-            if (value is string s)
+            if (value is not string s)
             {
-                if (int.TryParse(s, out i))
-                {
-                    if (i <= 0)
-                    {
-                        return 1;
-                    }
-
-                    if (i > max)
-                    {
-                        return max + 1;
-                    }
-
-                    return i;
-                }
-
-                if (double.TryParse(s, out double d))
-                {
-                    if (d > max)
-                    {
-                        return max;
-                    }
-
-                    if (d <= 0)
-                    {
-                        return 1;
-                    }
-
-                    return (int)d;
-                }
+                return null;
             }
 
-            return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
+            if (int.TryParse(s, out i))
+            {
+                if (i <= 0)
+                {
+                    return null;
+                }
+
+                return i;
+            }
+
+            if (!double.TryParse(s, out double d))
+            {
+                return null;
+            }
+
+            if (d > int.MaxValue)
+            {
+                return null; // TODO - Should be max page
+            }
+
+            if (d <= 0)
+            {
+                return null;
+            }
+
+            if (double.IsNaN(d))
+            {
+                return null; // Corner case
+            }
+
+            if (double.IsInfinity(d))
+            {
+                return null; // Corner case
+            }
+
+            return (int)d;
         }
     }
 }

@@ -53,7 +53,7 @@ namespace Caly.Core.Controls
         /// <summary>
         /// Defines the <see cref="SelectedPageIndex"/> property. Starts at 1.
         /// </summary>
-        public static readonly StyledProperty<int> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfDocumentControl, int>(nameof(SelectedPageIndex), 1, defaultBindingMode: BindingMode.TwoWay);
+        public static readonly StyledProperty<int?> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfDocumentControl, int?>(nameof(SelectedPageIndex), 1, defaultBindingMode: BindingMode.TwoWay);
 
         /// <summary>
         /// Defines the <see cref="SelectedBookmark"/> property.
@@ -80,7 +80,7 @@ namespace Caly.Core.Controls
         /// <summary>
         /// Starts at 1.
         /// </summary>
-        public int SelectedPageIndex
+        public int? SelectedPageIndex
         {
             get => GetValue(SelectedPageIndexProperty);
             set => SetValue(SelectedPageIndexProperty, value);
@@ -120,7 +120,10 @@ namespace Caly.Core.Controls
 
             if (change.Property == SelectedPageIndexProperty)
             {
-                GoToPage(SelectedPageIndex);
+                if (change.NewValue is int p)
+                {
+                    GoToPage(p);
+                }
             }
             else if (change.Property == SelectedBookmarkProperty)
             {
