@@ -47,7 +47,7 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private PdfBookmarkNode? _selectedBookmark;
 
-        [ObservableProperty] private int _selectedPageIndex = 1;
+        [ObservableProperty] private int? _selectedPageIndex = 1;
 
         [ObservableProperty] private int _pageCount;
 
@@ -210,13 +210,21 @@ namespace Caly.Core.ViewModels
         [RelayCommand]
         private void GoToPreviousPage()
         {
-            SelectedPageIndex = Math.Max(1, SelectedPageIndex - 1);
+            if (!SelectedPageIndex.HasValue)
+            {
+                return;
+            }
+            SelectedPageIndex = Math.Max(1, SelectedPageIndex.Value - 1);
         }
 
         [RelayCommand]
         private void GoToNextPage()
         {
-            SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex + 1);
+            if (!SelectedPageIndex.HasValue)
+            {
+                return;
+            }
+            SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex.Value + 1);
         }
 
         [RelayCommand]

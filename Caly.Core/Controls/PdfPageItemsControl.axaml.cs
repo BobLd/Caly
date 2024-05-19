@@ -49,7 +49,7 @@ public class PdfPageItemsControl : ItemsControl
     /// <summary>
     /// Defines the <see cref="SelectedPageIndex"/> property. Starts at 1.
     /// </summary>
-    public static readonly StyledProperty<int> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfPageItemsControl, int>(nameof(SelectedPageIndex), 1, defaultBindingMode: BindingMode.TwoWay);
+    public static readonly StyledProperty<int?> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfPageItemsControl, int?>(nameof(SelectedPageIndex), 1, defaultBindingMode: BindingMode.TwoWay);
 
     /// <summary>
     /// Defines the <see cref="MinZoomLevel"/> property.
@@ -103,7 +103,7 @@ public class PdfPageItemsControl : ItemsControl
     /// <summary>
     /// Starts at 1.
     /// </summary>
-    public int SelectedPageIndex
+    public int? SelectedPageIndex
     {
         get => GetValue(SelectedPageIndexProperty);
         set => SetValue(SelectedPageIndexProperty, value);
@@ -247,7 +247,7 @@ public class PdfPageItemsControl : ItemsControl
         int minPageIndex = GetMinPageIndex();
         int maxPageIndex = GetMaxPageIndex(); // Exclusive
 
-        int startIndex = SelectedPageIndex - 1; // Switch from one-indexed to zero-indexed
+        int startIndex = SelectedPageIndex.HasValue ? SelectedPageIndex.Value - 1 : 0; // Switch from one-indexed to zero-indexed
 
         bool isAfterSelectedPage = false;
 
@@ -491,7 +491,7 @@ public class PdfPageItemsControl : ItemsControl
         }
 
         // Check current page visibility
-        int startIndex = SelectedPageIndex - 1; // Switch from one-indexed to zero-indexed
+        int startIndex = SelectedPageIndex.HasValue ? SelectedPageIndex.Value - 1 : 0; // Switch from one-indexed to zero-indexed
         CheckPageVisibility(startIndex, out bool isSelectedPageVisible);
 
         int minPageIndex = GetMinPageIndex();
@@ -730,7 +730,7 @@ public class PdfPageItemsControl : ItemsControl
     {
         // There's a bug in VirtualizingStackPanel. Scroll bars do not display correctly
         // This hack fixes that by scrolling into view a page that's not realised
-        int currentPage = SelectedPageIndex - 1;
+        int currentPage = SelectedPageIndex.HasValue ? SelectedPageIndex.Value - 1 : 0;
         if (currentPage >= GetMinPageIndex() && currentPage <= GetMaxPageIndex())
         {
             // Current page is realised
