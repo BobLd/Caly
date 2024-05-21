@@ -19,26 +19,27 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Caly.Core.ViewModels;
-
-public partial class ViewModelBase : ObservableObject
+namespace Caly.Core.ViewModels
 {
-    [ObservableProperty]
-    private ExceptionViewModel? _exception;
-
-    partial void OnExceptionChanging(ExceptionViewModel? value)
+    public partial class ViewModelBase : ObservableObject
     {
-        if (value is null)
-        {
-            return;
-        }
+        [ObservableProperty]
+        private ExceptionViewModel? _exception;
 
-        var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
-        if (dialogService is null)
+        partial void OnExceptionChanging(ExceptionViewModel? value)
         {
-            throw new NullReferenceException($"Missing {nameof(IDialogService)} instance.");
-        }
+            if (value is null)
+            {
+                return;
+            }
 
-        Dispatcher.UIThread.Post(() => dialogService.ShowExceptionWindowAsync(value));
+            var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
+            if (dialogService is null)
+            {
+                throw new NullReferenceException($"Missing {nameof(IDialogService)} instance.");
+            }
+
+            Dispatcher.UIThread.Post(() => dialogService.ShowExceptionWindowAsync(value));
+        }
     }
 }

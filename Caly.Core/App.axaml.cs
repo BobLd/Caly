@@ -30,196 +30,197 @@ using Caly.Core.ViewModels;
 using Caly.Core.Views;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Caly.Core;
-
-public partial class App : Application
+namespace Caly.Core
 {
-    private readonly FilePipeStream _pipeServer = new();
-    private readonly CancellationTokenSource listeningToFilesCts = new();
-    private Task? listeningToFiles;
+    public partial class App : Application
+    {
+        private readonly FilePipeStream _pipeServer = new();
+        private readonly CancellationTokenSource listeningToFilesCts = new();
+        private Task? listeningToFiles;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    private IPdfDocumentsService _pdfDocumentsService;
+        private IPdfDocumentsService _pdfDocumentsService;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    public new static App? Current => Application.Current as App;
+        public new static App? Current => Application.Current as App;
 
-    /// <summary>
-    /// Gets the <see cref="IServiceProvider"/> instance to resolve application services.
-    /// </summary>
-    public IServiceProvider? Services { get; private set; }
+        /// <summary>
+        /// Gets the <see cref="IServiceProvider"/> instance to resolve application services.
+        /// </summary>
+        public IServiceProvider? Services { get; private set; }
 
-    public override void Initialize()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
-    public override void OnFrameworkInitializationCompleted()
-    {
-        // Line below is needed to remove Avalonia data validation.
-        // Without this line you will get duplicate validations from both Avalonia and CT
-        BindingPlugins.DataValidators.RemoveAt(0);
-
-        // Initialise dependencies
-        var services = new ServiceCollection();
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        public override void Initialize()
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainViewModel()
-            };
+            AvaloniaXamlLoader.Load(this);
+        }
 
-            services.AddSingleton(_ => (Visual)desktop.MainWindow);
-            desktop.Startup += Desktop_Startup;
-            desktop.Exit += Desktop_Exit;
+        public override void OnFrameworkInitializationCompleted()
+        {
+            // Line below is needed to remove Avalonia data validation.
+            // Without this line you will get duplicate validations from both Avalonia and CT
+            BindingPlugins.DataValidators.RemoveAt(0);
+
+            // Initialise dependencies
+            var services = new ServiceCollection();
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = new MainViewModel()
+                };
+
+                services.AddSingleton(_ => (Visual)desktop.MainWindow);
+                desktop.Startup += Desktop_Startup;
+                desktop.Exit += Desktop_Exit;
 #if DEBUG
-            desktop.MainWindow.RendererDiagnostics.DebugOverlays = Avalonia.Rendering.RendererDebugOverlays.RenderTimeGraph;
+                desktop.MainWindow.RendererDiagnostics.DebugOverlays = Avalonia.Rendering.RendererDebugOverlays.RenderTimeGraph;
 #endif
-        }
-        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
-        {
-            singleViewPlatform.MainView = new MainView
+            }
+            else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
-                DataContext = new MainViewModel()
-            };
-            services.AddSingleton(_ => (Visual)singleViewPlatform.MainView);
-        }
+                singleViewPlatform.MainView = new MainView
+                {
+                    DataContext = new MainViewModel()
+                };
+                services.AddSingleton(_ => (Visual)singleViewPlatform.MainView);
+            }
 
-        services.AddSingleton<IFilesService, FilesService>();
-        services.AddSingleton<IDialogService, DialogService>();
-        services.AddSingleton<IClipboardService, ClipboardService>();
-        services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
-        services.AddTransient<IPdfService, PdfPigPdfService>();
+            services.AddSingleton<IFilesService, FilesService>();
+            services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<IClipboardService, ClipboardService>();
+            services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
+            services.AddTransient<IPdfService, PdfPigPdfService>();
 
-        Services = services.BuildServiceProvider();
+            Services = services.BuildServiceProvider();
 
-        // We need to make sure IPdfDocumentsService singleton is initiated in UI thread
+            // We need to make sure IPdfDocumentsService singleton is initiated in UI thread
 #pragma warning disable CS8601 // Possible null reference assignment.
-        _pdfDocumentsService = Services.GetRequiredService<IPdfDocumentsService>();
+            _pdfDocumentsService = Services.GetRequiredService<IPdfDocumentsService>();
 #pragma warning restore CS8601 // Possible null reference assignment.
 
-        // TODO - Check https://github.com/AvaloniaUI/Avalonia/commit/0e014f9cb627d99fb4e1afa389b4c073c836e9b6
+            // TODO - Check https://github.com/AvaloniaUI/Avalonia/commit/0e014f9cb627d99fb4e1afa389b4c073c836e9b6
 
-        base.OnFrameworkInitializationCompleted();
-    }
-
-    private async void Desktop_Startup(object? sender, ControlledApplicationLifetimeStartupEventArgs e)
-    {
-        listeningToFiles = Task.Run(ListenToIncomingFiles); // Start listening
-
-        if (e.Args.Length == 0)
-        {
-            return;
+            base.OnFrameworkInitializationCompleted();
         }
 
-        await Task.Run(() => OpenDoc(e.Args[0], CancellationToken.None));
-    }
-
-    private void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
-    {
-        listeningToFilesCts.Cancel();
-        GC.KeepAlive(listeningToFiles);
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        private async void Desktop_Startup(object? sender, ControlledApplicationLifetimeStartupEventArgs e)
         {
-            desktop.Startup -= Desktop_Startup;
-            desktop.Exit -= Desktop_Exit;
-        }
-    }
+            listeningToFiles = Task.Run(ListenToIncomingFiles); // Start listening
 
-    private async Task ListenToIncomingFiles()
-    {
-        Debug.ThrowOnUiThread();
-
-        try
-        {
-            await Parallel.ForEachAsync(_pipeServer.ReceivePathAsync(listeningToFilesCts.Token),
-                listeningToFilesCts.Token,
-                async (path, ct) => await OpenDoc(path, ct));
-        }
-        catch (OperationCanceledException)
-        {
-            // No op
-        }
-        catch (Exception ex)
-        {
-            // Critical error...
-            ShowExceptionWindowSafely(ex);
-            Debug.WriteExceptionToFile(ex);
-            throw;
-        }
-        finally
-        {
-            await _pipeServer.DisposeAsync();
-        }
-    }
-
-    private async Task OpenDoc(string? path, CancellationToken token)
-    {
-        Debug.ThrowOnUiThread();
-
-        try
-        {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            if (e.Args.Length == 0)
             {
-                var dialogService = Services?.GetRequiredService<IDialogService>();
-                if (dialogService is not null)
-                {
-                    Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Cannot open file",
-                        "The file does not exist or the path is invalid.", NotificationType.Error));
-                }
-
-                // TODO - Log
-
                 return;
             }
 
-            await _pdfDocumentsService.OpenLoadDocument(path, token);
+            await Task.Run(() => OpenDoc(e.Args[0], CancellationToken.None));
         }
-        catch (Exception ex)
-        {
-            ShowExceptionNotificationSafely(ex);
-            Debug.WriteExceptionToFile(ex);
-        }
-    }
 
-    private void ShowExceptionNotificationSafely(Exception? ex)
-    {
-        Dispatcher.UIThread.Post(() =>
+        private void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         {
+            listeningToFilesCts.Cancel();
+            GC.KeepAlive(listeningToFiles);
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.Startup -= Desktop_Startup;
+                desktop.Exit -= Desktop_Exit;
+            }
+        }
+
+        private async Task ListenToIncomingFiles()
+        {
+            Debug.ThrowOnUiThread();
+
             try
             {
-                if (ex is null) return;
+                await Parallel.ForEachAsync(_pipeServer.ReceivePathAsync(listeningToFilesCts.Token),
+                    listeningToFilesCts.Token,
+                    async (path, ct) => await OpenDoc(path, ct));
+            }
+            catch (OperationCanceledException)
+            {
+                // No op
+            }
+            catch (Exception ex)
+            {
+                // Critical error...
+                ShowExceptionWindowSafely(ex);
+                Debug.WriteExceptionToFile(ex);
+                throw;
+            }
+            finally
+            {
+                await _pipeServer.DisposeAsync();
+            }
+        }
 
-                var dialogService = Services?.GetRequiredService<IDialogService>();
-                if (dialogService is not null)
+        private async Task OpenDoc(string? path, CancellationToken token)
+        {
+            Debug.ThrowOnUiThread();
+
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 {
-                    Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Error", ex.Message, NotificationType.Error));
+                    var dialogService = Services?.GetRequiredService<IDialogService>();
+                    if (dialogService is not null)
+                    {
+                        Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Cannot open file",
+                            "The file does not exist or the path is invalid.", NotificationType.Error));
+                    }
+
+                    // TODO - Log
+
+                    return;
                 }
-            }
-            catch
-            {
-                // No op
-            }
-        });
-    }
 
-    private void ShowExceptionWindowSafely(Exception? ex)
-    {
-        Dispatcher.UIThread.Post(() =>
+                await _pdfDocumentsService.OpenLoadDocument(path, token);
+            }
+            catch (Exception ex)
+            {
+                ShowExceptionNotificationSafely(ex);
+                Debug.WriteExceptionToFile(ex);
+            }
+        }
+
+        private void ShowExceptionNotificationSafely(Exception? ex)
         {
-            try
+            Dispatcher.UIThread.Post(() =>
             {
-                if (ex is null) return;
+                try
+                {
+                    if (ex is null) return;
 
-                var dialogService = Services?.GetRequiredService<IDialogService>();
-                dialogService?.ShowExceptionWindow(ex);
-            }
-            catch
+                    var dialogService = Services?.GetRequiredService<IDialogService>();
+                    if (dialogService is not null)
+                    {
+                        Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Error", ex.Message, NotificationType.Error));
+                    }
+                }
+                catch
+                {
+                    // No op
+                }
+            });
+        }
+
+        private void ShowExceptionWindowSafely(Exception? ex)
+        {
+            Dispatcher.UIThread.Post(() =>
             {
-                // No op
-            }
-        });
+                try
+                {
+                    if (ex is null) return;
+
+                    var dialogService = Services?.GetRequiredService<IDialogService>();
+                    dialogService?.ShowExceptionWindow(ex);
+                }
+                catch
+                {
+                    // No op
+                }
+            });
+        }
     }
 }

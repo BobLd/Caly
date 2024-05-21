@@ -29,87 +29,88 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Tabalonia.Controls;
 
-namespace Caly.Core.ViewModels;
-
-public sealed partial class MainViewModel : ViewModelBase
+namespace Caly.Core.ViewModels
 {
-    private readonly IDisposable _documentCollectionDisposable;
-
-    public ObservableCollection<PdfDocumentViewModel> PdfDocuments { get; } = new();
-
-    [ObservableProperty] private int _selectedDocumentIndex;
-
-    [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
-
-    public MainViewModel()
+    public sealed partial class MainViewModel : ViewModelBase
     {
-        // TODO - Dispose to unsubscribe
-        _documentCollectionDisposable = PdfDocuments
-            .GetWeakCollectionChangedObservable()
-            .ObserveOn(Scheduler.Default)
-            .Subscribe(async e =>
-            {
-                try
+        private readonly IDisposable _documentCollectionDisposable;
+
+        public ObservableCollection<PdfDocumentViewModel> PdfDocuments { get; } = new();
+
+        [ObservableProperty] private int _selectedDocumentIndex;
+
+        [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
+
+        public MainViewModel()
+        {
+            // TODO - Dispose to unsubscribe
+            _documentCollectionDisposable = PdfDocuments
+                .GetWeakCollectionChangedObservable()
+                .ObserveOn(Scheduler.Default)
+                .Subscribe(async e =>
                 {
-                    if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems?.Count > 0)
+                    try
                     {
-                        foreach (var newDoc in e.NewItems.OfType<PdfDocumentViewModel>())
+                        if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems?.Count > 0)
                         {
-                            await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask);
+                            foreach (var newDoc in e.NewItems.OfType<PdfDocumentViewModel>())
+                            {
+                                await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask);
+                            }
+
+                            SelectedDocumentIndex = PdfDocuments.Count - 1;
                         }
-
-                        SelectedDocumentIndex = PdfDocuments.Count - 1;
                     }
-                }
-                catch (OperationCanceledException)
-                {
-                    // No op
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteExceptionToFile(ex);
-                    Exception = new ExceptionViewModel(ex);
-                }
-            });
-    }
+                    catch (OperationCanceledException)
+                    {
+                        // No op
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteExceptionToFile(ex);
+                        Exception = new ExceptionViewModel(ex);
+                    }
+                });
+        }
 
-    [RelayCommand]
-    private async Task OpenFile(CancellationToken token)
-    {
-        try
+        [RelayCommand]
+        private async Task OpenFile(CancellationToken token)
         {
-            var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
-            if (pdfDocumentsService is null)
+            try
             {
-                throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
+                var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
+                if (pdfDocumentsService is null)
+                {
+                    throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
+                }
+
+                await pdfDocumentsService.OpenLoadDocument(token);
             }
-
-            await pdfDocumentsService.OpenLoadDocument(token);
-        }
-        catch (OperationCanceledException)
-        {
-            // No op
-        }
-        catch (Exception e)
-        {
-            Debug.WriteExceptionToFile(e);
-            Exception = new ExceptionViewModel(e);
-        }
-    }
-
-    [RelayCommand]
-    private async Task CloseTab(object tabItem)
-    {
-        // TODO - Finish proper dispose / unload of document on close 
-        if (((DragTabItem)tabItem)?.DataContext is PdfDocumentViewModel vm)
-        {
-            var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
-            if (pdfDocumentsService is null)
+            catch (OperationCanceledException)
             {
-                throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
+                // No op
             }
+            catch (Exception e)
+            {
+                Debug.WriteExceptionToFile(e);
+                Exception = new ExceptionViewModel(e);
+            }
+        }
 
-            await Task.Run(() => pdfDocumentsService.CloseUnloadDocument(vm));
+        [RelayCommand]
+        private async Task CloseTab(object tabItem)
+        {
+            // TODO - Finish proper dispose / unload of document on close 
+            if (((DragTabItem)tabItem)?.DataContext is PdfDocumentViewModel vm)
+            {
+                var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
+                if (pdfDocumentsService is null)
+                {
+                    throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
+                }
+
+                await Task.Run(() => pdfDocumentsService.CloseUnloadDocument(vm));
+            }
         }
     }
 }

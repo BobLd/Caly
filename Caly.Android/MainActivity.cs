@@ -5,24 +5,25 @@ using Avalonia;
 using Avalonia.Android;
 using Caly.Core;
 
-namespace Caly.Android;
-
-[Activity(
-    Label = "Caly.Android",
-    Theme = "@style/MyTheme.NoActionBar",
-    Icon = "@drawable/icon",
-    MainLauncher = true,
-    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
-public class MainActivity : AvaloniaMainActivity<App>
+namespace Caly.Android
 {
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    [Activity(
+        Label = "Caly.Android",
+        Theme = "@style/MyTheme.NoActionBar",
+        Icon = "@drawable/icon",
+        MainLauncher = true,
+        ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+    public class MainActivity : AvaloniaMainActivity<App>
     {
-        return base.CustomizeAppBuilder(builder)
-            .WithInterFont()
-            .UseSkia()
-            .With(new AndroidPlatformOptions()
-            {
-                RenderingMode = new[] { AndroidRenderingMode.Software }
-            });
+        protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+        {
+            return base.CustomizeAppBuilder(builder)
+                .WithInterFont()
+                .UseSkia()
+                .With(new AndroidPlatformOptions()
+                {
+                    RenderingMode = new[] { AndroidRenderingMode.Software }
+                });
+        }
     }
 }

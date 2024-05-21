@@ -23,74 +23,75 @@ using Avalonia.VisualTree;
 using Caly.Core.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Caly.Core.Views;
-
-public partial class MainView : UserControl
+namespace Caly.Core.Views
 {
-    public MainView()
+    public partial class MainView : UserControl
     {
-        InitializeComponent();
-        AddHandler(DragDrop.DropEvent, Drop);
-    }
-
-    private async void Drop(object? sender, DragEventArgs e)
-    {
-        try
+        public MainView()
         {
-            if (e.Data is null || !e.Data.Contains(DataFormats.Files))
+            InitializeComponent();
+            AddHandler(DragDrop.DropEvent, Drop);
+        }
+
+        private async void Drop(object? sender, DragEventArgs e)
+        {
+            try
+            {
+                if (e.Data is null || !e.Data.Contains(DataFormats.Files))
+                {
+                    return;
+                }
+
+                var files = e.Data.GetFiles();
+
+                if (files is null)
+                {
+                    return;
+                }
+
+                var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
+                if (pdfDocumentsService is null)
+                {
+                    throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
+                }
+
+                await Task.Run(() => pdfDocumentsService.OpenLoadDocuments(files, CancellationToken.None));
+            }
+            catch (Exception ex)
+            {
+                // TODO - Show dialog
+                Debug.WriteExceptionToFile(ex);
+            }
+        }
+
+        private void TreeView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (!e.WidthChanged)
             {
                 return;
             }
 
-            var files = e.Data.GetFiles();
-
-            if (files is null)
+            if (sender is not TreeView treeView)
             {
                 return;
             }
 
-            var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
-            if (pdfDocumentsService is null)
+            double width = treeView.Bounds.Width;
+
+            foreach (var control in treeView.GetRealizedContainers().OfType<TreeViewItem>())
             {
-                throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
-            }
+                var stackPanel = control.GetVisualChildren().OfType<StackPanel>().FirstOrDefault();
+                if (stackPanel is null)
+                {
+                    continue;
+                }
 
-            await Task.Run(() => pdfDocumentsService.OpenLoadDocuments(files, CancellationToken.None));
-        }
-        catch (Exception ex)
-        {
-            // TODO - Show dialog
-            Debug.WriteExceptionToFile(ex);
-        }
-    }
+                stackPanel.SetCurrentValue(WidthProperty, width);
 
-    private void TreeView_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        if (!e.WidthChanged)
-        {
-            return;
-        }
-
-        if (sender is not TreeView treeView)
-        {
-            return;
-        }
-
-        double width = treeView.Bounds.Width;
-
-        foreach (var control in treeView.GetRealizedContainers().OfType<TreeViewItem>())
-        {
-            var stackPanel = control.GetVisualChildren().OfType<StackPanel>().FirstOrDefault();
-            if (stackPanel is null)
-            {
-                continue;
-            }
-
-            stackPanel.SetCurrentValue(WidthProperty, width);
-
-            foreach (var textBlock in stackPanel.GetVisualDescendants().OfType<TextBlock>())
-            {
-                textBlock.InvalidateMeasure();
+                foreach (var textBlock in stackPanel.GetVisualDescendants().OfType<TextBlock>())
+                {
+                    textBlock.InvalidateMeasure();
+                }
             }
         }
     }
