@@ -32,6 +32,11 @@
 		<DebugSymbols>false</DebugSymbols>
 	</PropertyGroup>
 
+	<PropertyGroup Label="Avalonia">
+	  <AvaloniaUseCompiledBindingsByDefault>True</AvaloniaUseCompiledBindingsByDefault>
+	  <ApplicationIcon>..\Caly.Core\Assets\caly-logo.ico</ApplicationIcon>
+	</PropertyGroup>
+	
 	<!--
 	<PropertyGroup>
 		<UseSystemResourceKeys>true</UseSystemResourceKeys>

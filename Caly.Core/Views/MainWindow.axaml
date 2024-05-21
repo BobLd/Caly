@@ -1,13 +1,12 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Caly.Core.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:Caly.Core.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Caly.Core.Views.MainWindow"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Caly">
+        Icon="/Assets/caly-logo.ico"
+        Title="Caly Pdf Reader">
     <Border DragDrop.AllowDrop="True">
         <views:MainView />
     </Border>
