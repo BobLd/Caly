@@ -14,6 +14,7 @@
 		<Setter Property="ZoomLevel" Value="{Binding ZoomLevel, Mode=TwoWay}"/>
 		<Setter Property="SelectedPageIndex" Value="{Binding SelectedPageIndex, Mode=TwoWay}"/>
 		<Setter Property="SelectedBookmark" Value="{Binding SelectedBookmark, Mode=OneWay}"/>
+        <Setter Property="SelectedTextSearchResult" Value="{Binding SelectedTextSearchResult, Mode=OneWay}"/>
 		<Setter Property="UseLayoutRounding" Value="True"/>
 
 		<Setter Property="Template">

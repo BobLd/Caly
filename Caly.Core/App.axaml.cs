@@ -18,6 +18,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data.Core.Plugins;
@@ -64,6 +65,7 @@ namespace Caly.Core
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = new MainViewModel()
@@ -96,6 +98,7 @@ namespace Caly.Core
             services.AddSingleton<IClipboardService, ClipboardService>();
             services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
             services.AddTransient<IPdfService, PdfPigPdfService>();
+            services.AddTransient<ITextSearchService, LiftiTextSearchService>();
 
             Services = services.BuildServiceProvider();
 

@@ -68,6 +68,7 @@ namespace Caly.Core.Services
         }
 
         private string? _previousNotificationMessage;
+        private string? _previousExceptionWindowMessage;
 
         public void ShowNotification(string? title, string? message, NotificationType type)
         {
@@ -90,7 +91,7 @@ namespace Caly.Core.Services
                 }
             }, DispatcherPriority.Loaded);
         }
-
+        
         public Task ShowExceptionWindowAsync(Exception exception)
         {
             return ShowExceptionWindowAsync(new ExceptionViewModel(exception));
@@ -107,8 +108,12 @@ namespace Caly.Core.Services
                     return;
                 }
 
-                var window = new MessageWindow { DataContext = exception };
-                await window.ShowDialog(w);
+                if (exception.Message != _previousExceptionWindowMessage) // TODO - Improve to count same messages
+                {
+                    var window = new MessageWindow { DataContext = exception };
+                    await window.ShowDialog(w);
+                    _previousExceptionWindowMessage = exception.Message;
+                }
             }, DispatcherPriority.Loaded);
         }
 
@@ -123,8 +128,13 @@ namespace Caly.Core.Services
             {
                 Debug.ThrowNotOnUiThread();
                 System.Diagnostics.Debug.WriteLine(exception.ToString());
-                var window = new MessageWindow { DataContext = exception };
-                window.Show();
+
+                if (exception.Message != _previousExceptionWindowMessage) // TODO - Improve to count same messages
+                {
+                    var window = new MessageWindow { DataContext = exception };
+                    window.Show();
+                    _previousExceptionWindowMessage = exception.Message;
+                }
             }, DispatcherPriority.Loaded);
         }
     }

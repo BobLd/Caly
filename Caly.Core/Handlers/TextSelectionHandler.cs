@@ -16,11 +16,13 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Caly.Core.Controls;
 using Caly.Core.Handlers.Interfaces;
@@ -42,6 +44,8 @@ namespace Caly.Core.Handlers
     {
         private static readonly Color _selectionColor = Color.FromArgb(0xa9, 0x33, 0x99, 0xFF);
 
+        private static readonly Color _searchColor = Color.FromArgb(0xa9, 255, 0, 0);
+
         /// <summary>
         /// <c>true</c> if we are currently selecting text. <c>false</c> otherwise.
         /// </summary>
@@ -61,6 +65,8 @@ namespace Caly.Core.Handlers
 
         private void ClearSelection(PdfPageTextLayerControl currentTextLayer)
         {
+            Debug.ThrowNotOnUiThread();
+
             int start = Selection.GetStartPageIndex();
             int end = Selection.GetEndPageIndex();
 
@@ -477,6 +483,66 @@ namespace Caly.Core.Handlers
             _isSelecting = false;
         }
 
+        private readonly Dictionary<int, PdfWord[]> _searchResults = new();
+
+        public void ClearTextSearchResults(PdfDocumentViewModel documentViewModel)
+        {
+            var currentPages = _searchResults.Keys.ToArray();
+            _searchResults.Clear();
+
+            foreach (int p in currentPages)
+            {
+                Dispatcher.UIThread.Post(documentViewModel.Pages[p - 1].FlagSelectionChanged);
+            }
+        }
+
+        public void SetTextSearchResults(PdfDocumentViewModel documentViewModel,
+            IReadOnlyCollection<TextSearchResultViewModel> searchResults)
+        {
+            var currentPages = _searchResults.Keys.ToList();
+            _searchResults.Clear();
+
+            if (searchResults.Count > 0)
+            {
+                foreach (var result in searchResults)
+                {
+                    System.Diagnostics.Debug.Assert(result.Nodes != null);
+
+                    _searchResults[result.PageNumber] = result.Nodes
+                        .Where(x => x.Word is not null)
+                        .Select(x => x.Word!)
+                        .ToArray();
+
+                    Dispatcher.UIThread.Post(documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged);
+                    currentPages.Remove(result.PageNumber);
+                }
+            }
+
+            foreach (int p in currentPages)
+            {
+                Dispatcher.UIThread.Post(documentViewModel.Pages[p - 1].FlagSelectionChanged);
+            }
+        }
+
+        public void AddTextSearchResults(PdfDocumentViewModel documentViewModel,
+            IReadOnlyCollection<TextSearchResultViewModel> searchResults)
+        {
+            if (searchResults.Count > 0)
+            {
+                foreach (var result in searchResults)
+                {
+                    System.Diagnostics.Debug.Assert(result.Nodes != null);
+
+                    _searchResults[result.PageNumber] = result.Nodes
+                        .Where(x => x.Word is not null)
+                        .Select(x => x.Word!)
+                        .ToArray();
+
+                    Dispatcher.UIThread.Post(documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged);
+                }
+            }
+        }
+
 #if DEBUG
         private static void DrawArrow(DrawingContext context, IPen pen, Point lineStart, Point lineEnd)
         {
@@ -536,6 +602,16 @@ namespace Caly.Core.Handlers
                 context.DrawGeometry(redBrush, redPen, PdfWordHelpers.GetGeometry(focusLine.BoundingBox, true));
             }
 #endif
+
+            if (_searchResults.TryGetValue(control.PageNumber!.Value, out var results))
+            {
+                var searchBrush = new ImmutableSolidColorBrush(_searchColor);
+
+                foreach (PdfWord result in results)
+                {
+                    context.DrawGeometry(searchBrush, null, PdfWordHelpers.GetGeometry(result));
+                }
+            }
 
             var selectionBrush = new ImmutableSolidColorBrush(_selectionColor);
 

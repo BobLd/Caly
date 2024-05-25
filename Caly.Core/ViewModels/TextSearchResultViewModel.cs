@@ -13,27 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using System;
+using System.Collections.ObjectModel;
+using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Caly.Core.ViewModels
 {
-    public sealed class ExceptionViewModel : ObservableObject
+    public sealed partial class TextSearchResultViewModel : ViewModelBase
     {
-        public Exception Exception { get; }
-
-        public string Message => Exception.Message;
-
-        public string StackTrace => Exception.StackTrace ?? string.Empty;
-
-        public ExceptionViewModel(Exception exception)
-        {
-            Exception = exception;
-        }
-
-        public override string ToString()
-        {
-            return Exception.ToString();
-        }
+        [ObservableProperty] private int _pageNumber;
+        [ObservableProperty] private int? _wordIndex;
+        [ObservableProperty] private PdfWord? _word;
+        [ObservableProperty] private double? _score;
+        [ObservableProperty] private ObservableCollection<TextSearchResultViewModel>? _nodes;
     }
 }

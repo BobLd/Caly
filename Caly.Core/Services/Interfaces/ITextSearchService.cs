@@ -14,26 +14,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Caly.Core.ViewModels;
 
-namespace Caly.Core.ViewModels
+namespace Caly.Core.Services.Interfaces
 {
-    public sealed class ExceptionViewModel : ObservableObject
+    public interface ITextSearchService : IDisposable
     {
-        public Exception Exception { get; }
+        Task BuildPdfDocumentIndex(PdfDocumentViewModel pdfDocument, CancellationToken token);
 
-        public string Message => Exception.Message;
-
-        public string StackTrace => Exception.StackTrace ?? string.Empty;
-
-        public ExceptionViewModel(Exception exception)
-        {
-            Exception = exception;
-        }
-
-        public override string ToString()
-        {
-            return Exception.ToString();
-        }
+        Task<IEnumerable<TextSearchResultViewModel>> Search(PdfDocumentViewModel pdfDocument, string text, CancellationToken token);
     }
 }

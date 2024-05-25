@@ -85,7 +85,16 @@
 							<TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"/>
-                        </StackPanel>
+
+							<!-- Document text search -->
+							<TextBox Width="120" Watermark="Search..." Text="{Binding TextSearch}"/>
+							<Button HorizontalAlignment="Center" Command="{Binding SearchTextCommand}">
+								<PathIcon Data="{StaticResource document_search_regular}">
+									<ToolTip.Tip>Search</ToolTip.Tip>
+								</PathIcon>
+							</Button>
+
+						</StackPanel>
 
 					</DockPanel>
 
@@ -96,61 +105,99 @@
                                CompactPaneLength="0"
                                DisplayMode="CompactInline">
 
-                        <!-- Left navigation bar -->
-			            <SplitView.Pane>
-                 
-                            <Grid ColumnDefinitions="*,4">
-                                <Border Grid.Column="0"
+						<!-- Left navigation bar -->
+						<SplitView.Pane>
+
+							<Grid ColumnDefinitions="*,4">
+								<Border Grid.Column="0"
                                         BorderThickness="1"
                                         BorderBrush="{StaticResource SystemChromeHighColor}">
-                                    
-                                    <TabControl TabStripPlacement="Left" Padding="12,0,0,0">
-                                        
-                                        <!-- Thumbnails tab -->
-                                        <TabItem IsSelected="True">
-                                            <TabItem.Header>
-                                                <PathIcon Data="{StaticResource copy_regular}">
-                                                    <ToolTip.Tip>Thumbnails</ToolTip.Tip>
-                                                    <PathIcon.RenderTransform>
-                                                        <ScaleTransform ScaleY="-1"/>
-                                                    </PathIcon.RenderTransform>
-                                                </PathIcon>
-                                            </TabItem.Header>
-                                            <controls:PdfDocumentThumbnailControl />
-                                        </TabItem>
-                                        
-                                        <!-- Bookmarks tab -->
-                                        <TabItem IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
+
+									<TabControl TabStripPlacement="Left"
+                                                Padding="12,0,0,0"
+                                                SelectedIndex="{Binding SelectedTabIndex}">
+
+										<!-- Thumbnails tab -->
+										<TabItem IsSelected="True">
+											<TabItem.Header>
+												<PathIcon Data="{StaticResource copy_regular}">
+													<ToolTip.Tip>Thumbnails</ToolTip.Tip>
+													<PathIcon.RenderTransform>
+														<ScaleTransform ScaleY="-1"/>
+													</PathIcon.RenderTransform>
+												</PathIcon>
+											</TabItem.Header>
+											<controls:PdfDocumentThumbnailControl />
+										</TabItem>
+
+										<!-- Bookmarks tab -->
+										<TabItem IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                  IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                            <TabItem.Header>
-                                                <PathIcon Data="{StaticResource bookmark_regular}">
-                                                    <ToolTip.Tip>Bookmarks</ToolTip.Tip>
-                                                </PathIcon>
-                                            </TabItem.Header>
-                                            <TreeView ItemsSource="{Binding Bookmarks}"
+											<TabItem.Header>
+												<PathIcon Data="{StaticResource bookmark_regular}">
+													<ToolTip.Tip>Bookmarks</ToolTip.Tip>
+												</PathIcon>
+											</TabItem.Header>
+											<TreeView ItemsSource="{Binding Bookmarks}"
                                                       SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
                                                       SelectionMode="Toggle"
                                                       SizeChanged="TreeView_SizeChanged">
-                                                <TreeView.ItemTemplate>
-                                                    <TreeDataTemplate ItemsSource="{Binding Nodes}">
-                                                        <Border HorizontalAlignment="Left"
+												<TreeView.ItemTemplate>
+													<TreeDataTemplate ItemsSource="{Binding Nodes}">
+														<Border HorizontalAlignment="Left"
                                                                 BorderBrush="Gray"
                                                                 BorderThickness="1"
                                                                 CornerRadius="5"
                                                                 Padding="15 3">
-                                                            <TextBlock xml:space="preserve"
+															<TextBlock xml:space="preserve"
                                                                        Text="{Binding Title}"
                                                                        TextWrapping="WrapWithOverflow" />
-                                                        </Border>
-                                                    </TreeDataTemplate>
-                                                </TreeView.ItemTemplate>
-                                            </TreeView>
-                                        </TabItem>
-                                    </TabControl>
-                                </Border>
+														</Border>
+													</TreeDataTemplate>
+												</TreeView.ItemTemplate>
+											</TreeView>
+										</TabItem>
 
-                                <!-- Resize left navigation bar -->
-					            <Rectangle Grid.Column="1"
+										<!-- Search results tab -->
+										<TabItem>
+											<TabItem.Header>
+												<PathIcon Data="{StaticResource document_search_regular}">
+													<ToolTip.Tip>Search</ToolTip.Tip>
+												</PathIcon>
+											</TabItem.Header>
+
+											<Panel>
+												<TextBlock IsVisible="{Binding !SearchResults.Count}">No results found</TextBlock>
+
+												<TreeView IsVisible="{Binding !!SearchResults.Count}"
+														  ItemsSource="{Binding SearchResults}"
+														  SelectedItem="{Binding SelectedTextSearchResult, Mode=OneWayToSource}">
+													<TreeView.ItemTemplate>
+														<TreeDataTemplate ItemsSource="{Binding Nodes}">
+															<Border HorizontalAlignment="Left"
+																	BorderBrush="Gray" BorderThickness="1"
+																	CornerRadius="5" Padding="15 3">
+
+																<TextBlock VerticalAlignment="Center"
+																		   HorizontalAlignment="Center"
+																		   Margin="5,0">
+																	<TextBlock Text="{Binding PageNumber}"/>
+																	<Run Text="/"/>
+																	<TextBlock Text="{Binding WordIndex}" />
+																</TextBlock>
+
+															</Border>
+														</TreeDataTemplate>
+													</TreeView.ItemTemplate>
+												</TreeView>
+											</Panel>
+
+										</TabItem>
+									</TabControl>
+								</Border>
+
+								<!-- Resize left navigation bar -->
+								<Rectangle Grid.Column="1"
                                            Fill="{StaticResource SystemChromeHighColor}"
                                            PointerMoved="Rectangle_OnPointerMoved"
                                            PointerEntered="Rectangle_OnPointerEntered"
@@ -158,13 +205,13 @@
                                            PointerPressed="Rectangle_OnPointerPressed"
                                            PointerReleased="Rectangle_OnPointerReleased"/>
 
-                            </Grid>
-                        </SplitView.Pane>
+							</Grid>
+						</SplitView.Pane>
 
-			            <!-- Document control -->
-			            <SplitView.Content>
-				            <controls:PdfDocumentControl />
-			            </SplitView.Content>
+						<!-- Document control -->
+						<SplitView.Content>
+							<controls:PdfDocumentControl />
+						</SplitView.Content>
 
 					</SplitView>
 

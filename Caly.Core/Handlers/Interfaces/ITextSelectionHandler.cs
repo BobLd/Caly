@@ -13,10 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using System.Collections.Generic;
 using Avalonia.Input;
 using Avalonia.Media;
 using Caly.Core.Controls;
 using Caly.Core.Models;
+using Caly.Core.ViewModels;
 
 namespace Caly.Core.Handlers.Interfaces
 {
@@ -29,6 +31,21 @@ namespace Caly.Core.Handlers.Interfaces
         void OnPointerPressed(PointerPressedEventArgs e);
 
         void OnPointerReleased(PointerReleasedEventArgs e);
+
+        /// <summary>
+        /// Clear current results and set the new ones.
+        /// </summary>
+        void SetTextSearchResults(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults);
+
+        /// <summary>
+        /// Add results to existing ones.
+        /// </summary>
+        void AddTextSearchResults(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults);
+
+        /// <summary>
+        /// Clear current results.
+        /// </summary>
+        void ClearTextSearchResults(PdfDocumentViewModel documentViewModel);
 
         /// <summary>
         /// TODO - Should not be in selection handler.

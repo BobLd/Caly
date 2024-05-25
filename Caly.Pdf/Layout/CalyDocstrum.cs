@@ -21,7 +21,7 @@ namespace Caly.Pdf.Layout
         private readonly CalyDocstrumOptions options;
 
         /// <summary>
-        /// Create an instance of Docstrum for bounding boxes page segmenter, <see cref="DocstrumBoundingBoxes"/>.
+        /// Create an instance of Docstrum for bounding boxes page segmenter, <see cref="CalyDocstrum"/>.
         /// </summary>
         public static CalyDocstrum Instance { get; } = new CalyDocstrum();
 

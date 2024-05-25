@@ -36,6 +36,7 @@
 
 							<ScrollViewer.KeyBindings>
 								<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
+                                <KeyBinding Gesture="Ctrl+F" Command="{Binding SearchTextCommand}" />
 							</ScrollViewer.KeyBindings>
 
 							<controls:CalyLayoutTransformControl Name="PART_LayoutTransformControl"
