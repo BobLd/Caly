@@ -120,6 +120,7 @@ namespace Caly.Core.ViewModels
 
         public void FlagSelectionChanged()
         {
+            Debug.ThrowNotOnUiThread();
             SelectionChangedFlag = !SelectionChangedFlag;
         }
 

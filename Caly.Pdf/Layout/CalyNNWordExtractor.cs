@@ -19,9 +19,9 @@ namespace Caly.Pdf.Layout
         private readonly CalyNNWordExtractorOptions options;
 
         /// <summary>
-        /// Create an instance of Nearest Neighbour Word Extractor, <see cref="TheiaNNWordExtractor"/>.
+        /// Create an instance of Nearest Neighbour Word Extractor, <see cref="CalyNNWordExtractor"/>.
         /// </summary>
-        public readonly static CalyNNWordExtractor Instance = new();
+        public static readonly CalyNNWordExtractor Instance = new();
 
         /// <summary>
         /// Create an instance of Nearest Neighbour Word Extractor using default options values.

@@ -8,6 +8,7 @@ using Avalonia.Platform.Storage;
 using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
+using Caly.Core.ViewModels;
 using Caly.Pdf;
 using Caly.Pdf.Models;
 using Caly.Pdf.PageFactories;
@@ -25,6 +26,7 @@ namespace Caly.Core.Services
     internal sealed class PdfPigPdfService : IPdfService
     {
         private readonly IDialogService _dialogService;
+        private readonly ITextSearchService _textSearchService;
 
         // PdfPig only allow to read 1 page at a time for now
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
@@ -39,7 +41,7 @@ namespace Caly.Core.Services
 
         public int NumberOfPages { get; private set; }
 
-        public PdfPigPdfService(IDialogService dialogService)
+        public PdfPigPdfService(IDialogService dialogService, ITextSearchService textSearchService)
         {
             if (dialogService is null)
             {
@@ -47,6 +49,7 @@ namespace Caly.Core.Services
             }
 
             _dialogService = dialogService;
+            _textSearchService = textSearchService;
         }
 
         public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken cancellationToken)
@@ -277,6 +280,20 @@ namespace Caly.Core.Services
             }
         }
 
+        public async Task BuildIndex(PdfDocumentViewModel pdfDocument, CancellationToken cancellationToken)
+        {
+            Debug.ThrowOnUiThread();
+
+            await _textSearchService.BuildPdfDocumentIndex(pdfDocument, cancellationToken);
+        }
+
+        public Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken cancellationToken)
+        {
+            Debug.ThrowOnUiThread();
+
+            return _textSearchService.Search(pdfDocument, query, cancellationToken);
+        }
+
         private static PdfBookmarkNode? BuildPdfBookmarkNode(BookmarkNode node, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -321,6 +338,8 @@ namespace Caly.Core.Services
             System.Diagnostics.Debug.WriteLine($"Disposing document for {FileName}");
             _semaphore.Dispose();
 
+            _textSearchService.Dispose();
+
             if (_fileStream is not null)
             {
                 _fileStream.Dispose();
@@ -344,6 +363,8 @@ namespace Caly.Core.Services
 
                 System.Diagnostics.Debug.WriteLine($"Disposing document async for {FileName}");
                 _semaphore.Dispose();
+                
+                _textSearchService.Dispose();
 
                 if (_fileStream is not null)
                 {

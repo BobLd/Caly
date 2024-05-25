@@ -60,6 +60,8 @@ namespace Caly.Core.Controls
         /// </summary>
         public static readonly StyledProperty<PdfBookmarkNode?> SelectedBookmarkProperty = AvaloniaProperty.Register<PdfDocumentControl, PdfBookmarkNode?>(nameof(SelectedBookmark));
 
+        public static readonly StyledProperty<TextSearchResultViewModel?> SelectedTextSearchResultProperty = AvaloniaProperty.Register<PdfDocumentControl, TextSearchResultViewModel?>(nameof(SelectedTextSearchResult));
+
         /// <summary>
         /// Defines the <see cref="TextSelectionHandler"/> property.
         /// </summary>
@@ -90,6 +92,12 @@ namespace Caly.Core.Controls
         {
             get => GetValue(SelectedBookmarkProperty);
             set => SetValue(SelectedBookmarkProperty, value);
+        }
+
+        public TextSearchResultViewModel? SelectedTextSearchResult
+        {
+            get => GetValue(SelectedTextSearchResultProperty);
+            set => SetValue(SelectedTextSearchResultProperty, value);
         }
 
         public IEnumerable? ItemsSource
@@ -131,6 +139,13 @@ namespace Caly.Core.Controls
                     SelectedBookmark.PageNumber.Value != SelectedPageIndex)
                 {
                     SetCurrentValue(SelectedPageIndexProperty, SelectedBookmark.PageNumber.Value);
+                }
+            }
+            else if (change.Property == SelectedTextSearchResultProperty)
+            {
+                if (change.NewValue is TextSearchResultViewModel { PageNumber: > 0 } r)
+                {
+                    SetCurrentValue(SelectedPageIndexProperty, r.PageNumber);
                 }
             }
             else if (change.Property == ZoomLevelProperty)
