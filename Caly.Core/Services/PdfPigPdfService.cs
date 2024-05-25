@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
+using Caly.Core.ViewModels;
 using Caly.Pdf;
 using Caly.Pdf.Models;
 using Caly.Pdf.PageFactories;
@@ -26,21 +27,22 @@ namespace Caly.Core.Services
     internal sealed class PdfPigPdfService : IPdfService
     {
         private readonly IDialogService _dialogService;
+        private readonly ITextSearchService _textSearchService;
 
         // PdfPig only allow to read 1 page at a time for now
-        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        private MemoryStream? fileStream;
-        private PdfDocument? document;
-        private Uri? filePath;
+        private MemoryStream? _fileStream;
+        private PdfDocument? _document;
+        private Uri? _filePath;
 
-        public string? LocalPath => filePath?.LocalPath;
+        public string? LocalPath => _filePath?.LocalPath;
 
         public string? FileName => Path.GetFileNameWithoutExtension(LocalPath);
 
         public int NumberOfPages { get; private set; }
 
-        public PdfPigPdfService(IDialogService dialogService)
+        public PdfPigPdfService(IDialogService dialogService, ITextSearchService textSearchService)
         {
             if (dialogService is null)
             {
@@ -48,6 +50,7 @@ namespace Caly.Core.Services
             }
 
             _dialogService = dialogService;
+            _textSearchService = textSearchService;
         }
 
         public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken cancellationToken)
@@ -68,14 +71,14 @@ namespace Caly.Core.Services
                     //throw new ArgumentOutOfRangeException($"The loaded file '{Path.GetFileName(storageFile.Path.LocalPath)}' is not a pdf document.");
                 }
 
-                filePath = storageFile.Path;
+                _filePath = storageFile.Path;
                 System.Diagnostics.Debug.WriteLine($"[INFO] Opening {FileName}...");
 
-                fileStream = new MemoryStream();
+                _fileStream = new MemoryStream();
                 await using (var fs = await storageFile.OpenReadAsync())
                 {
-                    await fs.CopyToAsync(fileStream, cancellationToken);
-                    fileStream.Position = 0;
+                    await fs.CopyToAsync(_fileStream, cancellationToken);
+                    _fileStream.Position = 0;
                 }
 
                 return await Task.Run(() =>
@@ -91,12 +94,12 @@ namespace Caly.Core.Services
                         pdfParsingOptions.Password = password;
                     }
 
-                    document = PdfDocument.Open(fileStream, pdfParsingOptions);
-                    document.AddPageFactory<PdfPageInformation, PageInformationFactory>();
-                    document.AddPageFactory<SKPicture, SkiaPageFactory>();
-                    document.AddPageFactory<PageTextLayerContent, TextLayerFactory>();
+                    _document = PdfDocument.Open(_fileStream, pdfParsingOptions);
+                    _document.AddPageFactory<PdfPageInformation, PageInformationFactory>();
+                    _document.AddPageFactory<SKPicture, SkiaPageFactory>();
+                    _document.AddPageFactory<PageTextLayerContent, TextLayerFactory>();
 
-                    NumberOfPages = document.NumberOfPages;
+                    NumberOfPages = _document.NumberOfPages;
                     return NumberOfPages;
                 }, cancellationToken);
             }
@@ -147,11 +150,11 @@ namespace Caly.Core.Services
                     return null;
                 }
 
-                await semaphore.WaitAsync(CancellationToken.None);
+                await _semaphore.WaitAsync(CancellationToken.None);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                return document!.GetPage<PdfPageInformation>(pageNumber);
+                return _document!.GetPage<PdfPageInformation>(pageNumber);
             }
             catch (OperationCanceledException)
             {
@@ -169,9 +172,9 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !isDiposed())
                 {
-                    semaphore.Release();
+                    _semaphore.Release();
                 }
             }
         }
@@ -188,11 +191,11 @@ namespace Caly.Core.Services
                     return null;
                 }
 
-                await semaphore.WaitAsync(CancellationToken.None);
+                await _semaphore.WaitAsync(CancellationToken.None);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                pic = document!.GetPage<SKPicture>(pageNumber);
+                pic = _document!.GetPage<SKPicture>(pageNumber);
             }
             catch (OperationCanceledException)
             {
@@ -210,9 +213,9 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !isDiposed())
                 {
-                    semaphore.Release();
+                    _semaphore.Release();
                 }
             }
 
@@ -227,16 +230,16 @@ namespace Caly.Core.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (document is null || isDiposed())
+                if (_document is null || isDiposed())
                 {
                     return null;
                 }
 
-                await semaphore.WaitAsync(CancellationToken.None);
+                await _semaphore.WaitAsync(CancellationToken.None);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var page = document.GetPage<PageTextLayerContent>(pageNumber);
+                var page = _document.GetPage<PageTextLayerContent>(pageNumber);
                 return PdfTextLayerHelper.GetTextLayer(page, cancellationToken);
             }
             catch (OperationCanceledException)
@@ -255,9 +258,9 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !isDiposed())
                 {
-                    semaphore.Release();
+                    _semaphore.Release();
                 }
             }
         }
@@ -273,11 +276,11 @@ namespace Caly.Core.Services
                     return null;
                 }
 
-                await semaphore.WaitAsync(CancellationToken.None);
+                await _semaphore.WaitAsync(CancellationToken.None);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (!document!.TryGetBookmarks(out var bookmarks) || bookmarks.Roots.Count == 0)
+                if (!_document!.TryGetBookmarks(out var bookmarks) || bookmarks.Roots.Count == 0)
                 {
                     return null;
                 }
@@ -311,11 +314,25 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !isDiposed())
                 {
-                    semaphore.Release();
+                    _semaphore.Release();
                 }
             }
+        }
+
+        public async Task BuildIndex(PdfDocumentViewModel pdfDocument, CancellationToken cancellationToken)
+        {
+            Debug.ThrowOnUiThread();
+
+            await _textSearchService.BuildPdfDocumentIndex(pdfDocument, cancellationToken);
+        }
+
+        public Task<IEnumerable<TextSearchResultViewModel>> SearchText(string query, CancellationToken cancellationToken)
+        {
+            Debug.ThrowOnUiThread();
+
+            return _textSearchService.Search(query, cancellationToken);
         }
 
         private static PdfBookmarkNode? BuildPdfBookmarkNode(BookmarkNode node, CancellationToken cancellationToken)
@@ -360,18 +377,20 @@ namespace Caly.Core.Services
             Interlocked.Increment(ref _isDisposed);
 
             System.Diagnostics.Debug.WriteLine($"Disposing document for {FileName}");
-            semaphore.Dispose();
+            _semaphore.Dispose();
 
-            if (fileStream is not null)
+            _textSearchService.Dispose();
+
+            if (_fileStream is not null)
             {
-                fileStream.Dispose();
-                fileStream = null;
+                _fileStream.Dispose();
+                _fileStream = null;
             }
 
-            if (document is not null)
+            if (_document is not null)
             {
-                document.Dispose();
-                document = null;
+                _document.Dispose();
+                _document = null;
             }
         }
 
@@ -384,18 +403,20 @@ namespace Caly.Core.Services
                 Interlocked.Increment(ref _isDisposed);
 
                 System.Diagnostics.Debug.WriteLine($"Disposing document async for {FileName}");
-                semaphore.Dispose();
+                _semaphore.Dispose();
+                
+                _textSearchService.Dispose();
 
-                if (fileStream is not null)
+                if (_fileStream is not null)
                 {
-                    await fileStream.DisposeAsync();
-                    fileStream = null;
+                    await _fileStream.DisposeAsync();
+                    _fileStream = null;
                 }
 
-                if (document is not null)
+                if (_document is not null)
                 {
-                    document.Dispose();
-                    document = null;
+                    _document.Dispose();
+                    _document = null;
                 }
             }
             catch (Exception ex)
