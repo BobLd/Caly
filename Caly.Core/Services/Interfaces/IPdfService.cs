@@ -14,12 +14,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using Caly.Core.Models;
 using Caly.Core.Utilities;
+using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
 using SkiaSharp;
 
@@ -46,5 +48,8 @@ namespace Caly.Core.Services.Interfaces
         Task<PdfTextLayer?> GetTextLayerAsync(int pageNumber, CancellationToken cancellationToken);
 
         Task<ObservableCollection<PdfBookmarkNode>?> GetPdfBookmark(CancellationToken cancellationToken);
+
+        Task BuildIndex(PdfDocumentViewModel pdfDocument, CancellationToken cancellationToken);
+        Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken cancellationToken);
     }
 }
