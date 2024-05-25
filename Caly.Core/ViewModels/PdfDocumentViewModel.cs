@@ -15,12 +15,14 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
@@ -29,6 +31,7 @@ using Caly.Core.Utilities;
 using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Lifti.Querying;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Caly.Core.ViewModels
@@ -44,9 +47,7 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = new();
 
-        [ObservableProperty] private ObservableCollection<PdfBookmarkNode>? _bookmarks;
-
-        [ObservableProperty] private PdfBookmarkNode? _selectedBookmark;
+        [ObservableProperty] private int _selectedTabIndex;
 
         [ObservableProperty] private int? _selectedPageIndex = 1;
 
@@ -57,6 +58,17 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private double _zoomLevel = 1;
 
         [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
+
+
+        [ObservableProperty] private ObservableCollection<PdfBookmarkNode>? _bookmarks;
+
+        [ObservableProperty] private PdfBookmarkNode? _selectedBookmark;
+
+        [ObservableProperty] private ObservableCollection<TextSearchResultViewModel> _searchResults = new();
+
+        [ObservableProperty] private string? _textSearch;
+
+        [ObservableProperty] private TextSearchResultViewModel? _selectedTextSearchResult;
 
         /*
          * See PDF Reference 1.7 - C.2 Architectural limits
@@ -75,6 +87,8 @@ namespace Caly.Core.ViewModels
 
         private readonly Lazy<Task> _loadBookmarksTask;
         public Task LoadBookmarksTask => _loadBookmarksTask.Value;
+
+        private readonly Lazy<Task> _buildSearchIndex;
 
         internal string? LocalPath { get; private set; }
 
@@ -138,6 +152,7 @@ namespace Caly.Core.ViewModels
 
             _loadPagesTask = new Lazy<Task>(LoadPages);
             _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);
+            _buildSearchIndex = new Lazy<Task>(BuildSearchIndex);
         }
 
         /// <summary>
@@ -202,6 +217,12 @@ namespace Caly.Core.ViewModels
         {
             _cts.Token.ThrowIfCancellationRequested();
             Bookmarks = await Task.Run(() => _pdfService.GetPdfBookmark(_cts.Token));
+        }
+
+        private async Task BuildSearchIndex()
+        {
+            _cts.Token.ThrowIfCancellationRequested();
+            await Task.Run(() => _pdfService.BuildIndex(this, _cts.Token), _cts.Token);
         }
 
         private static ReadOnlySequence<char> FullWord(PdfWord word)
@@ -273,6 +294,60 @@ namespace Caly.Core.ViewModels
                 }
 
                 ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[index - 1]);
+            }
+        }
+
+        [RelayCommand]
+        private async Task SearchText(CancellationToken token)
+        {
+            try
+            {
+                SelectedTabIndex = 2;
+                SelectedTextSearchResult = null;
+                SearchResults.Clear();
+
+                if (string.IsNullOrEmpty(TextSearch))
+                {
+                    return;
+                }
+
+                await _buildSearchIndex.Value;
+
+                var results = await Task.Run(() => _pdfService.SearchText(this, TextSearch, token), token);
+                foreach (var result in results.OrderBy(r => r.PageNumber))
+                {
+                    SearchResults.Add(result);
+                }
+
+                TextSelectionHandler.SetTextSearchResult(this, SearchResults);
+
+                if (SearchResults.Count == 0)
+                {
+                    // No match found
+                    SearchResults.Add(new TextSearchResultViewModel() { PageNumber = -1 });
+                }
+            }
+            catch (QueryParserException qpe)
+            {
+                System.Diagnostics.Debug.Write(qpe.ToString());
+                var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
+                if (dialogService is not null)
+                {
+                    Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Text Search Error",
+                        qpe.Message,
+                        NotificationType.Error));
+                }
+
+                if (SearchResults.Count == 0)
+                {
+                    // No match found
+                    SearchResults.Add(new TextSearchResultViewModel() { PageNumber = -99 });
+                }
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.Write(e.ToString());
+                Exception = new ExceptionViewModel(e);
             }
         }
 

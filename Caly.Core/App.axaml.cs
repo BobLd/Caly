@@ -96,6 +96,7 @@ namespace Caly.Core
             services.AddSingleton<IClipboardService, ClipboardService>();
             services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
             services.AddTransient<IPdfService, PdfPigPdfService>();
+            services.AddTransient<ITextSearchService, LiftiTextSearchService>();
 
             Services = services.BuildServiceProvider();
 
