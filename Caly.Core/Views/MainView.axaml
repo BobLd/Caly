@@ -85,8 +85,17 @@
 							<TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"/>
-                        </StackPanel>
 
+							<!-- Document text search -->
+                            <TextBox Watermark="Search..." Text="{Binding TextSearch}" />
+                            <Button HorizontalAlignment="Center" Command="{Binding SearchTextCommand}">
+                                <PathIcon Data="{StaticResource document_search_regular}">
+                                    <ToolTip.Tip>Search</ToolTip.Tip>
+                                </PathIcon>
+                            </Button>
+
+                        </StackPanel>
+	
 					</DockPanel>
 
 					<SplitView Grid.Row="1" IsPaneOpen="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).IsPaneOpen}"
@@ -98,7 +107,8 @@
 						<SplitView.Pane>
 							<Border BorderThickness="1" BorderBrush="{StaticResource SystemChromeHighColor}">
 
-								<TabControl TabStripPlacement="Left" Padding="12,0,0,0">
+								<TabControl TabStripPlacement="Left" Padding="12,0,0,0" SelectedIndex="{Binding SelectedTabIndex}">
+
 									<!-- Thumbnails tab -->
 									<TabItem IsSelected="True">
 										<TabItem.Header>
@@ -137,6 +147,36 @@
 											</TreeView.ItemTemplate>
 										</TreeView>
 									</TabItem>
+
+                                    <!-- Search results tab -->
+									<TabItem>
+                                        <TabItem.Header>
+                                            <PathIcon Data="{StaticResource document_search_regular}">
+                                                <ToolTip.Tip>Search</ToolTip.Tip>
+                                            </PathIcon>
+                                        </TabItem.Header>
+
+                                        <TreeView ItemsSource="{Binding SearchResults}"
+                                                  SelectedItem="{Binding SelectedTextSearchResult, Mode=OneWayToSource}">
+                                            <TreeView.ItemTemplate>
+                                                <TreeDataTemplate ItemsSource="{Binding Nodes}">
+                                                    <Border HorizontalAlignment="Left"
+                                                            BorderBrush="Gray" BorderThickness="1"
+                                                            CornerRadius="5" Padding="15 3">
+
+                                                        <TextBlock VerticalAlignment="Center"
+                                                                   HorizontalAlignment="Center"
+                                                                   Margin="5,0">
+                                                            <TextBlock Text="{Binding PageNumber}"/>
+                                                            <Run Text="/"/>
+                                                            <TextBlock Text="{Binding WordIndex}" />
+                                                        </TextBlock>
+														
+													</Border>
+                                                </TreeDataTemplate>
+                                            </TreeView.ItemTemplate>
+                                        </TreeView>
+                                    </TabItem>
 
 								</TabControl>
 

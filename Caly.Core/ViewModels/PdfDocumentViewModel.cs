@@ -43,9 +43,7 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = new();
 
-        [ObservableProperty] private ObservableCollection<PdfBookmarkNode>? _bookmarks;
-
-        [ObservableProperty] private PdfBookmarkNode? _selectedBookmark;
+        [ObservableProperty] private int _selectedTabIndex;
 
         [ObservableProperty] private int? _selectedPageIndex = 1;
 
@@ -56,6 +54,17 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private double _zoomLevel = 1;
 
         [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
+
+
+        [ObservableProperty] private ObservableCollection<PdfBookmarkNode>? _bookmarks;
+
+        [ObservableProperty] private PdfBookmarkNode? _selectedBookmark;
+
+        [ObservableProperty] private ObservableCollection<TextSearchResultViewModel> _searchResults = new();
+
+        [ObservableProperty] private string? _textSearch;
+
+        [ObservableProperty] private TextSearchResultViewModel? _selectedTextSearchResult;
 
         /*
          * See PDF Reference 1.7 - C.2 Architectural limits
@@ -74,6 +83,8 @@ namespace Caly.Core.ViewModels
 
         private readonly Lazy<Task> _loadBookmarksTask;
         public Task LoadBookmarksTask => _loadBookmarksTask.Value;
+
+        private readonly Lazy<Task> _buildSearchIndex;
 
         internal string? LocalPath { get; private set; }
 
@@ -137,6 +148,7 @@ namespace Caly.Core.ViewModels
 
             _loadPagesTask = new Lazy<Task>(LoadPages);
             _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);
+            _buildSearchIndex = new Lazy<Task>(BuildSearchIndex);
         }
 
         /// <summary>
@@ -203,6 +215,12 @@ namespace Caly.Core.ViewModels
             Bookmarks = await Task.Run(() => _pdfService.GetPdfBookmark(_cts.Token));
         }
 
+        private async Task BuildSearchIndex()
+        {
+            _cts.Token.ThrowIfCancellationRequested();
+            await Task.Run(() => _pdfService.BuildIndex(this, _cts.Token), _cts.Token);
+        }
+
         private static IEnumerable<ReadOnlyMemory<char>> FullWord(PdfWord word)
         {
             return word.Letters.Select(l => l.Value);
@@ -216,7 +234,7 @@ namespace Caly.Core.ViewModels
 
             for (int l = startIndex; l <= endIndex; ++l)
             {
-                yield return word.Letters![l].Value;
+                yield return word.Letters[l].Value;
             }
         }
 
@@ -275,6 +293,36 @@ namespace Caly.Core.ViewModels
                 }
 
                 ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[index - 1]);
+            }
+        }
+
+        [RelayCommand]
+        private async Task SearchText(CancellationToken token)
+        {
+            SelectedTabIndex = 2;
+            SelectedTextSearchResult = null;
+            SearchResults.Clear();
+
+            if (string.IsNullOrEmpty(TextSearch))
+            {
+                return;
+            }
+
+            await _buildSearchIndex.Value;
+
+            var results = await Task.Run(() => _pdfService.SearchText(TextSearch, token), token);
+            foreach (var result in results.OrderBy(r => r.PageNumber))
+            {
+                SearchResults.Add(result);
+            }
+
+            if (SearchResults.Count == 0)
+            {
+                // No match found
+                SearchResults.Add(new TextSearchResultViewModel()
+                {
+                    PageNumber = -1
+                });
             }
         }
 
