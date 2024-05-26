@@ -1,21 +1,24 @@
 # Caly Pdf Reader
 ## About
-Caly Pdf Reader is a cross-platform pdf document reader application written in C# (net8.0 with AOT), only using [Avalonia](https://github.com/AvaloniaUI/Avalonia) & [SkiaSharp](https://github.com/mono/SkiaSharp) + [PdfPig](https://github.com/UglyToad/PdfPig). It is released under GPL-3.0 license.
+Caly Pdf Reader is a cross-platform pdf document reader application written in C# (net8.0 with AOT), only using [Avalonia](https://github.com/AvaloniaUI/Avalonia) & [SkiaSharp](https://github.com/mono/SkiaSharp) + [PdfPig](https://github.com/UglyToad/PdfPig) for the UI / pdf rendering part. It is released under GPL-3.0 license.
 
 The development is currently in alpha.
 
-## Goal
-The aim is to develop a C# cross-platform open source pdf reader/viewer application, with the following abilities:
-- View pdf document - Work in Progress
-- Open many documents with a tab system - Work in Progress
-- Navigate and zoom document (go to page, zoom in/out, etc.) - Work in Progress
-- Select text and copy to clipboard - Work in Progress
-- Search text - Development not started
+## Goal and Roadmap
+The aim is to develop a C# cross-platform open source pdf reader/viewer application. Below is a table of the current progress:
 
-Other plans for later:
-- OCR
-- Table extraction
-
+| Task | Priority | Progress | Comment | TODO |
+| ---- | -------- | -------- | ------- | ---- |
+| View pdf document | High | Done | | Performance to improve |
+| Open many documents with tab system | High | Done | Use [Tabalonia](https://github.com/egorozh/Tabalonia) | Bugs to fix - see https://github.com/BobLd/Caly/issues/11 |
+| Navigate and zoom document (go to page, zoom in/out, etc.) | High | Done | | Performance to improve |
+| Text selection | High | Done | | Improve rendering by merging words into lines |
+| Copy text selection to clipboard | High | Done | | |
+| Search text | High | Work in Progress | Use [Lifti](https://github.com/mikegoatly/lifti) lib, see `text-search-lifti` branch | |
+| Run JavaScript embedded in a PDF | Medium | Not started | Use [Jint](https://github.com/sebastienros/jint) | |
+| UI / UX | Low | Work in Progress | How the app feels | Need better colors, icons, transitions, etc. |
+| OCR | Low | Not started | Use [RapidOCR](https://github.com/RapidAI/RapidOCR) onnx models | |
+| Table extraction | Low | Not started  | Use [tabula-sharp](https://github.com/BobLd/tabula-sharp) or [camelot-sharp](https://github.com/BobLd/camelot-sharp) | |
 
 ## Windows, Linux, MacOS and mobile compatible
 As of now, only the Windows, Linux and Android versions have been tested. Android version runs, but is not optimised for the platfotm. Better mobile support is planned, including iOS.
@@ -37,5 +40,5 @@ dotnet publish -r win-x64 -c Release -f net8.0
 ```
 
 ## Preview
-![image](https://github.com/BobLd/Caly/assets/38405645/b7511f10-8f18-4249-829e-923b79bad219)
+![image](https://github.com/BobLd/Caly/assets/38405645/f342ab53-f848-4040-a71b-6d45c9139093)
 
