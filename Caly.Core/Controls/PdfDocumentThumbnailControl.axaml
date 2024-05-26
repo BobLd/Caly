@@ -3,7 +3,7 @@
         xmlns:controls="using:Caly.Core.Controls"
         xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
 	<Design.PreviewWith>
-		<controls:PdfDocumentThumbnailControl x:DataType="viewModels:PdfDocumentViewModel" Width="200" Height="891" />
+		<controls:PdfDocumentThumbnailControl x:DataType="viewModels:PdfDocumentViewModel" Width="200" Height="400" />
 	</Design.PreviewWith>
 
 	<Style Selector="controls|PdfDocumentThumbnailControl">

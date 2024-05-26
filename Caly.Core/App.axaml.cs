@@ -85,7 +85,13 @@ namespace Caly.Core
                 };
                 services.AddSingleton(_ => (Visual)singleViewPlatform.MainView);
             }
-
+#if DEBUG
+            else if (ApplicationLifetime is null && Avalonia.Controls.Design.IsDesignMode)
+            {
+                var mainView = new MainView { DataContext = new MainViewModel() };
+                services.AddSingleton(_ => (Visual)mainView);
+            }
+#endif
             services.AddSingleton<IFilesService, FilesService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IClipboardService, ClipboardService>();

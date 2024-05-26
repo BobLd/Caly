@@ -16,12 +16,11 @@
 	</Design.DataContext>
 
 	<UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="/Controls/PdfPageButtonSpinner.axaml"/>
-		</ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-		
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceInclude Source="/Controls/PdfPageButtonSpinner.axaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
 	</UserControl.Resources>
 
 	<tabalonia:TabsControl Background="Transparent"
@@ -50,7 +49,7 @@
 								</PathIcon>
 							</ToggleButton>
 
-                            <NumericUpDown Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
+							<NumericUpDown Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
                                            MinWidth="120"
                                            MaxWidth="200"
                                            Minimum="1"
@@ -67,23 +66,23 @@
                                        Margin="5,0">
 								<Run Text="/"/>
 								<Run Text="{Binding PageCount}"/>
-                            </TextBlock>
+							</TextBlock>
 						</StackPanel>
 
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                            <Button HorizontalAlignment="Center" Command="{Binding ZoomOutCommand}">
-                                <PathIcon Data="{StaticResource zoom_out_regular}">
-                                    <ToolTip.Tip>Zoom Out</ToolTip.Tip>
-                                </PathIcon>
-                            </Button>
+						<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+							<Button HorizontalAlignment="Center" Command="{Binding ZoomOutCommand}">
+								<PathIcon Data="{StaticResource zoom_out_regular}">
+									<ToolTip.Tip>Zoom Out</ToolTip.Tip>
+								</PathIcon>
+							</Button>
 
-                            <Button HorizontalAlignment="Center" Command="{Binding ZoomInCommand}">
-                                <PathIcon Data="{StaticResource zoom_in_regular}">
-                                    <ToolTip.Tip>Zoom In</ToolTip.Tip>
-                                </PathIcon>
-                            </Button>
+							<Button HorizontalAlignment="Center" Command="{Binding ZoomInCommand}">
+								<PathIcon Data="{StaticResource zoom_in_regular}">
+									<ToolTip.Tip>Zoom In</ToolTip.Tip>
+								</PathIcon>
+							</Button>
 
-                            <TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
+							<TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"/>
                         </StackPanel>
