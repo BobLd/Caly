@@ -14,6 +14,7 @@
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-7-0#trimming-framework-library-features-->
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0-->
 
+	<!-- Comment the below to allow Avalonia design mode -->
 	<PropertyGroup>
 		<PublishAot>true</PublishAot>
 		<OptimizationPreference>Speed</OptimizationPreference>
@@ -31,6 +32,7 @@
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 		<DebugSymbols>false</DebugSymbols>
 	</PropertyGroup>
+	<!-- Comment the above to allow Avalonia design mode -->
 
 	<PropertyGroup Label="Avalonia">
 	  <AvaloniaUseCompiledBindingsByDefault>True</AvaloniaUseCompiledBindingsByDefault>

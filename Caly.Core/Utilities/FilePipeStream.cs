@@ -33,10 +33,21 @@ namespace Caly.Core.Utilities
 
         private static readonly string _pipeName = $"caly-files-pipe-{Environment.MachineName}-{Environment.UserName}";
 
-        private static readonly Memory<byte> _keyPhrase = "ca1y k3y pa$$"u8.ToArray();
+        private static readonly ReadOnlyMemory<byte> _keyPhrase = "ca1y k3y pa$$"u8.ToArray();
 
-        private readonly NamedPipeServerStream pipeServer = new(_pipeName, PipeDirection.In, 1,
-            PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
+        private readonly NamedPipeServerStream _pipeServer;
+
+        public FilePipeStream()
+        {
+#if DEBUG
+            if (Avalonia.Controls.Design.IsDesignMode)
+            {
+                _pipeServer = new(Guid.NewGuid().ToString(), PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
+                return;
+            }
+#endif
+            _pipeServer = new(_pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.CurrentUserOnly);
+        }
 
         public async IAsyncEnumerable<string> ReceivePathAsync([EnumeratorCancellation] CancellationToken token)
         {
@@ -48,10 +59,10 @@ namespace Caly.Core.Utilities
                 try
                 {
                     // https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-use-named-pipes-for-network-interprocess-communication
-                    await pipeServer.WaitForConnectionAsync(token);
+                    await _pipeServer.WaitForConnectionAsync(token);
 
                     Memory<byte> lengthBuffer = new byte[2];
-                    if (await pipeServer.ReadAsync(lengthBuffer, token) != 2)
+                    if (await _pipeServer.ReadAsync(lengthBuffer, token) != 2)
                     {
                         // TODO - Log
                         continue;
@@ -61,7 +72,7 @@ namespace Caly.Core.Utilities
 
                     // Read key phrase
                     Memory<byte> keyBuffer = new byte[_keyPhrase.Length];
-                    if (await pipeServer.ReadAsync(keyBuffer, token) != _keyPhrase.Length)
+                    if (await _pipeServer.ReadAsync(keyBuffer, token) != _keyPhrase.Length)
                     {
                         // TODO - Log
                         continue;
@@ -77,7 +88,7 @@ namespace Caly.Core.Utilities
                     // Read file path
                     pathBuffer = new byte[len];
 
-                    if (await pipeServer.ReadAsync(pathBuffer, token) != len)
+                    if (await _pipeServer.ReadAsync(pathBuffer, token) != len)
                     {
                         // TODO - Log
                         continue;
@@ -95,9 +106,9 @@ namespace Caly.Core.Utilities
                 finally
                 {
                     // We are not connected if operation was canceled
-                    if (pipeServer.IsConnected)
+                    if (_pipeServer.IsConnected)
                     {
-                        pipeServer.Disconnect();
+                        _pipeServer.Disconnect();
                     }
                 }
 
@@ -110,12 +121,12 @@ namespace Caly.Core.Utilities
 
         public void Dispose()
         {
-            pipeServer.Dispose();
+            _pipeServer.Dispose();
         }
 
         public async ValueTask DisposeAsync()
         {
-            await pipeServer.DisposeAsync();
+            await _pipeServer.DisposeAsync();
         }
 
         public static void SendPath(string filePath)
