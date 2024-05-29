@@ -14,8 +14,8 @@
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-7-0#trimming-framework-library-features-->
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0-->
 
-	<!-- Comment the below to allow Avalonia design mode -->
-	<PropertyGroup>
+	<PropertyGroup Condition ="'$(Configuration)'=='Release'">
+		<!-- Only for Release config to allow Avalonia design mode -->
 		<PublishAot>true</PublishAot>
 		<OptimizationPreference>Speed</OptimizationPreference>
 
@@ -32,13 +32,7 @@
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 		<DebugSymbols>false</DebugSymbols>
 	</PropertyGroup>
-	<!-- Comment the above to allow Avalonia design mode -->
 
-	<PropertyGroup Label="Avalonia">
-	  <AvaloniaUseCompiledBindingsByDefault>True</AvaloniaUseCompiledBindingsByDefault>
-	  <ApplicationIcon>..\Caly.Core\Assets\caly-logo.ico</ApplicationIcon>
-	</PropertyGroup>
-	
 	<!--
 	<PropertyGroup>
 		<UseSystemResourceKeys>true</UseSystemResourceKeys>
@@ -48,6 +42,11 @@
 	</PropertyGroup>
 	-->
 
+	<PropertyGroup Label="Avalonia">
+	  <AvaloniaUseCompiledBindingsByDefault>True</AvaloniaUseCompiledBindingsByDefault>
+	  <ApplicationIcon>..\Caly.Core\Assets\caly-logo.ico</ApplicationIcon>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="Avalonia.Desktop" Version="11.1.0-beta2" />
 	</ItemGroup>
