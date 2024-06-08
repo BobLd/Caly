@@ -66,8 +66,8 @@ namespace Caly.Core.ViewModels
         public double MaxZoomLevel => 64;
 #pragma warning restore CA1822
 
-        private readonly ChannelWriter<PdfPageViewModel> _channelWriter;
-        private readonly ChannelReader<PdfPageViewModel> _channelReader;
+        private readonly ChannelWriter<PdfPageViewModel>? _channelWriter;
+        private readonly ChannelReader<PdfPageViewModel>? _channelReader;
 
         private readonly Lazy<Task> _loadPagesTask;
         public Task LoadPagesTask => _loadPagesTask.Value;
@@ -82,6 +82,11 @@ namespace Caly.Core.ViewModels
             try
             {
                 Debug.ThrowOnUiThread();
+
+                if (_channelReader is null)
+                {
+                    throw new NullReferenceException("Channel reader should not be null in ProcessPagesInfoQueue().");
+                }
 
                 await Parallel.ForEachAsync(_channelReader.ReadAllAsync(token), token, async (p, ct) =>
                 {
@@ -107,19 +112,22 @@ namespace Caly.Core.ViewModels
                     $"Invalid number of pages in PdfPageService, got '{pdfService.NumberOfPages}'.");
             }
 
-            // TODO - We could optimise here as we only need the channel if we have more than 1 page in the document
-            Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(new BoundedChannelOptions(_initialPagesInfoToLoad)
+            if (pdfService.NumberOfPages > 1)
             {
-                AllowSynchronousContinuations = false,
-                FullMode = BoundedChannelFullMode.DropWrite,
-                SingleReader = false,
-                SingleWriter = true
-            });
-            _channelWriter = pageInfoChannel.Writer;
-            _channelReader = pageInfoChannel.Reader;
+                // We only need the channel if we have more than 1 page in the document
+                Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(new BoundedChannelOptions(_initialPagesInfoToLoad)
+                {
+                    AllowSynchronousContinuations = false,
+                    FullMode = BoundedChannelFullMode.DropWrite,
+                    SingleReader = false,
+                    SingleWriter = true
+                });
+                _channelWriter = pageInfoChannel.Writer;
+                _channelReader = pageInfoChannel.Reader;
 
-            Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
-
+                Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
+            }
+            
             _pdfService = pdfService;
             PageCount = _pdfService.NumberOfPages;
             FileName = _pdfService.FileName;
@@ -164,6 +172,11 @@ namespace Caly.Core.ViewModels
 
                 Pages.Add(firstPage);
 
+                if (PageCount > 1 && _channelWriter is null)
+                {
+                    throw new NullReferenceException("Document has more than 1 page, the channel writer should not be null.");
+                }
+
                 for (int p = 2; p <= PageCount; p++)
                 {
                     _cts.Token.ThrowIfCancellationRequested();
@@ -177,10 +190,10 @@ namespace Caly.Core.ViewModels
                     if (p <= _initialPagesInfoToLoad)
                     {
                         // We limit loading page info to n first page
-                        await _channelWriter.WriteAsync(newPage, _cts.Token);
+                        await _channelWriter!.WriteAsync(newPage, _cts.Token);
                     }
                 }
-                _channelWriter.Complete();
+                _channelWriter?.Complete();
             }, _cts.Token);
         }
 
