@@ -106,7 +106,7 @@ namespace Caly.Pdf.Models
 
         public PdfWord? FindWordOver(double x, double y)
         {
-            if (Words == null || Words.Count == 0)
+            if (Words.Count == 0)
             {
                 return null;
             }
@@ -125,7 +125,7 @@ namespace Caly.Pdf.Models
 
         public PdfWord? FindNearestWord(double x, double y)
         {
-            if (Words == null || Words.Count == 0)
+            if (Words.Count == 0)
             {
                 return null;
             }

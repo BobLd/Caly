@@ -44,7 +44,7 @@ namespace Caly.Pdf.TextLayer
             return false;
         }
 
-        public static bool TryCombineDiacriticWithPreviousLetter(string diacritic, string previous, out string result)
+        public static bool TryCombineDiacriticWithPreviousLetter(string diacritic, string? previous, out string result)
         {
             result = null;
 

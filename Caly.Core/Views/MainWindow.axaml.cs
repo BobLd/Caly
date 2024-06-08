@@ -21,7 +21,7 @@ namespace Caly.Core.Views
 {
     public partial class MainWindow : Window
     {
-        public WindowNotificationManager NotificationManager { get; set; }
+        public WindowNotificationManager? NotificationManager { get; set; }
 
         public MainWindow()
         {
@@ -36,7 +36,7 @@ namespace Caly.Core.Views
 #if DEBUG
                 MaxItems = 50
 #else
-            MaxItems = 5
+                MaxItems = 5
 #endif
             };
 

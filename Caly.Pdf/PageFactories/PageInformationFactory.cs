@@ -33,46 +33,44 @@ namespace Caly.Pdf.PageFactories
         /// <summary>
         /// The parsing options.
         /// </summary>
-        private readonly ParsingOptions parsingOptions;
+        private readonly ParsingOptions _parsingOptions;
 
         /// <summary>
         /// The Pdf token scanner.
         /// </summary>
-        private readonly IPdfTokenScanner pdfScanner;
+        private readonly IPdfTokenScanner _pdfScanner;
 
         /// <summary>
         /// Create a <see cref="BasePageFactory{TPage}"/>.
         /// </summary>
         public PageInformationFactory(
             IPdfTokenScanner pdfScanner,
-#pragma warning disable IDE0060 Roslyn.RCS1163
             IResourceStore resourceStore,
             ILookupFilterProvider filterProvider,
             IPageContentParser pageContentParser,
-#pragma warning restore Roslyn.RCS1163 IDE0060
             ParsingOptions parsingOptions)
         {
-            this.pdfScanner = pdfScanner;
-            this.parsingOptions = parsingOptions;
+            _pdfScanner = pdfScanner;
+            _parsingOptions = parsingOptions;
         }
 
         /// <inheritdoc/>
         public PdfPageInformation Create(int number, DictionaryToken dictionary, PageTreeMembers pageTreeMembers, NamedDestinations namedDestinations)
         {
-            if (dictionary == null)
+            if (dictionary is null)
             {
                 throw new ArgumentNullException(nameof(dictionary));
             }
 
-            var type = dictionary.GetNameOrDefault(NameToken.Type);
+            NameToken? type = dictionary.GetNameOrDefault(NameToken.Type);
 
-            if (type != null && !type.Equals(NameToken.Page))
+            if (type is not null && !type.Equals(NameToken.Page))
             {
-                parsingOptions.Logger.Error($"Page {number} had its type specified as {type} rather than 'Page'.");
+                _parsingOptions.Logger.Error($"Page {number} had its type specified as {type} rather than 'Page'.");
             }
 
             var rotation = new PageRotationDegrees(pageTreeMembers.Rotation);
-            if (dictionary.TryGet(NameToken.Rotate, pdfScanner, out NumericToken rotateToken))
+            if (dictionary.TryGet(NameToken.Rotate, _pdfScanner, out NumericToken? rotateToken))
             {
                 rotation = new PageRotationDegrees(rotateToken.Int);
             }
@@ -80,7 +78,7 @@ namespace Caly.Pdf.PageFactories
             MediaBox mediaBox = GetMediaBox(number, dictionary, pageTreeMembers);
             CropBox cropBox = GetCropBox(dictionary, mediaBox);
 
-            var initialMatrix = GetInitialMatrix(GetUserSpaceUnits(dictionary), mediaBox, cropBox, rotation, parsingOptions.Logger);
+            TransformationMatrix initialMatrix = GetInitialMatrix(GetUserSpaceUnits(dictionary), mediaBox, cropBox, rotation, _parsingOptions.Logger);
 
             ApplyTransformNormalise(initialMatrix, ref mediaBox, ref cropBox);
 
@@ -115,11 +113,11 @@ namespace Caly.Pdf.PageFactories
         {
             CropBox cropBox;
             if (dictionary.TryGet(NameToken.CropBox, out var cropBoxObject) &&
-                DirectObjectFinderCaly.TryGet(cropBoxObject, pdfScanner, out ArrayToken cropBoxArray))
+                DirectObjectFinderCaly.TryGet(cropBoxObject, _pdfScanner, out ArrayToken cropBoxArray))
             {
                 if (cropBoxArray.Length != 4)
                 {
-                    parsingOptions.Logger.Error(
+                    _parsingOptions.Logger.Error(
                         $"The CropBox was the wrong length in the dictionary: {dictionary}. Array was: {cropBoxArray}. Using MediaBox.");
 
                     cropBox = new CropBox(mediaBox.Bounds);
@@ -127,7 +125,7 @@ namespace Caly.Pdf.PageFactories
                     return cropBox;
                 }
 
-                cropBox = new CropBox(cropBoxArray.ToRectangle(pdfScanner));
+                cropBox = new CropBox(cropBoxArray.ToRectangle(_pdfScanner));
             }
             else
             {
@@ -144,11 +142,11 @@ namespace Caly.Pdf.PageFactories
         {
             MediaBox mediaBox;
             if (dictionary.TryGet(NameToken.MediaBox, out var mediaBoxObject)
-                && DirectObjectFinderCaly.TryGet(mediaBoxObject, pdfScanner, out ArrayToken mediaBoxArray))
+                && DirectObjectFinderCaly.TryGet(mediaBoxObject, _pdfScanner, out ArrayToken mediaBoxArray))
             {
                 if (mediaBoxArray.Length != 4)
                 {
-                    parsingOptions.Logger.Error(
+                    _parsingOptions.Logger.Error(
                         $"The MediaBox was the wrong length in the dictionary: {dictionary}. Array was: {mediaBoxArray}. Defaulting to US Letter.");
 
                     mediaBox = MediaBox.Letter;
@@ -156,15 +154,15 @@ namespace Caly.Pdf.PageFactories
                     return mediaBox;
                 }
 
-                mediaBox = new MediaBox(mediaBoxArray.ToRectangle(pdfScanner));
+                mediaBox = new MediaBox(mediaBoxArray.ToRectangle(_pdfScanner));
             }
             else
             {
                 mediaBox = pageTreeMembers.MediaBox;
 
-                if (mediaBox == null)
+                if (mediaBox is null)
                 {
-                    parsingOptions.Logger.Error(
+                    _parsingOptions.Logger.Error(
                         $"The MediaBox was the wrong missing for page {number}. Using US Letter.");
 
                     // PDFBox defaults to US Letter.
@@ -197,7 +195,7 @@ namespace Caly.Pdf.PageFactories
         /// <param name="rotation">The page rotation.</param>
         /// <param name="log"></param>
         [System.Diagnostics.Contracts.Pure]
-        private static TransformationMatrix GetInitialMatrix(int pointMultiples,
+        private static TransformationMatrix GetInitialMatrix(int userSpaceUnit,
             MediaBox mediaBox,
             CropBox cropBox,
             PageRotationDegrees rotation,
@@ -210,7 +208,7 @@ namespace Caly.Pdf.PageFactories
             if (rotation.Value == 0
                 && viewBox.Left == 0
                 && viewBox.Bottom == 0
-                && pointMultiples == 1)
+                && userSpaceUnit == 1)
             {
                 return TransformationMatrix.Identity;
             }
@@ -218,7 +216,7 @@ namespace Caly.Pdf.PageFactories
             // Move points so that (0,0) is equal to the viewbox bottom left corner.
             var t1 = TransformationMatrix.GetTranslationMatrix(-viewBox.Left, -viewBox.Bottom);
 
-            if (pointMultiples != 1)
+            if (userSpaceUnit != 1)
             {
                 log.Warn("User space unit other than 1 is not implemented");
             }

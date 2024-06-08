@@ -116,7 +116,7 @@ namespace Caly.Pdf.TextLayer
             }
 
             // If we did not create a letter for a combined diacritic, create one here.
-            if (letter == null)
+            if (letter is null)
             {
                 /* 9.2.2 Basics of showing text
                  * A font defines the glyphs at one standard size. This standard is arranged so that the nominal height of tightly
@@ -163,7 +163,7 @@ namespace Caly.Pdf.TextLayer
 
             // Only do text related ngs
 
-            if (state.TryGet(NameToken.Font, PdfScanner, out ArrayToken fontArray) && fontArray.Length == 2
+            if (state.TryGet(NameToken.Font, PdfScanner, out ArrayToken? fontArray) && fontArray.Length == 2
                 && fontArray.Data[0] is IndirectReferenceToken fontReference &&
                 fontArray.Data[1] is NumericToken sizeToken)
             {
@@ -273,7 +273,8 @@ namespace Caly.Pdf.TextLayer
             // No op
         }
 
-        public override void BeginMarkedContent(NameToken name, NameToken propertyDictionaryName, DictionaryToken properties)
+        public override void BeginMarkedContent(NameToken name, NameToken? propertyDictionaryName,
+            DictionaryToken? properties)
         {
             // No op
         }

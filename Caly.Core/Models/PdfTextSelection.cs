@@ -421,7 +421,7 @@ namespace Caly.Core.Models
             }
             else
             {
-                IsBackward = AnchorWord.IndexInPage > FocusWord.IndexInPage;
+                IsBackward = AnchorWord!.IndexInPage > FocusWord!.IndexInPage;
             }
         }
 
@@ -442,7 +442,7 @@ namespace Caly.Core.Models
         {
             selectionOffset = 0;
 
-            if (word.Letters == null || word.Letters.Count == 0)
+            if (word.Letters.Count == 0)
             {
                 // not a text word - set full selection
                 selectionIndex = -1;

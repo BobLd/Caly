@@ -99,7 +99,7 @@ namespace Caly.Pdf.Models
 
         public PdfLetter? FindLetterOver(double x, double y)
         {
-            if (Letters == null || Letters.Count == 0)
+            if (Letters.Count == 0)
             {
                 return null;
             }
@@ -118,7 +118,7 @@ namespace Caly.Pdf.Models
 
         public int FindLetterIndexOver(double x, double y)
         {
-            if (Letters == null || Letters.Count == 0)
+            if (Letters.Count == 0)
             {
                 return -1;
             }
@@ -136,7 +136,7 @@ namespace Caly.Pdf.Models
 
         public int FindNearestLetterIndex(double x, double y)
         {
-            if (Letters == null || Letters.Count == 0)
+            if (Letters.Count == 0)
             {
                 return -1;
             }

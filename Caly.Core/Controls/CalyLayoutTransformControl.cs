@@ -68,7 +68,7 @@ namespace Caly.Core.Controls
         /// <returns>The actual size used.</returns>
         protected override Size ArrangeOverride(Size finalSize)
         {
-            if (TransformRoot == null || LayoutTransform == null)
+            if (TransformRoot is null || LayoutTransform is null)
             {
                 SetCurrentValue(LayoutTransformProperty, RenderTransform);
                 return base.ArrangeOverride(finalSize);
@@ -123,7 +123,7 @@ namespace Caly.Core.Controls
         /// <returns>The size that this element determines it needs during layout, based on its calculations of child element sizes.</returns>
         protected override Size MeasureOverride(Size availableSize)
         {
-            if (TransformRoot == null || LayoutTransform == null)
+            if (TransformRoot is null || LayoutTransform is null)
             {
                 return base.MeasureOverride(availableSize);
             }

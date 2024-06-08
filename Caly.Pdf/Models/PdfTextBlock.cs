@@ -82,7 +82,7 @@ namespace Caly.Pdf.Models
 
         public PdfTextLine? FindTextLineOver(double x, double y)
         {
-            if (TextLines == null || TextLines.Count == 0)
+            if (TextLines.Count == 0)
             {
                 return null;
             }

@@ -226,21 +226,29 @@ namespace Caly.Core.Handlers
                 word = FindNearestWordWhileSelecting(loc, control.PdfTextLayer);
             }
 
-            if (lineBox == null && word is null) return;
+            if (lineBox is null && word is null)
+            {
+                return;
+            }
 
-            if (word == null)
+            if (lineBox is null)
+            {
+                return;
+            }
+
+            if (word is null)
             {
                 // get the word under the mouse
                 word = lineBox.FindWordOver(loc.X, loc.Y);
             }
 
             // if no word found under the mouse use the last or the first word in the line
-            if (word == null)
+            if (word is null)
             {
                 word = lineBox.FindNearestWord(loc.X, loc.Y);
             }
 
-            if (word == null)
+            if (word is null)
             {
                 return;
             }

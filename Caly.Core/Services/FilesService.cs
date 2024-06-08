@@ -36,13 +36,13 @@ namespace Caly.Core.Services
 
         public async Task<IStorageFile?> OpenPdfFileAsync()
         {
-            var top = TopLevel.GetTopLevel(_target);
+            TopLevel? top = TopLevel.GetTopLevel(_target);
             if (top is null)
             {
                 return null;
             }
 
-            var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            IReadOnlyList<IStorageFile> files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
                 Title = "Open",
                 AllowMultiple = false,
@@ -52,15 +52,15 @@ namespace Caly.Core.Services
             return files.Count >= 1 ? files[0] : null;
         }
 
-        public async Task<IStorageFile?> SavePdfFileAsync()
+        public Task<IStorageFile?> SavePdfFileAsync()
         {
-            var top = TopLevel.GetTopLevel(_target);
+            TopLevel? top = TopLevel.GetTopLevel(_target);
             if (top is null)
             {
-                return null;
+                return Task.FromResult<IStorageFile?>(null);
             }
 
-            return await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+            return top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
                 Title = "Save Pdf File"
             });
@@ -68,12 +68,8 @@ namespace Caly.Core.Services
 
         public Task<IStorageFile?> TryGetFileFromPathAsync(string path)
         {
-            var top = TopLevel.GetTopLevel(_target);
-            if (top is null)
-            {
-                return null;
-            }
-            return top.StorageProvider.TryGetFileFromPathAsync(path);
+            TopLevel? top = TopLevel.GetTopLevel(_target);
+            return top is null ? Task.FromResult<IStorageFile?>(null) : top.StorageProvider.TryGetFileFromPathAsync(path);
         }
     }
 }

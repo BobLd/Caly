@@ -249,7 +249,18 @@ namespace Caly.Pdf.Models
                 System.Diagnostics.Debug.Assert(Count > 0);
                 System.Diagnostics.Debug.Assert(index >= 0 && index < Count);
 
-                var block = TextBlocks.FirstOrDefault(f => f.ContainsWord(index));
+                if (TextBlocks is null)
+                {
+                    throw new NullReferenceException($"Cannot access word at index {index} because TextBlocks is null.");
+                }
+
+                PdfTextBlock? block = TextBlocks.FirstOrDefault(f => f.ContainsWord(index)); // TODO - Optimise that
+
+                if (block is null)
+                {
+                    throw new NullReferenceException($"Cannot find word at index {index}.");
+                }
+
                 return block.GetWordInPageAt(index);
             }
         }

@@ -27,17 +27,17 @@ namespace Caly.Pdf.TextLayer
 
         public ColorSpaceDetails CurrentNonStrokingColorSpace => DeviceGrayColorSpaceDetails.Instance;
 
-        public void SetStrokingColorspace(NameToken colorspace, DictionaryToken dictionary = null)
+        public void SetStrokingColorspace(NameToken colorspace, DictionaryToken? dictionary = null)
         {
             // No op
         }
 
-        public void SetNonStrokingColorspace(NameToken colorspace, DictionaryToken dictionary = null)
+        public void SetNonStrokingColorspace(NameToken colorspace, DictionaryToken? dictionary = null)
         {
             // No op
         }
 
-        public void SetStrokingColor(IReadOnlyList<double> operands, NameToken patternName = null)
+        public void SetStrokingColor(IReadOnlyList<double> operands, NameToken? patternName = null)
         {
             // No op
         }
@@ -57,7 +57,7 @@ namespace Caly.Pdf.TextLayer
             // No op
         }
 
-        public void SetNonStrokingColor(IReadOnlyList<double> operands, NameToken patternName = null)
+        public void SetNonStrokingColor(IReadOnlyList<double> operands, NameToken? patternName = null)
         {
             // No op
         }
