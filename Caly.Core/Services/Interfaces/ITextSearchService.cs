@@ -25,6 +25,6 @@ namespace Caly.Core.Services.Interfaces
     {
         Task BuildPdfDocumentIndex(PdfDocumentViewModel pdfDocument, CancellationToken token);
 
-        Task<IEnumerable<TextSearchResultViewModel>> Search(string text, CancellationToken token);
+        Task<IEnumerable<TextSearchResultViewModel>> Search(PdfDocumentViewModel pdfDocument, string text, CancellationToken token);
     }
 }

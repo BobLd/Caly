@@ -87,7 +87,7 @@
                                        HorizontalAlignment="Center"/>
 
 							<!-- Document text search -->
-                            <TextBox Watermark="Search..." Text="{Binding TextSearch}" />
+                            <TextBox Width="120" Watermark="Search..." Text="{Binding TextSearch}" />
                             <Button HorizontalAlignment="Center" Command="{Binding SearchTextCommand}">
                                 <PathIcon Data="{StaticResource document_search_regular}">
                                     <ToolTip.Tip>Search</ToolTip.Tip>

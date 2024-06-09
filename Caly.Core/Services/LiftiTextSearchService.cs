@@ -86,7 +86,7 @@ namespace Caly.Core.Services
             }
         }
 
-        public async Task<IEnumerable<TextSearchResultViewModel>> Search(string text, CancellationToken token)
+        public async Task<IEnumerable<TextSearchResultViewModel>> Search(PdfDocumentViewModel pdfDocument, string text, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
 
@@ -101,13 +101,15 @@ namespace Caly.Core.Services
                 new TextSearchResultViewModel()
                 {
                     PageNumber = r.Key,
-                    Nodes = new ObservableCollection<TextSearchResultViewModel>(r.FieldMatches.SelectMany(m => m.Locations
+                    Nodes = new ObservableCollection<TextSearchResultViewModel>(r.FieldMatches.SelectMany(m => m
+                        .Locations
                         .Select(l =>
                             new TextSearchResultViewModel()
                             {
                                 PageNumber = r.Key,
                                 WordIndex = l.TokenIndex,
                                 Score = m.Score,
+                                Word = pdfDocument.Pages[r.Key - 1].PdfTextLayer?[l.TokenIndex]
                             }
                         )))
                 });

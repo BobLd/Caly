@@ -21,6 +21,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
@@ -28,6 +30,7 @@ using Caly.Core.Services.Interfaces;
 using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Lifti.Querying;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Caly.Core.ViewModels
@@ -299,30 +302,54 @@ namespace Caly.Core.ViewModels
         [RelayCommand]
         private async Task SearchText(CancellationToken token)
         {
-            SelectedTabIndex = 2;
-            SelectedTextSearchResult = null;
-            SearchResults.Clear();
-
-            if (string.IsNullOrEmpty(TextSearch))
+            try
             {
-                return;
-            }
+                SelectedTabIndex = 2;
+                SelectedTextSearchResult = null;
+                SearchResults.Clear();
 
-            await _buildSearchIndex.Value;
-
-            var results = await Task.Run(() => _pdfService.SearchText(TextSearch, token), token);
-            foreach (var result in results.OrderBy(r => r.PageNumber))
-            {
-                SearchResults.Add(result);
-            }
-
-            if (SearchResults.Count == 0)
-            {
-                // No match found
-                SearchResults.Add(new TextSearchResultViewModel()
+                if (string.IsNullOrEmpty(TextSearch))
                 {
-                    PageNumber = -1
-                });
+                    return;
+                }
+
+                await _buildSearchIndex.Value;
+
+                var results = await Task.Run(() => _pdfService.SearchText(this, TextSearch, token), token);
+                foreach (var result in results.OrderBy(r => r.PageNumber))
+                {
+                    SearchResults.Add(result);
+                }
+
+                TextSelectionHandler.SetTextSearchResult(this, SearchResults);
+
+                if (SearchResults.Count == 0)
+                {
+                    // No match found
+                    SearchResults.Add(new TextSearchResultViewModel() { PageNumber = -1 });
+                }
+            }
+            catch (QueryParserException qpe)
+            {
+                System.Diagnostics.Debug.Write(qpe.ToString());
+                var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
+                if (dialogService is not null)
+                {
+                    Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Text Search Error",
+                        qpe.Message,
+                        NotificationType.Error));
+                }
+
+                if (SearchResults.Count == 0)
+                {
+                    // No match found
+                    SearchResults.Add(new TextSearchResultViewModel() { PageNumber = -99 });
+                }
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.Write(e.ToString());
+                Exception = new ExceptionViewModel(e);
             }
         }
 
