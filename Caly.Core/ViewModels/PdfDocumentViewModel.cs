@@ -310,7 +310,7 @@ namespace Caly.Core.ViewModels
 
             await _buildSearchIndex.Value;
 
-            var results = await Task.Run(() => _pdfService.SearchText(TextSearch, token), token);
+            var results = await Task.Run(() => _pdfService.SearchText(this, TextSearch, token), token);
             foreach (var result in results.OrderBy(r => r.PageNumber))
             {
                 SearchResults.Add(result);

@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System.Collections.ObjectModel;
-using System.Xml.Linq;
+using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Caly.Core.ViewModels
@@ -24,6 +24,7 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private int _pageNumber;
         [ObservableProperty] private int? _wordIndex;
         [ObservableProperty] private double? _score;
+        [ObservableProperty] private PdfWord? _word;
         [ObservableProperty] private ObservableCollection<TextSearchResultViewModel>? _nodes;
     }
 }
