@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using Caly.Pdf.Models;
-using Caly.Pdf.PageFactories.Helpers;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
@@ -23,8 +22,10 @@ using UglyToad.PdfPig.Geometry;
 using UglyToad.PdfPig.Logging;
 using UglyToad.PdfPig.Outline.Destinations;
 using UglyToad.PdfPig.Parser;
+using UglyToad.PdfPig.Parser.Parts;
 using UglyToad.PdfPig.Tokenization.Scanner;
 using UglyToad.PdfPig.Tokens;
+using UglyToad.PdfPig.Util;
 
 namespace Caly.Pdf.PageFactories
 {
@@ -113,7 +114,7 @@ namespace Caly.Pdf.PageFactories
         {
             CropBox cropBox;
             if (dictionary.TryGet(NameToken.CropBox, out var cropBoxObject) &&
-                DirectObjectFinderCaly.TryGet(cropBoxObject, _pdfScanner, out ArrayToken cropBoxArray))
+                DirectObjectFinder.TryGet(cropBoxObject, _pdfScanner, out ArrayToken? cropBoxArray))
             {
                 if (cropBoxArray.Length != 4)
                 {
@@ -142,7 +143,7 @@ namespace Caly.Pdf.PageFactories
         {
             MediaBox mediaBox;
             if (dictionary.TryGet(NameToken.MediaBox, out var mediaBoxObject)
-                && DirectObjectFinderCaly.TryGet(mediaBoxObject, _pdfScanner, out ArrayToken mediaBoxArray))
+                && DirectObjectFinder.TryGet(mediaBoxObject, _pdfScanner, out ArrayToken? mediaBoxArray))
             {
                 if (mediaBoxArray.Length != 4)
                 {
