@@ -13,11 +13,32 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using Avalonia.Controls;
+using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
+using Caly.Core.Utilities;
+using Caly.Core.ViewModels;
 
 namespace Caly.Core.Controls
 {
+    [TemplatePart("PART_ListBox", typeof(ListBox))]
     public class PdfDocumentThumbnailControl : TemplatedControl
     {
+        private ListBox? _listBox;
+
+        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        {
+            base.OnApplyTemplate(e);
+            _listBox = e.NameScope.FindFromNameScope<ListBox>("PART_ListBox");
+            _listBox.ContainerPrepared += _listBox_ContainerPrepared;
+        }
+
+        private async void _listBox_ContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+        {
+            if (e.Container.DataContext is PdfPageViewModel vm)
+            {
+                await vm.LoadThumbnailCommand.ExecuteAsync(null);
+            }
+        }
     }
 }

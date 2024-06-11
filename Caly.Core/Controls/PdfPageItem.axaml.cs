@@ -180,6 +180,8 @@ namespace Caly.Core.Controls
                                 // UnloadPagePictureCommand is most often null here, it is invoked when the property
                                 // is changed to a new value.
                                 UnloadPagePictureCommand?.Execute(null);
+
+                                System.Diagnostics.Debug.Assert((Picture?.RefCount ?? 0) == 0);
                             }
                         }
                         catch (Exception e)
