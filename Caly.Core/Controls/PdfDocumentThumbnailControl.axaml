@@ -22,7 +22,8 @@
 							 VerticalAlignment="Stretch"
                              BorderThickness="0"
                              ItemsSource="{Binding Pages}"
-                             SelectedIndex="{Binding SelectedPageIndex, Mode=TwoWay, Converter={StaticResource zeroPageIndexConverter}}">
+                             SelectedIndex="{Binding SelectedPageIndex, Mode=TwoWay, Converter={StaticResource zeroPageIndexConverter}}"
+                              >
 						<ListBox.ItemTemplate>
 							<DataTemplate x:DataType="viewModels:PdfPageViewModel">
 								<StackPanel>

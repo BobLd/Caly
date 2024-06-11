@@ -14,9 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 namespace Caly.Core.Controls
 {
@@ -47,6 +49,21 @@ namespace Caly.Core.Controls
         /// </summary>
         public static readonly StyledProperty<double> PageHeightProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, double>(nameof(PageHeight));
 
+        /// <summary>
+        /// Defines the <see cref="LoadThumbnailCommand"/> property.
+        /// </summary>
+        public static readonly StyledProperty<ICommand?> LoadThumbnailCommandProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, ICommand?>(nameof(LoadThumbnailCommand));
+
+        /// <summary>
+        /// Defines the <see cref="UnloadThumbnailCommand"/> property.
+        /// </summary>
+        public static readonly StyledProperty<ICommand?> UnloadThumbnailCommandProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, ICommand?>(nameof(UnloadThumbnailCommand));
+
+        /// <summary>
+        /// Defines the <see cref="Thumbnail"/> property.
+        /// </summary>
+        public static readonly StyledProperty<Bitmap?> ThumbnailProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, Bitmap?>(nameof(Thumbnail));
+
         public Rect? VisibleArea
         {
             get => GetValue(VisibleAreaProperty);
@@ -65,10 +82,36 @@ namespace Caly.Core.Controls
             set => SetValue(PageHeightProperty, value);
         }
 
+        /// <summary>
+        /// Gets or sets an <see cref="ICommand"/> to be invoked when the page picture needs to be loaded.
+        /// <para>This is when the page becomes 'visible'.</para>
+        /// </summary>
+        public ICommand? LoadThumbnailCommand
+        {
+            get => GetValue(LoadThumbnailCommandProperty);
+            set => SetValue(LoadThumbnailCommandProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets an <see cref="ICommand"/> to be invoked when the page picture needs to be unloaded.
+        /// <para>This is when the page becomes 'invisible'.</para>
+        /// </summary>
+        public ICommand? UnloadThumbnailCommand
+        {
+            get => GetValue(UnloadThumbnailCommandProperty);
+            set => SetValue(UnloadThumbnailCommandProperty, value);
+        }
+
+        public Bitmap? Thumbnail
+        {
+            get => GetValue(ThumbnailProperty);
+            set => SetValue(ThumbnailProperty, value);
+        }
+
         static PdfPageThumbnailControl()
         {
-            AffectsRender<PdfPageThumbnailControl>(VisibleAreaProperty, ThumbnailHeightProperty, PageHeightProperty);
-            AffectsMeasure<PdfPageThumbnailControl>(VisibleAreaProperty, ThumbnailHeightProperty, PageHeightProperty);
+            AffectsRender<PdfPageThumbnailControl>(ThumbnailProperty, VisibleAreaProperty, ThumbnailHeightProperty, PageHeightProperty);
+            AffectsMeasure<PdfPageThumbnailControl>(ThumbnailProperty, VisibleAreaProperty, ThumbnailHeightProperty, PageHeightProperty);
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -78,24 +121,30 @@ namespace Caly.Core.Controls
             {
                 UpdateScaleMatrix();
             }
+            else if (change.Property == UnloadThumbnailCommandProperty)
+            {
+                if (change.OldValue is ICommand o)
+                {
+                    o.Execute(null);
+                }
+            }
         }
 
         public override void Render(DrawingContext context)
         {
             base.Render(context);
-            context.FillRectangle(Brushes.White, Bounds); // TODO - Render page image instead
+            context.FillRectangle(Brushes.White, Bounds);
 
-#if DEBUG
-            if (DataContext is ViewModels.PdfPageViewModel vm && vm.IsPageVisible)
+            if (Thumbnail is not null)
             {
-                context.DrawRectangle(new Pen(Colors.Red.ToUInt32(), 4), Bounds);
+                context.DrawImage(Thumbnail, this.Bounds);
             }
-#endif
 
             if (VisibleArea.HasValue)
             {
-                var area = VisibleArea.Value.TransformToAABB(_scale);
-                context.DrawRectangle(_areaBrush.ToImmutable(), _areaPen.ToImmutable(), area);
+                context.DrawRectangle(_areaBrush.ToImmutable(),
+                    _areaPen.ToImmutable(),
+                    VisibleArea.Value.TransformToAABB(_scale));
             }
         }
 

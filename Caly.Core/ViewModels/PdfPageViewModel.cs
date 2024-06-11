@@ -32,7 +32,7 @@ namespace Caly.Core.ViewModels
 {
     public sealed partial class PdfPageViewModel : ViewModelBase, IAsyncDisposable
     {
-        private readonly AutoResetEvent _mutex = new AutoResetEvent(true);
+        private readonly SemaphoreSlim _mutex = new SemaphoreSlim(1);
         private readonly IPdfService _pdfService;
 
         private CancellationTokenSource? _cts = new();
@@ -53,6 +53,7 @@ namespace Caly.Core.ViewModels
         private double _height;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsThumbnailRendering))]
         private Bitmap? _thumbnail;
 
         [ObservableProperty]
@@ -78,6 +79,8 @@ namespace Caly.Core.ViewModels
         public int ThumbnailHeight => (int)(Height / Width * ThumbnailWidth);
 
         public bool IsPageRendering => PdfPicture is null || PdfPicture.Item is null; // TODO - refactor might not be optimal
+
+        public bool IsThumbnailRendering => Thumbnail is null;
 
 #if DEBUG
         /// <summary>
@@ -121,42 +124,20 @@ namespace Caly.Core.ViewModels
         }
 
         [RelayCommand]
-        public async Task LoadPagePicture()
+        private async Task LoadPagePicture()
         {
             await Task.Run(async () =>
             {
+                if (_cts is null)
+                {
+                    return;
+                }
+
+                await _mutex.WaitAsync();
+
                 try
                 {
-                    _mutex.WaitOne();
-
-                    if (_cts is null)
-                    {
-                        return;
-                    }
-
-                    if (PdfPicture?.Item is not null)
-                    {
-                        return;
-                    }
-
-                    _cts.Token.ThrowIfCancellationRequested();
-
-                    PdfPicture = await _pdfService.GetRenderPageAsync(PageNumber, _cts.Token);
-
-                    if (PdfPicture is not null)
-                    {
-                        var w = PdfPicture?.Item.CullRect.Width;
-                        var h = PdfPicture?.Item.CullRect.Height;
-                        if (w.HasValue && h.HasValue)
-                        {
-                            Width = w.Value;
-                            Height = h.Value;
-                        }
-
-                        //await Task.WhenAll(LoadInteractiveLayer(_cts.Token), Task.Run(LoadBitmap, _cts.Token));
-                        await LoadInteractiveLayer(_cts.Token);
-                    }
-                    //await LoadThumbnailFromPicture(ThumbnailWidth, _cts.Token);
+                    await LoadPagePictureLocal();
                 }
                 catch (OperationCanceledException)
                 {
@@ -169,32 +150,55 @@ namespace Caly.Core.ViewModels
                 }
                 finally
                 {
-                    _mutex.Set();
+                    _mutex.Release();
                 }
             });
         }
 
-        [RelayCommand]
-        public async Task UnloadPagePicture()
+        private async Task LoadPagePictureLocal()
         {
-            // TODO - Make sure that loading / unloading the picture at the same time is properly handled
+            if (PdfPicture?.Item is not null)
+            {
+                return;
+            }
 
-            await Task.Run(() =>
+            _cts.Token.ThrowIfCancellationRequested();
+
+            PdfPicture = await _pdfService.GetRenderPageAsync(PageNumber, _cts.Token);
+
+            if (PdfPicture is not null)
+            {
+                float? w = PdfPicture?.Item.CullRect.Width;
+                float? h = PdfPicture?.Item.CullRect.Height;
+                if (w.HasValue && h.HasValue)
+                {
+                    Width = w.Value;
+                    Height = h.Value;
+                }
+
+                await LoadInteractiveLayer(_cts.Token);
+            }
+        }
+
+        [RelayCommand]
+        private async Task UnloadPagePicture()
+        {
+            await Task.Run(async () =>
             {
                 if (_cts is null)
                 {
                     return;
                 }
 
+                await _mutex.WaitAsync();
                 try
                 {
-                    _mutex.WaitOne();
                     if (_cts.IsCancellationRequested)
                     {
                         return; // already cancelled
                     }
 
-                    _cts.Cancel();
+                    await _cts.CancelAsync();
                     DisposePictureSafely();
                 }
                 catch (Exception e)
@@ -205,7 +209,7 @@ namespace Caly.Core.ViewModels
                 {
                     _cts.Dispose();
                     _cts = new CancellationTokenSource();
-                    _mutex.Set();
+                    _mutex.Release();
                 }
             });
         }
@@ -216,55 +220,101 @@ namespace Caly.Core.ViewModels
             PdfPicture = null;
             tempPicture?.Dispose();
             System.Diagnostics.Debug.Assert((tempPicture?.RefCount ?? 0) == 0);
-
-            //var tempBitmap = PdfBitmap;
-            //PdfBitmap = null;
-            //tempBitmap?.Dispose();
-            //System.Diagnostics.Debug.Assert((tempBitmap?.RefCount ?? 0) == 0);
         }
 
-        /*
-        private void LoadBitmap()
+        [RelayCommand]
+        private async Task LoadThumbnail()
         {
-            Debug.ThrowOnUiThread();
-
-            if (PdfPicture is null)
+            await Task.Run(async () =>
             {
-                throw new ArgumentNullException(nameof(PdfPicture),
-                    "Please call LoadPagePicture() before calling LoadBitmap().");
-            }
-
-            var bitmap = new SKBitmap((int)PdfPicture.Item.CullRect.Width, (int)PdfPicture.Item.CullRect.Height);
-            using (var canvas = new SKCanvas(bitmap))
-            {
-                canvas.DrawPicture(PdfPicture.Item);
-            }
-
-            PdfBitmap = RefCountable.Create(bitmap);
-        }
-        */
-
-        private Task LoadThumbnailFromPicture(int width, CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested || Thumbnail is not null)
-            {
-                return Task.CompletedTask;
-            }
-
-            if (PdfPicture is null)
-            {
-                throw new ArgumentNullException(nameof(PdfPicture), "Please call LoadPagePicture() before calling LoadThumbnailFromPicture().");
-            }
-
-            return Task.Run(() =>
-            {
-                using (SKImage skImage = SKImage.FromPicture(PdfPicture.Item, new SKSizeI((int)Width, (int)Height)))
-                using (SKData d = skImage.Encode(SKEncodedImageFormat.Png, 100))
-                using (Stream stream = d.AsStream())
+                if (_cts is null)
                 {
-                    Thumbnail = Bitmap.DecodeToWidth(stream, width, BitmapInterpolationMode.LowQuality);
+                    return;
                 }
-            }, cancellationToken);
+
+                await _mutex.WaitAsync();
+                try
+                {
+                    if (Thumbnail is not null)
+                    {
+                        return;
+                    }
+
+                    if (PdfPicture is null)
+                    {
+                        await LoadPagePictureLocal();
+                        if (PdfPicture is null)
+                        {
+                            return;
+                        }
+                    }
+
+                    int tWidth = (int)(ThumbnailWidth / 1.5);
+                    int tHeight = (int)(ThumbnailHeight / 1.5);
+                    
+                    SKMatrix scale = SKMatrix.CreateScale(tWidth / (float)Width, tHeight / (float)Height);
+
+                    using (SKBitmap bitmap = new SKBitmap(tWidth, tHeight))
+                    using (SKCanvas canvas = new SKCanvas(bitmap))
+                    {
+                        canvas.Clear(SKColors.White);
+                        canvas.DrawPicture(PdfPicture!.Item, ref scale);
+
+                        using (SKData d = bitmap.Encode(SKEncodedImageFormat.Jpeg, 100))
+                        await using (Stream stream = d.AsStream())
+                        {
+                            Thumbnail = Bitmap.DecodeToWidth(stream, ThumbnailWidth,
+                                BitmapInterpolationMode.LowQuality);
+                        }
+                    }
+
+                    if (!IsPageVisible)
+                    {
+                        DisposePictureSafely();
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    //DisposePictureSafely();
+                }
+                catch (Exception e)
+                {
+                    //DisposePictureSafely();
+                    Exception = new ExceptionViewModel(e);
+                }
+                finally
+                {
+                    _mutex.Release();
+                }
+            });
+        }
+
+        [RelayCommand]
+        private async Task UnloadThumbnail()
+        {
+            await Task.Run(async () =>
+            {
+                if (_cts is null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    await _mutex.WaitAsync();
+                    var t = Thumbnail;
+                    Thumbnail = null;
+                    t?.Dispose();
+                }
+                catch (Exception e)
+                {
+                    Exception = new ExceptionViewModel(e);
+                }
+                finally
+                {
+                    _mutex.Release();
+                }
+            });
         }
 
         public async Task LoadInteractiveLayer(CancellationToken cancellationToken)

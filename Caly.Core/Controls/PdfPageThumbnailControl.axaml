@@ -2,24 +2,27 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:Caly.Core.Controls"
         xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
-  <Design.PreviewWith>
-    <controls:PdfPageThumbnailControl />
-  </Design.PreviewWith>
+    <Design.PreviewWith>
+        <controls:PdfPageThumbnailControl />
+    </Design.PreviewWith>
 
-    <Style Selector="controls|PdfPageThumbnailControl">
-        <!-- Set Defaults -->
+    <Style Selector="controls|PdfPageThumbnailControl" x:DataType="viewModels:PdfPageViewModel">
+        <Setter Property="LoadThumbnailCommand" Value="{Binding LoadThumbnailCommand}"/>
+        <Setter Property="UnloadThumbnailCommand" Value="{Binding UnloadPagePictureCommand}"/>
+        <Setter Property="Thumbnail" Value="{Binding Thumbnail}"/>
+
         <Setter Property="Template">
             <ControlTemplate x:DataType="viewModels:PdfPageViewModel">
+                <Grid>
 
-                <!--
-                <ProgressBar HorizontalAlignment="Stretch"
-			                 VerticalAlignment="Stretch"
-			                 IsIndeterminate="{Binding IsPageRendering}"
-			                 IsEnabled="{Binding IsPageRendering}"
-			                 IsVisible="{Binding IsPageRendering}"/>
-                
-				<Image Source="{Binding Thumbnail}"/>
-                -->
+                    <ProgressBar Width="50"
+                                 IsIndeterminate="{Binding IsThumbnailRendering}"
+                                 IsEnabled="{Binding IsThumbnailRendering}"
+                                 IsVisible="{Binding IsThumbnailRendering}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+
+                </Grid>
             </ControlTemplate>
         </Setter>
     </Style>
