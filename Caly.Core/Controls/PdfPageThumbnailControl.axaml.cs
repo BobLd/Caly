@@ -29,8 +29,8 @@ namespace Caly.Core.Controls
          * Thumbnail images should be no larger than 106 by 106 samples, and should be created at one-eighth scale for 8.5-by-11-inch and A4-size pages.
          */
 
-        private readonly Brush _areaBrush = new SolidColorBrush(Colors.DodgerBlue, 0.3);
-        private readonly Pen _areaPen = new Pen(Colors.DodgerBlue.ToUInt32());
+        private static readonly Brush _areaBrush = new SolidColorBrush(Colors.DodgerBlue, 0.3);
+        private static readonly Pen _areaPen = new Pen(Colors.DodgerBlue.ToUInt32());
 
         private Matrix _scale = Matrix.Identity;
 
