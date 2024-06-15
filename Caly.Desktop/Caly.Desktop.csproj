@@ -14,7 +14,7 @@
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-7-0#trimming-framework-library-features-->
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0-->
 
-	<PropertyGroup Condition ="'$(Configuration)'=='Release'">
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<!-- Only for Release config to allow Avalonia design mode -->
 		<PublishAot>true</PublishAot>
 		<OptimizationPreference>Speed</OptimizationPreference>
@@ -48,7 +48,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="Avalonia.Desktop" Version="11.1.0-beta2" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.1.0-rc1" />
 	</ItemGroup>
 
 	<ItemGroup>
