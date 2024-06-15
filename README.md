@@ -40,5 +40,5 @@ dotnet publish -r win-x64 -c Release -f net8.0
 ```
 
 ## Preview
-![image](https://github.com/BobLd/Caly/assets/38405645/f342ab53-f848-4040-a71b-6d45c9139093)
+![image](https://github.com/BobLd/Caly/assets/38405645/b8a191fd-fd9f-49f3-823e-cc6acb0f2429)
 
