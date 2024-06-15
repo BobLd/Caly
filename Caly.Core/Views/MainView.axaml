@@ -89,65 +89,82 @@
 
 					</DockPanel>
 
-					<SplitView Grid.Row="1" IsPaneOpen="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).IsPaneOpen}"
-                               OpenPaneLength="300"
+					<SplitView Grid.Row="1"
+							   Name="PART_SplitView"
+                               IsPaneOpen="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).IsPaneOpen}"
+                               OpenPaneLength="200"
                                CompactPaneLength="0"
                                DisplayMode="CompactInline">
 
-						<!-- Left navigation bar -->
-						<SplitView.Pane>
-							<Border BorderThickness="1" BorderBrush="{StaticResource SystemChromeHighColor}">
+                        <!-- Left navigation bar -->
+			            <SplitView.Pane>
+                 
+                            <Grid ColumnDefinitions="*,4">
+                                <Border Grid.Column="0"
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource SystemChromeHighColor}">
+                                    
+                                    <TabControl TabStripPlacement="Left" Padding="12,0,0,0">
+                                        
+                                        <!-- Thumbnails tab -->
+                                        <TabItem IsSelected="True">
+                                            <TabItem.Header>
+                                                <PathIcon Data="{StaticResource copy_regular}">
+                                                    <ToolTip.Tip>Thumbnails</ToolTip.Tip>
+                                                    <PathIcon.RenderTransform>
+                                                        <ScaleTransform ScaleY="-1"/>
+                                                    </PathIcon.RenderTransform>
+                                                </PathIcon>
+                                            </TabItem.Header>
+                                            <controls:PdfDocumentThumbnailControl />
+                                        </TabItem>
+                                        
+                                        <!-- Bookmarks tab -->
+                                        <TabItem IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                 IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                            <TabItem.Header>
+                                                <PathIcon Data="{StaticResource bookmark_regular}">
+                                                    <ToolTip.Tip>Bookmarks</ToolTip.Tip>
+                                                </PathIcon>
+                                            </TabItem.Header>
+                                            <TreeView ItemsSource="{Binding Bookmarks}"
+                                                      SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
+                                                      SelectionMode="Toggle"
+                                                      SizeChanged="TreeView_SizeChanged">
+                                                <TreeView.ItemTemplate>
+                                                    <TreeDataTemplate ItemsSource="{Binding Nodes}">
+                                                        <Border HorizontalAlignment="Left"
+                                                                BorderBrush="Gray"
+                                                                BorderThickness="1"
+                                                                CornerRadius="5"
+                                                                Padding="15 3">
+                                                            <TextBlock xml:space="preserve"
+                                                                       Text="{Binding Title}"
+                                                                       TextWrapping="WrapWithOverflow" />
+                                                        </Border>
+                                                    </TreeDataTemplate>
+                                                </TreeView.ItemTemplate>
+                                            </TreeView>
+                                        </TabItem>
+                                    </TabControl>
+                                </Border>
 
-								<TabControl TabStripPlacement="Left" Padding="12,0,0,0">
-									<!-- Thumbnails tab -->
-									<TabItem IsSelected="True">
-										<TabItem.Header>
-											<PathIcon Data="{StaticResource copy_regular}">
-												<ToolTip.Tip>Thumbnails</ToolTip.Tip>
-												<PathIcon.RenderTransform>
-													<ScaleTransform ScaleY="-1"/>
-												</PathIcon.RenderTransform>
-											</PathIcon>
-										</TabItem.Header>
-										<controls:PdfDocumentThumbnailControl />
-									</TabItem>
+                                <!-- Resize left navigation bar -->
+					            <Rectangle Grid.Column="1"
+                                           Fill="{StaticResource SystemChromeHighColor}"
+                                           PointerMoved="Rectangle_OnPointerMoved"
+                                           PointerEntered="Rectangle_OnPointerEntered"
+                                           PointerExited="Rectangle_OnPointerExited"
+                                           PointerPressed="Rectangle_OnPointerPressed"
+                                           PointerReleased="Rectangle_OnPointerReleased"/>
 
-									<!-- Bookmarks tab -->
-									<TabItem IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
-											 IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
-										<TabItem.Header>
-											<PathIcon Data="{StaticResource bookmark_regular}">
-												<ToolTip.Tip>Bookmarks</ToolTip.Tip>
-											</PathIcon>
-										</TabItem.Header>
-										<TreeView ItemsSource="{Binding Bookmarks}"
-												  SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
-												  SelectionMode="Toggle"
-												  SizeChanged="TreeView_SizeChanged">
-											<TreeView.ItemTemplate>
-												<TreeDataTemplate ItemsSource="{Binding Nodes}">
-													<Border HorizontalAlignment="Left"
-															BorderBrush="Gray" BorderThickness="1"
-															CornerRadius="5" Padding="15 3">
-														<TextBlock xml:space="preserve"
-																   Text="{Binding Title}"
-																   TextWrapping="WrapWithOverflow" />
-													</Border>
-												</TreeDataTemplate>
-											</TreeView.ItemTemplate>
-										</TreeView>
-									</TabItem>
+                            </Grid>
+                        </SplitView.Pane>
 
-								</TabControl>
-
-							</Border>
-
-						</SplitView.Pane>
-
-						<!-- Document control -->
-						<SplitView.Content>
-							<controls:PdfDocumentControl />
-						</SplitView.Content>
+			            <!-- Document control -->
+			            <SplitView.Content>
+				            <controls:PdfDocumentControl />
+			            </SplitView.Content>
 
 					</SplitView>
 
