@@ -30,8 +30,6 @@ namespace Caly.Core.Views
 
         protected override void OnLoaded(RoutedEventArgs e)
         {
-            base.OnLoaded(e);
-
             NotificationManager = new WindowNotificationManager(this)
             {
                 Position = NotificationPosition.BottomRight,
@@ -41,6 +39,8 @@ namespace Caly.Core.Views
                 MaxItems = 5
 #endif
             };
+
+            base.OnLoaded(e); // We need to OnLoad() after the NotificationManager is created
         }
     }
 }

@@ -131,7 +131,7 @@ namespace Caly.Desktop
                 if (ex is null) return;
 
                 var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
-                Dispatcher.UIThread.Post(() => dialogService?.ShowExceptionWindow(ex));
+                dialogService?.ShowExceptionWindow(ex);
             }
             catch
             {
