@@ -47,13 +47,13 @@ namespace Caly.Core.Utilities
 
         public void Error(string message)
         {
-            Dispatcher.UIThread.Post(() => _dialogService.ShowNotification(_annotationTitle, message, NotificationType.Warning));
+            _dialogService.ShowNotification(_annotationTitle, message, NotificationType.Warning);
         }
 
         public void Error(string message, Exception ex)
         {
             // We ignore the ex for the moment
-            Dispatcher.UIThread.Post(() => _dialogService.ShowNotification(_annotationTitle, message, NotificationType.Warning));
+            _dialogService.ShowNotification(_annotationTitle, message, NotificationType.Warning);
         }
     }
 }

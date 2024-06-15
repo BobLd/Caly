@@ -62,7 +62,7 @@ namespace Caly.Core.Services
                     }
                     catch (Exception e)
                     {
-                        Dispatcher.UIThread.Post(() => _dialogService.ShowExceptionWindowAsync(e));
+                        await _dialogService.ShowExceptionWindowAsync(e);
                     }
                 });
             }
@@ -71,7 +71,7 @@ namespace Caly.Core.Services
                 // Critical error - can't open document anymore
                 System.Diagnostics.Debug.WriteLine($"ERROR in WorkerProc {e}");
                 Debug.WriteExceptionToFile(e);
-                Dispatcher.UIThread.Post(() => _dialogService.ShowExceptionWindowAsync(e));
+                await _dialogService.ShowExceptionWindowAsync(e);
                 throw;
             }
         }

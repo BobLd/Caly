@@ -22,7 +22,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
 using Caly.Core.Services;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
@@ -35,8 +34,8 @@ namespace Caly.Core
     public partial class App : Application
     {
         private readonly FilePipeStream _pipeServer = new();
-        private readonly CancellationTokenSource listeningToFilesCts = new();
-        private Task? listeningToFiles;
+        private readonly CancellationTokenSource _listeningToFilesCts = new();
+        private Task? _listeningToFiles;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private IPdfDocumentsService _pdfDocumentsService;
@@ -112,7 +111,7 @@ namespace Caly.Core
 
         private async void Desktop_Startup(object? sender, ControlledApplicationLifetimeStartupEventArgs e)
         {
-            listeningToFiles = Task.Run(ListenToIncomingFiles); // Start listening
+            _listeningToFiles = Task.Run(ListenToIncomingFiles); // Start listening
 
             if (e.Args.Length == 0)
             {
@@ -124,8 +123,8 @@ namespace Caly.Core
 
         private void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         {
-            listeningToFilesCts.Cancel();
-            GC.KeepAlive(listeningToFiles);
+            _listeningToFilesCts.Cancel();
+            GC.KeepAlive(_listeningToFiles);
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -140,8 +139,8 @@ namespace Caly.Core
 
             try
             {
-                await Parallel.ForEachAsync(_pipeServer.ReceivePathAsync(listeningToFilesCts.Token),
-                    listeningToFilesCts.Token,
+                await Parallel.ForEachAsync(_pipeServer.ReceivePathAsync(_listeningToFilesCts.Token),
+                    _listeningToFilesCts.Token,
                     async (path, ct) => await OpenDoc(path, ct));
             }
             catch (OperationCanceledException)
@@ -172,11 +171,9 @@ namespace Caly.Core
                     var dialogService = Services?.GetRequiredService<IDialogService>();
                     if (dialogService is not null)
                     {
-                        Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Cannot open file",
-                            "The file does not exist or the path is invalid.", NotificationType.Error));
+                        dialogService.ShowNotification("Cannot open file",
+                            "The file does not exist or the path is invalid.", NotificationType.Error);
                     }
-
-                    // TODO - Log
 
                     return;
                 }
@@ -192,41 +189,35 @@ namespace Caly.Core
 
         private void ShowExceptionNotificationSafely(Exception? ex)
         {
-            Dispatcher.UIThread.Post(() =>
+            try
             {
-                try
-                {
-                    if (ex is null) return;
+                if (ex is null) return;
 
-                    var dialogService = Services?.GetRequiredService<IDialogService>();
-                    if (dialogService is not null)
-                    {
-                        Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Error", ex.Message, NotificationType.Error));
-                    }
-                }
-                catch
+                var dialogService = Services?.GetRequiredService<IDialogService>();
+                if (dialogService is not null)
                 {
-                    // No op
+                    dialogService.ShowNotification("Error", ex.Message, NotificationType.Error);
                 }
-            });
+            }
+            catch
+            {
+                // No op
+            }
         }
 
         private void ShowExceptionWindowSafely(Exception? ex)
         {
-            Dispatcher.UIThread.Post(() =>
+            try
             {
-                try
-                {
-                    if (ex is null) return;
+                if (ex is null) return;
 
-                    var dialogService = Services?.GetRequiredService<IDialogService>();
-                    dialogService?.ShowExceptionWindow(ex);
-                }
-                catch
-                {
-                    // No op
-                }
-            });
+                var dialogService = Services?.GetRequiredService<IDialogService>();
+                dialogService?.ShowExceptionWindow(ex);
+            }
+            catch
+            {
+                // No op
+            }
         }
     }
 }

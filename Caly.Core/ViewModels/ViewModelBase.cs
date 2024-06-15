@@ -13,9 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using Avalonia.Threading;
-using Caly.Core.Services.Interfaces;
 using System;
+using Caly.Core.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,7 +38,7 @@ namespace Caly.Core.ViewModels
                 throw new NullReferenceException($"Missing {nameof(IDialogService)} instance.");
             }
 
-            Dispatcher.UIThread.Post(() => dialogService.ShowExceptionWindowAsync(value));
+            dialogService.ShowExceptionWindow(value);
         }
     }
 }

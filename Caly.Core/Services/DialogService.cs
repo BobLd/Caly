@@ -19,6 +19,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.ViewModels;
 using Caly.Core.Views;
@@ -46,6 +47,7 @@ namespace Caly.Core.Services
             if (sender is MainWindow mw)
             {
                 _windowNotificationManager = mw.NotificationManager;
+                System.Diagnostics.Debug.Assert(_windowNotificationManager is not null);
             }
             else
             {
@@ -53,35 +55,40 @@ namespace Caly.Core.Services
             }
         }
 
-        public Task<string?> ShowPdfPasswordDialogAsync()
+        public async Task<string?> ShowPdfPasswordDialogAsync()
         {
-            if (_target is Window w)
+            return await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                return new PdfPasswordWindow().ShowDialog<string?>(w);
-            }
-
-            return Task.FromResult<string?>(string.Empty);
+                if (_target is Window w)
+                {
+                    return new PdfPasswordWindow().ShowDialog<string?>(w);
+                }
+                return Task.FromResult<string?>(string.Empty);
+            });
         }
 
         private string? _previousNotificationMessage;
 
         public void ShowNotification(string? title, string? message, NotificationType type)
         {
-            Debug.ThrowNotOnUiThread();
-            System.Diagnostics.Debug.WriteLine($"Annotation ({type}): {title}\n{message}");
-            if (_windowNotificationManager is not null)
+            Dispatcher.UIThread.Post(() =>
             {
-                if (message != _previousNotificationMessage)
+                Debug.ThrowNotOnUiThread();
+                System.Diagnostics.Debug.WriteLine($"Annotation ({type}): {title}\n{message}");
+                if (_windowNotificationManager is not null)
                 {
-                    _windowNotificationManager.Show(new Notification(title, message, type, _annotationExpiration));
-                    _previousNotificationMessage = message;
+                    if (message != _previousNotificationMessage)
+                    {
+                        _windowNotificationManager.Show(new Notification(title, message, type, _annotationExpiration));
+                        _previousNotificationMessage = message;
+                    }
                 }
-            }
-            else
-            {
-                // TODO - we need a queue system to display the annotations when the manager is loaded
-                System.Diagnostics.Debug.WriteLine($"Annotation (ERROR NOT LOADED) ({type}): {title}\n{message}");
-            }
+                else
+                {
+                    // TODO - we need a queue system to display the annotations when the manager is loaded
+                    System.Diagnostics.Debug.WriteLine($"Annotation (ERROR NOT LOADED) ({type}): {title}\n{message}");
+                }
+            }, DispatcherPriority.Loaded);
         }
 
         public Task ShowExceptionWindowAsync(Exception exception)
@@ -91,17 +98,18 @@ namespace Caly.Core.Services
 
         public async Task ShowExceptionWindowAsync(ExceptionViewModel exception)
         {
-            Debug.ThrowNotOnUiThread();
-
-            System.Diagnostics.Debug.WriteLine(exception.ToString());
-
-            if (_target is not Window w)
+            await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                return;
-            }
+                Debug.ThrowNotOnUiThread();
+                System.Diagnostics.Debug.WriteLine(exception.ToString());
+                if (_target is not Window w)
+                {
+                    return;
+                }
 
-            var window = new MessageWindow { DataContext = exception };
-            await window.ShowDialog(w);
+                var window = new MessageWindow { DataContext = exception };
+                await window.ShowDialog(w);
+            }, DispatcherPriority.Loaded);
         }
 
         public void ShowExceptionWindow(Exception exception)
@@ -111,13 +119,13 @@ namespace Caly.Core.Services
 
         public void ShowExceptionWindow(ExceptionViewModel exception)
         {
-            Debug.ThrowNotOnUiThread();
-            System.Diagnostics.Debug.WriteLine(exception.ToString());
-            var window = new MessageWindow
+            Dispatcher.UIThread.Post(() =>
             {
-                DataContext = exception
-            };
-            window.Show();
+                Debug.ThrowNotOnUiThread();
+                System.Diagnostics.Debug.WriteLine(exception.ToString());
+                var window = new MessageWindow { DataContext = exception };
+                window.Show();
+            }, DispatcherPriority.Loaded);
         }
     }
 }
