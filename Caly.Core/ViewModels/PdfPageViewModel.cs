@@ -251,7 +251,7 @@ namespace Caly.Core.ViewModels
 
                     int tWidth = (int)(ThumbnailWidth / 1.5);
                     int tHeight = (int)(ThumbnailHeight / 1.5);
-                    
+
                     SKMatrix scale = SKMatrix.CreateScale(tWidth / (float)Width, tHeight / (float)Height);
 
                     using (SKBitmap bitmap = new SKBitmap(tWidth, tHeight))

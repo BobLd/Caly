@@ -8,7 +8,7 @@
 
     <Style Selector="controls|PdfPageThumbnailControl" x:DataType="viewModels:PdfPageViewModel">
         <Setter Property="LoadThumbnailCommand" Value="{Binding LoadThumbnailCommand}"/>
-        <Setter Property="UnloadThumbnailCommand" Value="{Binding UnloadPagePictureCommand}"/>
+        <Setter Property="UnloadThumbnailCommand" Value="{Binding UnloadThumbnailCommand}"/>
         <Setter Property="Thumbnail" Value="{Binding Thumbnail}"/>
 
         <Setter Property="Template">
