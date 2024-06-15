@@ -135,9 +135,20 @@ namespace Caly.Core.Controls
             base.Render(context);
             context.FillRectangle(Brushes.White, Bounds);
 
-            if (Thumbnail is not null)
+            try
             {
-                context.DrawImage(Thumbnail, this.Bounds);
+                // TODO - Bitmap is not the correct object
+                // We should use a similar approach to SKPicture
+                var thumbnail = Thumbnail;
+                if (thumbnail is not null)
+                {
+                    context.DrawImage(thumbnail, Bounds);
+                }
+            }
+            catch (Exception e)
+            {
+                // We just ignore for the moment
+                Debug.WriteExceptionToFile(e);
             }
 
             if (VisibleArea.HasValue)
