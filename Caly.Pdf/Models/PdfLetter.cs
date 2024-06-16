@@ -30,12 +30,7 @@ namespace Caly.Pdf.Models
         public PdfRectangle BoundingBox { get; }
 
         /// <summary>
-        /// The placement position of the character in PDF space. See <see cref="StartBaseLine"/>
-        /// </summary>
-        public PdfPoint Location => StartBaseLine;
-
-        /// <summary>
-        /// The placement position of the character in PDF space (the start point of the baseline). See <see cref="Location"/>
+        /// The placement position of the character in PDF space (the start point of the baseline).
         /// </summary>
         public PdfPoint StartBaseLine => BoundingBox.BottomLeft;
 
@@ -43,11 +38,6 @@ namespace Caly.Pdf.Models
         /// The end point of the baseline.
         /// </summary>
         public PdfPoint EndBaseLine => BoundingBox.BottomRight;
-
-        /// <summary>
-        /// The width occupied by the character within the PDF content.
-        /// </summary>
-        public double Width => BoundingBox.Width;
 
         /// <summary>
         /// The size of the font in points.

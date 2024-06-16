@@ -151,11 +151,9 @@ namespace Caly.Pdf.Layout
             /// </summary>
             public Func<PdfLetter, PdfLetter, double> MaximumDistance { get; set; } = (l1, l2) =>
             {
-                double maxDist = Math.Max(Math.Max(Math.Max(Math.Max(Math.Max(
+                double maxDist = Math.Max(Math.Max(Math.Max(
                     Math.Abs(l1.BoundingBox.Width),
                     Math.Abs(l2.BoundingBox.Width)),
-                    Math.Abs(l1.Width)),
-                    Math.Abs(l2.Width)),
                     l1.PointSize), l2.PointSize) * 0.2;
 
                 if (l1.TextOrientation == TextOrientation.Other || l2.TextOrientation == TextOrientation.Other)

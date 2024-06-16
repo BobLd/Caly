@@ -182,7 +182,7 @@ namespace Caly.Pdf.Models
                     blY = letter.StartBaseLine.Y;
                 }
 
-                var right = letter.StartBaseLine.X + Math.Max(letter.Width, letter.BoundingBox.Width);
+                var right = letter.StartBaseLine.X + letter.BoundingBox.Width;
                 if (right > trX)
                 {
                     trX = right;
@@ -220,7 +220,7 @@ namespace Caly.Pdf.Models
                     blY = letter.StartBaseLine.Y;
                 }
 
-                var right = letter.StartBaseLine.X - Math.Max(letter.Width, letter.BoundingBox.Width);
+                var right = letter.StartBaseLine.X - letter.BoundingBox.Width;
                 if (right < trX)
                 {
                     trX = right;
