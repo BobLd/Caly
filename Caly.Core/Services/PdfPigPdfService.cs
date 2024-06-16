@@ -11,6 +11,7 @@ using Caly.Core.Utilities;
 using Caly.Pdf;
 using Caly.Pdf.Models;
 using Caly.Pdf.PageFactories;
+using Microsoft.IO;
 using SkiaSharp;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Exceptions;
@@ -24,6 +25,8 @@ namespace Caly.Core.Services
     /// </summary>
     internal sealed class PdfPigPdfService : IPdfService
     {
+        private static readonly RecyclableMemoryStreamManager _manager = new RecyclableMemoryStreamManager();
+
         private readonly IDialogService _dialogService;
 
         // PdfPig only allow to read 1 page at a time for now
@@ -70,7 +73,7 @@ namespace Caly.Core.Services
                 _filePath = storageFile.Path;
                 System.Diagnostics.Debug.WriteLine($"[INFO] Opening {FileName}...");
 
-                _fileStream = new MemoryStream();
+                _fileStream = _manager.GetStream();
                 await using (var fs = await storageFile.OpenReadAsync())
                 {
                     await fs.CopyToAsync(_fileStream, cancellationToken);
