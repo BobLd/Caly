@@ -148,12 +148,7 @@ namespace Caly.Pdf.Models
 
             return w;
         }
-
-        public PdfLetter? FindLetterOver(double x, double y)
-        {
-            return FindWordOver(x, y)?.FindLetterOver(x, y);
-        }
-
+        
         public PdfWord GetWordInPageAt(int indexInPage)
         {
             int indexInLine = indexInPage - WordStartIndex;

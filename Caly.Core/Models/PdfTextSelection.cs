@@ -442,7 +442,7 @@ namespace Caly.Core.Models
         {
             selectionOffset = 0;
 
-            if (word.Letters.Count == 0)
+            if (word.LettersBoundingBoxes.Length == 0)
             {
                 // not a text word - set full selection
                 selectionIndex = -1;
@@ -458,8 +458,7 @@ namespace Caly.Core.Models
 
                 if (index > -1)
                 {
-                    var bbox = word.Letters[index].BoundingBox;
-
+                    var bbox = word.LettersBoundingBoxes[index];
                     selectionOffset = new PdfPoint(loc.X, loc.Y)
                         .ProjectPointOnLineM(bbox.BottomLeft, bbox.BottomRight);
                 }

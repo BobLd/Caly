@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using System.Buffers;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
@@ -25,7 +26,15 @@ namespace Caly.Pdf.Models
 #if DEBUG
         public override string ToString()
         {
-            return string.Concat(Letters.Select(l => l.Value));
+            if (Value.IsEmpty)
+            {
+                return string.Empty;
+            }
+
+            Span<char> output = Value.Length < 512 ? stackalloc char[(int)Value.Length] : new char[Value.Length];
+
+            Value.CopyTo(output);
+            return new string(output);
         }
 #endif
 
@@ -51,10 +60,11 @@ namespace Caly.Pdf.Models
         /// </summary>
         public int TextBlockIndex { get; internal set; }
 
-        /// <summary>
-        /// The text lines contained in the block.
-        /// </summary>
-        public IReadOnlyList<PdfLetter> Letters { get; }
+        public PdfRectangle[] LettersBoundingBoxes { get; }
+
+        public ReadOnlySequence<char> Value { get; }
+
+        public int Count { get; }
 
         public PdfWord(IReadOnlyList<PdfLetter> letters)
         {
@@ -65,8 +75,25 @@ namespace Caly.Pdf.Models
                 throw new ArgumentException("Cannot construct word if no letters provided.", nameof(letters));
             }
 
-            Letters = letters;
             TextOrientation = PdfTextLayerHelper.GetTextOrientation(letters);
+
+            Count = letters.Count;
+
+            LettersBoundingBoxes = new PdfRectangle[letters.Count];
+
+            var firstLetter = letters[0];
+            LettersBoundingBoxes[0] = firstLetter.BoundingBox;
+
+            var first = new MemorySegment<char>(firstLetter.Value);
+            var current = first;
+            for (int i = 1; i < letters.Count; i++)
+            {
+                var letter = letters[i];
+                LettersBoundingBoxes[i] = letter.BoundingBox;
+                current = current.Append(letter.Value);
+            }
+
+            Value = new ReadOnlySequence<char>(first, 0, current, current.Memory.Length);
 
             switch (TextOrientation)
             {
@@ -97,36 +124,17 @@ namespace Caly.Pdf.Models
             return BoundingBox.Contains(new PdfPoint(x, y), true);
         }
 
-        public PdfLetter? FindLetterOver(double x, double y)
-        {
-            if (Letters.Count == 0)
-            {
-                return null;
-            }
-
-            var point = new PdfPoint(x, y);
-            foreach (var letter in Letters)
-            {
-                if (letter.BoundingBox.Contains(point, true))
-                {
-                    return letter;
-                }
-            }
-
-            return null;
-        }
-
         public int FindLetterIndexOver(double x, double y)
         {
-            if (Letters.Count == 0)
+            if (LettersBoundingBoxes.Length == 0)
             {
                 return -1;
             }
 
             var point = new PdfPoint(x, y);
-            for (int i = 0; i < Letters.Count; i++)
+            for (int i = 0; i < LettersBoundingBoxes.Length; i++)
             {
-                if (Letters[i].BoundingBox.Contains(point, true))
+                if (LettersBoundingBoxes[i].Contains(point, true))
                 {
                     return i;
                 }
@@ -136,7 +144,7 @@ namespace Caly.Pdf.Models
 
         public int FindNearestLetterIndex(double x, double y)
         {
-            if (Letters.Count == 0)
+            if (LettersBoundingBoxes.Length == 0)
             {
                 return -1;
             }
@@ -145,10 +153,10 @@ namespace Caly.Pdf.Models
             double dist = double.MaxValue;
             int index = -1;
 
-            for (int i = 0; i < Letters.Count; i++)
+            for (int i = 0; i < LettersBoundingBoxes.Length; i++)
             {
-                var letter = Letters[i];
-                double localDist = Distances.Euclidean(point, letter.BoundingBox.BottomRight);
+                var letter = LettersBoundingBoxes[i];
+                double localDist = Distances.Euclidean(point, letter.BottomRight);
                 if (localDist < dist)
                 {
                     dist = localDist;
@@ -324,7 +332,7 @@ namespace Caly.Pdf.Models
             {
                 r.StartBaseLine,
                 r.EndBaseLine,
-            }).ToList();
+            }).ToArray();
 
             // Fitting a line through the base lines points
             // to find the orientation (slope)
@@ -333,7 +341,7 @@ namespace Caly.Pdf.Models
             double sumProduct = 0;
             double sumDiffSquaredX = 0;
 
-            for (int i = 0; i < baseLinePoints.Count; i++)
+            for (int i = 0; i < baseLinePoints.Length; i++)
             {
                 var point = baseLinePoints[i];
                 var x_diff = point.X - x0;

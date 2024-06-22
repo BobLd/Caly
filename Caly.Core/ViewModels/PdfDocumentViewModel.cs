@@ -14,9 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -25,6 +25,7 @@ using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
+using Caly.Core.Utilities;
 using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -127,7 +128,7 @@ namespace Caly.Core.ViewModels
 
                 Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
             }
-            
+
             _pdfService = pdfService;
             PageCount = _pdfService.NumberOfPages;
             FileName = _pdfService.FileName;
@@ -203,21 +204,18 @@ namespace Caly.Core.ViewModels
             Bookmarks = await Task.Run(() => _pdfService.GetPdfBookmark(_cts.Token));
         }
 
-        private static IEnumerable<ReadOnlyMemory<char>> FullWord(PdfWord word)
+        private static ReadOnlySequence<char> FullWord(PdfWord word)
         {
-            return word.Letters.Select(l => l.Value);
+            return word.Value;
         }
 
-        private static IEnumerable<ReadOnlyMemory<char>> PartialWord(PdfWord word, int startIndex, int endIndex)
+        private static ReadOnlySequence<char> PartialWord(PdfWord word, int startIndex, int endIndex)
         {
             System.Diagnostics.Debug.Assert(startIndex != -1);
             System.Diagnostics.Debug.Assert(endIndex != -1);
             System.Diagnostics.Debug.Assert(startIndex <= endIndex);
 
-            for (int l = startIndex; l <= endIndex; ++l)
-            {
-                yield return word.Letters![l].Value;
-            }
+            return word.Value.Slice(startIndex, endIndex - startIndex + 1);
         }
 
         [RelayCommand]
@@ -307,16 +305,7 @@ namespace Caly.Core.ViewModels
 
                     await foreach (var word in selection.GetDocumentSelectionAsAsync(FullWord, PartialWord, this, token))
                     {
-                        // TODO - optimise IsWhiteSpace check
-                        var isWhiteSpace = word.All(l => l.Span.IsEmpty || l.Span.IsWhiteSpace());
-
-                        if (!isWhiteSpace)
-                        {
-                            foreach (var letter in word)
-                            {
-                                sb.Append(letter);
-                            }
-                        }
+                        ReadOnlySequenceExtensions.Append(sb, word);
 
                         if (sb.Length == 0 || !char.IsWhiteSpace(sb[^1]))
                         {
@@ -332,8 +321,6 @@ namespace Caly.Core.ViewModels
 
                 await clipboardService.SetAsync(text);
                 System.Diagnostics.Debug.WriteLine("Ended SetClipboardAsync");
-
-                // TODO - We could unload the selection from memory
             }
             catch (Exception e)
             {
