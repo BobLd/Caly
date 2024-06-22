@@ -51,8 +51,8 @@ namespace Caly.Pdf.Layout
         public IReadOnlyList<PdfTextBlock> GetBlocks(IEnumerable<PdfWord> words, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            PdfWord[]? array = words?.Where(w => !w.Letters.All(l => l.Value.Span.IsWhiteSpace())).ToArray();
+            
+            PdfWord[]? array = words?.Where(w => !w.Value.IsEmptyOrWhiteSpace()).ToArray();
 
             if (array == null || array.Length == 0)
             {

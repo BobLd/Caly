@@ -14,8 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -29,7 +30,6 @@ using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
-using UglyToad.PdfPig.Geometry;
 
 namespace Caly.Core.Handlers
 {
@@ -298,27 +298,36 @@ namespace Caly.Core.Handlers
                             (Selection.AnchorOffset != -1 && Selection.FocusOffset != -1)); // Selection within same word
         }
 
+        // https://stevetalkscode.co.uk/regex-source-generator
+        private static readonly Regex UrlMatch = new Regex(@"(?i)(http(s)?:\/\/)?(\w{2,25}\.)+\w{3}([a-z0-9\-?=$-_.+!*()]+)(?i)", RegexOptions.Compiled);
+
         /// <summary>
         /// Handle mouse hover over words, links or others
         /// </summary>
         private static void HandleMouseMoveOver(PdfPageTextLayerControl control, Point loc)
         {
-            bool isLink = false; // TODO - Check if link
-            if (isLink)
+            PdfWord? word = control.PdfTextLayer!.FindWordOver(loc.X, loc.Y);
+            if (word != null)
             {
-                control.SetHandCursor();
-            }
-            else
-            {
-                PdfWord? word = control.PdfTextLayer!.FindWordOver(loc.X, loc.Y);
-                if (word != null)
+                ReadOnlySequence<char> sequence = word.Value;
+
+                Span<char> output = sequence.Length < 512 ? stackalloc char[(int)sequence.Length]
+                    : new char[sequence.Length]; // This allocates and could be improved using ArrayPool<T>
+
+                sequence.CopyTo(output);
+
+                if (UrlMatch.IsMatch(output))
                 {
-                    control.SetIbeamCursor();
+                    control.SetHandCursor();
                 }
                 else
                 {
-                    control.SetDefaultCursor();
+                    control.SetIbeamCursor();
                 }
+            }
+            else
+            {
+                control.SetDefaultCursor();
             }
         }
 
@@ -442,59 +451,17 @@ namespace Caly.Core.Handlers
             _isSelecting = false;
         }
 
-        private static StreamGeometry GetGeometry(PdfRectangle rect, bool isFilled = false)
-        {
-            var sg = new StreamGeometry();
-            using (var ctx = sg.Open())
-            {
-                ctx.BeginFigure(new Point(rect.BottomLeft.X, rect.BottomLeft.Y), isFilled);
-                ctx.LineTo(new Point(rect.TopLeft.X, rect.TopLeft.Y));
-                ctx.LineTo(new Point(rect.TopRight.X, rect.TopRight.Y));
-                ctx.LineTo(new Point(rect.BottomRight.X, rect.BottomRight.Y));
-                ctx.EndFigure(true);
-            }
-
-            return sg;
-        }
-
-        private static StreamGeometry GetGeometry(PdfWord word)
-        {
-            return GetGeometry(word.BoundingBox, true);
-        }
-
-        private static StreamGeometry? GetGeometry(PdfWord word, int startIndex, int endIndex)
-        {
-            System.Diagnostics.Debug.Assert(startIndex > -1);
-            System.Diagnostics.Debug.Assert(endIndex > -1);
-            System.Diagnostics.Debug.Assert(startIndex <= endIndex);
-
-            var rects = new List<PdfRectangle>();
-            for (int l = startIndex; l <= endIndex; ++l)
-            {
-                rects.Add(word.Letters![l].BoundingBox);
-            }
-
-            var bbox = GeometryExtensions.MinimumAreaRectangle(rects
-                .SelectMany(r => new[]
-                {
-                    r.BottomLeft,
-                    r.BottomRight,
-                    r.TopLeft,
-                    r.TopRight
-                }));
-
-            return GetGeometry(bbox, true);
-        }
-
+#if DEBUG
         private static void DrawArrow(DrawingContext context, IPen pen, Point lineStart, Point lineEnd)
         {
             context.DrawLine(pen, lineStart, lineEnd);
             context.DrawEllipse(null, pen, lineEnd, 1, 1);
         }
+#endif
 
         public void RenderPage(PdfPageTextLayerControl control, DrawingContext context)
         {
-            if (control.PdfTextLayer is null)
+            if (control.PdfTextLayer?.TextBlocks is null)
             {
                 return;
             }
@@ -511,13 +478,13 @@ namespace Caly.Core.Handlers
 
             foreach (var block in control.PdfTextLayer.TextBlocks)
             {
-                context.DrawGeometry(greenBrush, greenPen, GetGeometry(block.BoundingBox, true));
+                context.DrawGeometry(greenBrush, greenPen, PdfWordHelpers.GetGeometry(block.BoundingBox, true));
 
                 foreach (var line in block.TextLines)
                 {
                     foreach (var word in line.Words)
                     {
-                        context.DrawGeometry(redBrush, redPen, GetGeometry(word.BoundingBox));
+                        context.DrawGeometry(redBrush, redPen, PdfWordHelpers.GetGeometry(word.BoundingBox));
                         context.DrawEllipse(Brushes.Blue, null, new Point(word.BoundingBox.BottomLeft.X, word.BoundingBox.BottomLeft.Y), 0.5, 0.5);
 
                         if (previousWord is not null)
@@ -540,13 +507,13 @@ namespace Caly.Core.Handlers
 
             if (focusLine is not null)
             {
-                context.DrawGeometry(redBrush, redPen, GetGeometry(focusLine.BoundingBox, true));
+                context.DrawGeometry(redBrush, redPen, PdfWordHelpers.GetGeometry(focusLine.BoundingBox, true));
             }
 #endif
 
             var selectionBrush = new ImmutableSolidColorBrush(_selectionColor);
 
-            foreach (var g in Selection.GetPageSelectionAs(control.PageNumber!.Value, GetGeometry, GetGeometry))
+            foreach (var g in Selection.GetPageSelectionAs(control.PageNumber!.Value, PdfWordHelpers.GetGeometry, PdfWordHelpers.GetGeometry))
             {
                 context.DrawGeometry(selectionBrush, null, g);
             }

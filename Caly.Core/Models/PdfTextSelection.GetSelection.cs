@@ -168,7 +168,7 @@ namespace Caly.Core.Models
             {
                 // Single word selected
                 var word = selectedWords[0];
-                int lastIndex = word.Letters!.Count - 1;
+                int lastIndex = word.LettersBoundingBoxes.Length - 1;
                 if ((wordStartIndex == -1 || wordStartIndex == 0) && (wordEndIndex == -1 || wordEndIndex == lastIndex))
                 {
                     yield return processFull(word);
@@ -186,7 +186,7 @@ namespace Caly.Core.Models
             var firstWord = selectedWords[0];
             if (wordStartIndex != -1 && wordStartIndex != 0)
             {
-                int endIndex = firstWord.Letters!.Count - 1;
+                int endIndex = firstWord.LettersBoundingBoxes.Length - 1;
                 if (wordStartIndex > endIndex)
                 {
                     System.Diagnostics.Debug.WriteLine($"ERROR: wordStartIndex {wordStartIndex} is larger than {endIndex}.");
@@ -209,7 +209,7 @@ namespace Caly.Core.Models
 
             // Do last word
             var lastWord = selectedWords[^1];
-            if (wordEndIndex != -1 && wordEndIndex != lastWord.Letters!.Count - 1)
+            if (wordEndIndex != -1 && wordEndIndex != lastWord.LettersBoundingBoxes.Length - 1)
             {
                 yield return processPartial(lastWord, 0, wordEndIndex);
             }
