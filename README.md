@@ -2,7 +2,8 @@
 ## About
 Caly Pdf Reader is a cross-platform pdf document reader application written in C# (net8.0 with AOT), only using [Avalonia](https://github.com/AvaloniaUI/Avalonia) & [SkiaSharp](https://github.com/mono/SkiaSharp) + [PdfPig](https://github.com/UglyToad/PdfPig) for the UI / pdf rendering part. It is released under GPL-3.0 license.
 
-The development is currently in alpha.
+> [!IMPORTANT]
+> The development is currently in alpha.
 
 ## Goal and Roadmap
 The aim is to develop a C# cross-platform open source pdf reader/viewer application. Below is a table of the current progress:
