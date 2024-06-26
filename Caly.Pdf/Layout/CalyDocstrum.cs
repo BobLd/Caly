@@ -150,7 +150,7 @@ namespace Caly.Pdf.Layout
 
             // 1. Estimate within line and between line spacing
             KdTree<PdfWord> kdTreeBottomLeft = new KdTree<PdfWord>(words, w => w.BoundingBox.BottomLeft);
-
+            
             Parallel.ForEach(words, parallelOptions, word =>
             {
                 // Within-line distance
@@ -158,7 +158,7 @@ namespace Caly.Pdf.Layout
                 foreach (var n in kdTreeBottomLeft.FindNearestNeighbours(word, 2, w => w.BoundingBox.BottomRight, Distances.Euclidean))
                 {
                     // 1.1.2 Check if the neighbour word is within the angle of the candidate 
-                    if (wlBounds.Contains(AngleWL(word, n.Item1)))
+                    if (wlBounds.Contains(AngleWL(in word, in n.Item1)))
                     {
                         withinLineDistList.Enqueue(Distances.Euclidean(word.BoundingBox.BottomRight, n.Item1.BoundingBox.BottomLeft));
                     }
@@ -169,7 +169,7 @@ namespace Caly.Pdf.Layout
                 foreach (var n in kdTreeBottomLeft.FindNearestNeighbours(word, 2, w => w.BoundingBox.TopLeft, Distances.Euclidean))
                 {
                     // 1.2.2 Check if the candidate words is within the angle
-                    var angle = AngleBL(word, n.Item1);
+                    var angle = AngleBL(in word, in n.Item1);
                     if (blBounds.Contains(angle))
                     {
                         // 1.2.3 Compute the vertical (between-line) distance between the candidate
@@ -280,7 +280,7 @@ namespace Caly.Pdf.Layout
                 pivot => pivot.BoundingBox.BottomRight,
                 candidate => candidate.BoundingBox.BottomLeft,
                 _ => true,
-                (pivot, candidate) => wlBounds.Contains(AngleWL(pivot, candidate)),
+                (pivot, candidate) => wlBounds.Contains(AngleWL(in pivot, in candidate)),
                 parallelOptions);
 
             foreach (var gr in groupedWords)
@@ -294,7 +294,7 @@ namespace Caly.Pdf.Layout
         /// right and the candidate's bottom left points, taking in account the pivot's rotation.
         /// <para>-90 ≤ θ ≤ 90.</para>
         /// </summary>
-        private static double AngleWL(PdfWord pivot, PdfWord candidate)
+        private static double AngleWL(in PdfWord pivot, in PdfWord candidate)
         {
             var angle = Distances.BoundAngle180(Distances.Angle(pivot.BoundingBox.BottomRight, candidate.BoundingBox.BottomLeft) - pivot.BoundingBox.Rotation);
 
@@ -347,7 +347,7 @@ namespace Caly.Pdf.Layout
 
             var groupedLines = CalyClustering.NearestNeighbours(
                 lines,
-                (l1, l2) => PerpendicularOverlappingDistance(l1, l2, angularDifferenceBounds, epsilon),
+                (l1, l2) => PerpendicularOverlappingDistance(in l1, in l2, ref angularDifferenceBounds, epsilon),
                 (_, __) => maxBLDistance,
                 pivot => new PdfLine(pivot.BoundingBox.BottomLeft, pivot.BoundingBox.BottomRight),
                 candidate => new PdfLine(candidate.BoundingBox.TopLeft, candidate.BoundingBox.TopRight),
@@ -368,9 +368,9 @@ namespace Caly.Pdf.Layout
         /// <param name="line2"></param>
         /// <param name="angularDifferenceBounds"></param>
         /// <param name="epsilon"></param>
-        private static double PerpendicularOverlappingDistance(PdfLine line1, PdfLine line2, AngleBounds angularDifferenceBounds, double epsilon)
+        private static double PerpendicularOverlappingDistance(ref readonly PdfLine line1, ref readonly PdfLine line2, ref readonly AngleBounds angularDifferenceBounds, double epsilon)
         {
-            if (GetStructuralBlockingParameters(line1, line2, epsilon, out double theta, out _, out double ed))
+            if (GetStructuralBlockingParameters(in line1, in line2, epsilon, out double theta, out _, out double ed))
             {
                 // Angle is kept within [-90;90]
                 if (theta > 90)
@@ -428,10 +428,10 @@ namespace Caly.Pdf.Layout
         /// <param name="normalisedOverlap">Overlap of segment i onto j. Positive value if overlapped, negative value if nonoverlapped.<para>[-1, 1]?</para></param>
         /// <param name="perpendicularDistance">Signed perpendicular distance.</param>
         /// <returns>Return true if overlapped, false if nonoverlapped.</returns>
-        public static bool GetStructuralBlockingParameters(PdfLine i, PdfLine j, double epsilon,
+        public static bool GetStructuralBlockingParameters(in PdfLine i, in PdfLine j, double epsilon,
             out double angularDifference, out double normalisedOverlap, out double perpendicularDistance)
         {
-            if (AlmostEquals(i, j, epsilon))
+            if (AlmostEquals(in i, in j, epsilon))
             {
                 angularDifference = 0;
                 normalisedOverlap = 1;
@@ -439,15 +439,18 @@ namespace Caly.Pdf.Layout
                 return true;
             }
 
+            PdfPoint j1 = j.Point1;
+            PdfPoint j2 = j.Point2;
+
             double dXi = i.Point2.X - i.Point1.X;
             double dYi = i.Point2.Y - i.Point1.Y;
-            double dXj = j.Point2.X - j.Point1.X;
-            double dYj = j.Point2.Y - j.Point1.Y;
+            double dXj = j2.X - j1.X;
+            double dYj = j2.Y - j1.Y;
 
             angularDifference = Distances.BoundAngle180((Math.Atan2(dYj, dXj) - Math.Atan2(dYi, dXi)) * 180 / Math.PI);
 
-            PdfPoint? Aj = GetTranslatedPoint(i.Point1.X, i.Point1.Y, j.Point1.X, j.Point1.Y, dXi, dYi, dXj, dYj, epsilon);
-            PdfPoint? Bj = GetTranslatedPoint(i.Point2.X, i.Point2.Y, j.Point2.X, j.Point2.Y, dXi, dYi, dXj, dYj, epsilon);
+            PdfPoint? Aj = GetTranslatedPoint(i.Point1.X, i.Point1.Y, j1.X, j1.Y, dXi, dYi, dXj, dYj, epsilon);
+            PdfPoint? Bj = GetTranslatedPoint(i.Point2.X, i.Point2.Y, j2.X, j2.Y, dXi, dYi, dXj, dYj, epsilon);
 
             if (!Aj.HasValue || !Bj.HasValue)
             {
@@ -458,8 +461,11 @@ namespace Caly.Pdf.Layout
                 return false;
             }
 
+            PdfPoint ajv = Aj.Value;
+            PdfPoint bjv = Bj.Value;
+
             // Get middle points
-            Span<PdfPoint> ps = [j.Point1, j.Point2, Aj.Value, Bj.Value];
+            Span<PdfPoint> ps = stackalloc PdfPoint[] { j1, j2, ajv, bjv };
 
             if (dXj != 0)
             {
@@ -470,12 +476,12 @@ namespace Caly.Pdf.Layout
                 ps.Sort(PdfPointYComparer.Instance);
             }
 
-            PdfPoint Cj = ps[1];
-            PdfPoint Dj = ps[2];
+            ref readonly PdfPoint Cj = ref ps[1];
+            ref readonly PdfPoint Dj = ref ps[2];
 
             // Cj and Dj should be contained within both j and [Aj,Bj] if overlapped
-            bool overlap = !(!PointInLine(j.Point1, j.Point2, Cj) || !PointInLine(j.Point1, j.Point2, Dj) ||
-                             !PointInLine(Aj.Value, Bj.Value, Cj) || !PointInLine(Aj.Value, Bj.Value, Dj));
+            bool overlap = !(!PointInLine(in j1, in j2, in Cj) || !PointInLine(in j1, in j2, in Dj) ||
+                             !PointInLine(in ajv, in bjv, in Cj) || !PointInLine(in ajv, in bjv, in Dj));
 
             double pj = Distances.Euclidean(Cj, Dj);
 
@@ -535,7 +541,7 @@ namespace Caly.Pdf.Layout
         /// <param name="pl1">Line's first point.</param>
         /// <param name="pl2">Line's second point.</param>
         /// <param name="point">The point to check.</param>
-        private static bool PointInLine(PdfPoint pl1, PdfPoint pl2, PdfPoint point)
+        private static bool PointInLine(in PdfPoint pl1, in PdfPoint pl2, in PdfPoint point)
         {
             // /!\ Assuming the points are aligned (be careful)
             double ax = point.X - pl1.X;
@@ -550,7 +556,7 @@ namespace Caly.Pdf.Layout
         /// <summary>
         /// Helper function to check if 2 lines are equal.
         /// </summary>
-        private static bool AlmostEquals(PdfLine line1, PdfLine line2, double epsilon)
+        private static bool AlmostEquals(in PdfLine line1, in PdfLine line2, double epsilon)
         {
             return (line1.Point1.X - line2.Point1.X).AlmostEqualsToZero(epsilon) &&
                    (line1.Point1.Y - line2.Point1.Y).AlmostEqualsToZero(epsilon) &&
@@ -563,7 +569,7 @@ namespace Caly.Pdf.Layout
         /// and the candidate's centroid points, taking in account the pivot's rotation.
         /// <para>0 ≤ θ ≤ 180.</para>
         /// </summary>
-        private static double AngleBL(PdfWord pivot, PdfWord candidate)
+        private static double AngleBL(in PdfWord pivot, in PdfWord candidate)
         {
             var angle = Distances.BoundAngle180(Distances.Angle(pivot.BoundingBox.Centroid, candidate.BoundingBox.Centroid) - pivot.BoundingBox.Rotation);
 
