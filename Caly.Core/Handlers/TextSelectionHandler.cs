@@ -24,6 +24,7 @@ using Avalonia.VisualTree;
 using Caly.Core.Controls;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
+using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Core;
@@ -124,8 +125,8 @@ namespace Caly.Core.Handlers
             {
                 foreach (var line in block.TextLines)
                 {
-                    PdfPoint? projection = PdfTextSelection.ProjectPointOnLine(line.BoundingBox.BottomLeft,
-                        line.BoundingBox.BottomRight, point, out double s);
+                    PdfPoint? projection = PdfPointExtensions.ProjectPointOnLine(in point, line.BoundingBox.BottomLeft,
+                        line.BoundingBox.BottomRight, out double s);
 
                     if (!projection.HasValue || s < 0) // Cursor is before (to the left) line, we ignore
                     {

@@ -17,10 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
+using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Core;
-using UglyToad.PdfPig.Geometry;
 
 namespace Caly.Core.Models
 {
@@ -458,49 +458,14 @@ namespace Caly.Core.Models
 
                 if (index > -1)
                 {
-                    var letter = word.Letters[index];
-                    selectionOffset = ProjectPointOnLineM(letter.BoundingBox.BottomLeft,
-                        letter.BoundingBox.BottomRight,
-                        new PdfPoint(loc.X, loc.Y));
+                    var bbox = word.Letters[index].BoundingBox;
+
+                    selectionOffset = new PdfPoint(loc.X, loc.Y)
+                        .ProjectPointOnLineM(bbox.BottomLeft, bbox.BottomRight);
                 }
 
                 selectionIndex = index;
             }
-        }
-
-        // TODO - Put the below in helper class
-        // https://stackoverflow.com/questions/54009832/scala-orthogonal-projection-of-a-point-onto-a-line
-        /* Projects point `p` on line going through two points `line1` and `line2`. */
-        internal static PdfPoint? ProjectPointOnLine(PdfPoint line1, PdfPoint line2, PdfPoint p, out double s)
-        {
-            PdfPoint v = p.Subtract(line1);
-            PdfPoint d = line2.Subtract(line1);
-
-            double den = d.X * d.X + d.Y * d.Y;
-
-            if (Math.Abs(den) <= double.Epsilon)
-            {
-                s = 0;
-                return null;
-            }
-            s = v.DotProduct(d) / den;
-
-            return line1.Add(new PdfPoint(d.X * s, d.Y * s));
-        }
-
-        internal static double ProjectPointOnLineM(PdfPoint line1, PdfPoint line2, PdfPoint p)
-        {
-            PdfPoint v = p.Subtract(line1);
-            PdfPoint d = line2.Subtract(line1);
-
-            double den = d.X * d.X + d.Y * d.Y;
-
-            if (Math.Abs(den) <= double.Epsilon)
-            {
-                return 0;
-            }
-
-            return v.DotProduct(d) / den;
         }
     }
 }
