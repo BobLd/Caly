@@ -21,7 +21,7 @@ namespace Caly.Benchmarks
     {
         static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<DocstrumBenchmarks>();
+            var summary = BenchmarkRunner.Run<DuplicateOverlappingTextBenchmarks>();
             Console.ReadKey();
         }
     }

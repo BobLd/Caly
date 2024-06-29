@@ -19,6 +19,9 @@
     <None Update="2559 words.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Document-PublisherError-1.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="fseprd1102849.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
