@@ -15,12 +15,16 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Caly.Core.Handlers;
@@ -59,7 +63,6 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
 
-
         [ObservableProperty] private ObservableCollection<PdfBookmarkNode>? _bookmarks;
 
         [ObservableProperty] private PdfBookmarkNode? _selectedBookmark;
@@ -69,6 +72,11 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private string? _textSearch;
 
         [ObservableProperty] private TextSearchResultViewModel? _selectedTextSearchResult;
+
+        async partial void OnTextSearchChanged(string? value)
+        {
+            await SearchText(CancellationToken.None); // TODO - subscribe to event change instead and use rolling time window
+        }
 
         /*
          * See PDF Reference 1.7 - C.2 Architectural limits
@@ -117,6 +125,8 @@ namespace Caly.Core.ViewModels
             }
         }
 
+        private readonly IDisposable _searchResultsDisposable;
+
         public PdfDocumentViewModel(IPdfService pdfService)
         {
             ArgumentNullException.ThrowIfNull(pdfService, nameof(pdfService));
@@ -130,13 +140,14 @@ namespace Caly.Core.ViewModels
             if (pdfService.NumberOfPages > 1)
             {
                 // We only need the channel if we have more than 1 page in the document
-                Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(new BoundedChannelOptions(_initialPagesInfoToLoad)
-                {
-                    AllowSynchronousContinuations = false,
-                    FullMode = BoundedChannelFullMode.DropWrite,
-                    SingleReader = false,
-                    SingleWriter = true
-                });
+                Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(
+                    new BoundedChannelOptions(_initialPagesInfoToLoad)
+                    {
+                        AllowSynchronousContinuations = false,
+                        FullMode = BoundedChannelFullMode.DropWrite,
+                        SingleReader = false,
+                        SingleWriter = true
+                    });
                 _channelWriter = pageInfoChannel.Writer;
                 _channelReader = pageInfoChannel.Reader;
 
@@ -153,6 +164,33 @@ namespace Caly.Core.ViewModels
             _loadPagesTask = new Lazy<Task>(LoadPages);
             _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);
             _buildSearchIndex = new Lazy<Task>(BuildSearchIndex);
+
+            _searchResultsDisposable = SearchResults
+                .GetWeakCollectionChangedObservable()
+                .ObserveOn(Scheduler.Default)
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        if (SearchResults.Count > 0 && SearchResults[0].PageNumber != -1)
+                        {
+                            TextSelectionHandler.SetTextSearchResult(this, SearchResults);
+                        }
+                        else
+                        {
+                            TextSelectionHandler.ClearTextSearchResult(this);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // No op
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteExceptionToFile(ex);
+                        Exception = new ExceptionViewModel(ex);
+                    }
+                });
         }
 
         /// <summary>
@@ -169,6 +207,7 @@ namespace Caly.Core.ViewModels
             await _pdfService.DisposeAsync();
 
             _cts.Dispose();
+            _searchResultsDisposable.Dispose();
         }
 
         internal async ValueTask CancelAsync()
@@ -297,34 +336,59 @@ namespace Caly.Core.ViewModels
             }
         }
 
+        Task? pendingTask = null; // pending session
+        CancellationTokenSource? cts = null; // CTS for pending session
+
+        // https://stackoverflow.com/questions/18999827/a-pattern-for-self-cancelling-and-restarting-task
         [RelayCommand]
-        private async Task SearchText(CancellationToken token)
+        private async Task SearchText(CancellationToken token) // TODO - To finish cancel/restart
         {
             try
             {
                 SelectedTabIndex = 2;
                 SelectedTextSearchResult = null;
-                SearchResults.Clear();
+                SearchResults.ClearSafely();
 
                 if (string.IsNullOrEmpty(TextSearch))
                 {
                     return;
                 }
 
-                await _buildSearchIndex.Value;
+                Task indexBuildTask = _buildSearchIndex.Value;
 
-                var results = await Task.Run(() => _pdfService.SearchText(this, TextSearch, token), token);
-                foreach (var result in results.OrderBy(r => r.PageNumber))
+                await Task.WhenAll(indexBuildTask, Task.Run(async () =>
                 {
-                    SearchResults.Add(result);
-                }
+                    bool indexBuildTaskComplete;
+                    HashSet<int> pagesDone = new();
+                    do
+                    {
+                        indexBuildTaskComplete = indexBuildTask.IsCompleted;
+                        var searchResults = await _pdfService.SearchText(this, TextSearch, token);
 
-                TextSelectionHandler.SetTextSearchResult(this, SearchResults);
+                        foreach (var result in searchResults.OrderBy(r => r.PageNumber))
+                        {
+                            if (result.PageNumber == -1)
+                            {
+                                break;
+                            }
+
+                            if (pagesDone.Contains(result.PageNumber))
+                            {
+                                continue;
+                            }
+
+                            SearchResults.AddSafely(result);
+                            pagesDone.Add(result.PageNumber);
+                        }
+
+                        await Task.Delay(indexBuildTaskComplete ? 0 : 500, token);
+                    } while (!indexBuildTaskComplete);
+                }, token));
 
                 if (SearchResults.Count == 0)
                 {
                     // No match found
-                    SearchResults.Add(new TextSearchResultViewModel() { PageNumber = -1 });
+                    SearchResults.AddSafely(new TextSearchResultViewModel() { PageNumber = -1 });
                 }
             }
             catch (QueryParserException qpe)
@@ -341,7 +405,7 @@ namespace Caly.Core.ViewModels
                 if (SearchResults.Count == 0)
                 {
                     // No match found
-                    SearchResults.Add(new TextSearchResultViewModel() { PageNumber = -99 });
+                    SearchResults.AddSafely(new TextSearchResultViewModel() { PageNumber = -99 });
                 }
             }
             catch (Exception e)

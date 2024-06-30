@@ -18,6 +18,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Caly.Core.Services.Interfaces;
@@ -70,18 +71,10 @@ namespace Caly.Core.Services
                                     throw new NullReferenceException("Cannot index search on a null PdfTextLayer.");
                                 }
 
-                                return textLayer.Select(GetString);
+                                return textLayer.Select(w => string.Concat(w.Value));
                             }, ct);
                         }, tokenizationOptions: builder => builder.WithFactory(o => new CalyIndexTokenizer(o)))
                 ).Build();
-        }
-
-        private static string GetString(PdfWord word)
-        {
-            Span<char> output = word.Value.Length < 512 ? stackalloc char[(int)word.Value.Length] : new char[word.Value.Length];
-
-            word.Value.CopyTo(output);
-            return new string(output);
         }
 
         public async Task BuildPdfDocumentIndex(PdfDocumentViewModel pdfDocument, CancellationToken token)
@@ -90,7 +83,18 @@ namespace Caly.Core.Services
 
             for (int i = 0; i < pdfDocument.PageCount; i++)
             {
+                if (i % 10 == 0)
+                {
+                    _index.BeginBatchChange();
+                }
+
                 await _index.AddAsync(pdfDocument.Pages[i], token);
+
+                if (i % 10 == 0)
+                {
+                    await _index.CommitBatchChangeAsync(token);
+                }
+
                 System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer is not null);
                 System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer!.Count == _index.Metadata.GetDocumentMetadata(i).DocumentStatistics.TotalTokenCount);
             }
@@ -102,10 +106,20 @@ namespace Caly.Core.Services
 
             if (string.IsNullOrEmpty(text))
             {
-                return Array.Empty<TextSearchResultViewModel>();
+                return [];
             }
 
             var results = _index.Search(text);
+
+
+            
+
+            /*
+            foreach (var t in await results.CreateMatchPhrasesAsync(x => pdfDocument.Pages[x-1]))
+            {
+
+            }
+            */
 
             return results.Select(r =>
                 new TextSearchResultViewModel()
