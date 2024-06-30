@@ -397,9 +397,7 @@ namespace Caly.Core.ViewModels
                 var dialogService = App.Current?.Services?.GetRequiredService<IDialogService>();
                 if (dialogService is not null)
                 {
-                    Dispatcher.UIThread.Post(() => dialogService.ShowNotification("Text Search Error",
-                        qpe.Message,
-                        NotificationType.Error));
+                    dialogService.ShowNotification("Text Search Error", qpe.Message, NotificationType.Error);
                 }
 
                 if (SearchResults.Count == 0)

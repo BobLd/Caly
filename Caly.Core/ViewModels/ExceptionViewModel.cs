@@ -22,15 +22,13 @@ namespace Caly.Core.ViewModels
     {
         public Exception Exception { get; }
 
-        public string Message { get; }
+        public string Message => Exception.Message;
 
-        public string StackTrace { get; }
+        public string StackTrace => Exception.StackTrace ?? string.Empty;
 
         public ExceptionViewModel(Exception exception)
         {
             Exception = exception;
-            Message = exception.Message;
-            StackTrace = exception.StackTrace ?? string.Empty;
         }
 
         public override string ToString()
