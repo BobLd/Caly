@@ -22,6 +22,7 @@ using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Caly.Core.Controls;
 using Caly.Core.Handlers.Interfaces;
@@ -64,6 +65,8 @@ namespace Caly.Core.Handlers
 
         private void ClearSelection(PdfPageTextLayerControl currentTextLayer)
         {
+            Debug.ThrowNotOnUiThread();
+
             int start = Selection.GetStartPageIndex();
             int end = Selection.GetEndPageIndex();
 
@@ -463,7 +466,7 @@ namespace Caly.Core.Handlers
 
             foreach (int p in currentPages)
             {
-                documentViewModel.Pages[p - 1].FlagSelectionChanged();
+                Dispatcher.UIThread.Post(() => documentViewModel.Pages[p - 1].FlagSelectionChanged());
             }
         }
 
@@ -478,20 +481,19 @@ namespace Caly.Core.Handlers
                 {
                     System.Diagnostics.Debug.Assert(result.Nodes != null);
 
-                    PdfWord[] words = result.Nodes
+                    _searchResults[result.PageNumber] = result.Nodes
                         .Where(x => x.Word is not null)
                         .Select(x => x.Word!)
                         .ToArray();
 
-                    _searchResults.Add(result.PageNumber, words);
-                    documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged();
+                    Dispatcher.UIThread.Post(() => documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged());
                     currentPages.Remove(result.PageNumber);
                 }
             }
 
             foreach (int p in currentPages)
             {
-                documentViewModel.Pages[p - 1].FlagSelectionChanged();
+                Dispatcher.UIThread.Post(() => documentViewModel.Pages[p - 1].FlagSelectionChanged());
             }
         }
 
