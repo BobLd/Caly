@@ -466,7 +466,7 @@ namespace Caly.Core.Handlers
 
             foreach (int p in currentPages)
             {
-                Dispatcher.UIThread.Post(() => documentViewModel.Pages[p - 1].FlagSelectionChanged());
+                Dispatcher.UIThread.Post(documentViewModel.Pages[p - 1].FlagSelectionChanged);
             }
         }
 
@@ -486,14 +486,14 @@ namespace Caly.Core.Handlers
                         .Select(x => x.Word!)
                         .ToArray();
 
-                    Dispatcher.UIThread.Post(() => documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged());
+                    Dispatcher.UIThread.Post(documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged);
                     currentPages.Remove(result.PageNumber);
                 }
             }
 
             foreach (int p in currentPages)
             {
-                Dispatcher.UIThread.Post(() => documentViewModel.Pages[p - 1].FlagSelectionChanged());
+                Dispatcher.UIThread.Post(documentViewModel.Pages[p - 1].FlagSelectionChanged);
             }
         }
 

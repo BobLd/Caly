@@ -16,6 +16,7 @@
 using System;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 
@@ -89,6 +90,18 @@ namespace Caly.Core.Utilities
             lock (list.SyncRoot)
             {
                 return list.IndexOf(element);
+            }
+        }
+
+        /// <summary>
+        /// Thread safe.
+        /// </summary>
+        public static T[] ToArraySafely<T>(this ObservableCollection<T> collection)
+        {
+            var list = (IList)collection;
+            lock (list.SyncRoot)
+            {
+                return collection.ToArray();
             }
         }
 

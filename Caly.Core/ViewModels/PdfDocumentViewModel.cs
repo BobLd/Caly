@@ -15,6 +15,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -26,7 +27,6 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
-using Avalonia.Threading;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
@@ -336,12 +336,38 @@ namespace Caly.Core.ViewModels
             }
         }
 
-        Task? pendingTask = null; // pending session
-        CancellationTokenSource? cts = null; // CTS for pending session
+        Task? _pendingTask = null; // pending session
+        CancellationTokenSource? _pendingTaskCts = null; // CTS for pending session
 
         // https://stackoverflow.com/questions/18999827/a-pattern-for-self-cancelling-and-restarting-task
         [RelayCommand]
         private async Task SearchText(CancellationToken token) // TODO - To finish cancel/restart
+        {
+            try
+            {
+                var previousCts = _pendingTaskCts;
+                var newCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                _pendingTaskCts = newCts;
+
+                if (previousCts != null)
+                {
+                    // cancel the previous session and wait for its termination
+                    System.Diagnostics.Debug.WriteLine("cancel the previous session and wait for its termination");
+                    await previousCts.CancelAsync();
+                    try { await _pendingTask; } catch { }
+                }
+
+                newCts.Token.ThrowIfCancellationRequested();
+                _pendingTask = SearchTextHelper(newCts.Token);
+                await _pendingTask;
+            }
+            catch (OperationCanceledException e)
+            {
+                System.Diagnostics.Debug.WriteLine(e);
+            }
+        }
+
+        private async Task SearchTextHelper(CancellationToken token)
         {
             try
             {
@@ -356,17 +382,19 @@ namespace Caly.Core.ViewModels
 
                 Task indexBuildTask = _buildSearchIndex.Value;
 
-                await Task.WhenAll(indexBuildTask, Task.Run(async () =>
+                await Task.WhenAny(indexBuildTask, Task.Run(async () =>
                 {
                     bool indexBuildTaskComplete;
                     HashSet<int> pagesDone = new();
                     do
                     {
+                        token.ThrowIfCancellationRequested();
                         indexBuildTaskComplete = indexBuildTask.IsCompleted;
                         var searchResults = await _pdfService.SearchText(this, TextSearch, token);
 
                         foreach (var result in searchResults.OrderBy(r => r.PageNumber))
                         {
+                            token.ThrowIfCancellationRequested();
                             if (result.PageNumber == -1)
                             {
                                 break;

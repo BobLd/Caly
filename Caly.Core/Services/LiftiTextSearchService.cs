@@ -110,17 +110,7 @@ namespace Caly.Core.Services
             }
 
             var results = _index.Search(text);
-
-
             
-
-            /*
-            foreach (var t in await results.CreateMatchPhrasesAsync(x => pdfDocument.Pages[x-1]))
-            {
-
-            }
-            */
-
             return results.Select(r =>
                 new TextSearchResultViewModel()
                 {

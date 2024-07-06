@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
+using Avalonia.Threading;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
@@ -329,7 +330,7 @@ namespace Caly.Core.Models
             }
 
             SelectWordsInRange(pageViewModel.PdfTextLayer, pageViewModel.PageNumber);
-            pageViewModel.FlagSelectionChanged();
+            Dispatcher.UIThread.Post(pageViewModel.FlagSelectionChanged);
         }
 
         /// <summary>
