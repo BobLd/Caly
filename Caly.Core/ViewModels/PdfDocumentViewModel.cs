@@ -381,8 +381,7 @@ namespace Caly.Core.ViewModels
                 }
 
                 Task indexBuildTask = _buildSearchIndex.Value;
-
-                await Task.WhenAny(indexBuildTask, Task.Run(async () =>
+                Task searchTask = Task.Run(async () =>
                 {
                     bool indexBuildTaskComplete;
                     HashSet<int> pagesDone = new();
@@ -411,7 +410,16 @@ namespace Caly.Core.ViewModels
 
                         await Task.Delay(indexBuildTaskComplete ? 0 : 500, token);
                     } while (!indexBuildTaskComplete);
-                }, token));
+                }, token);
+
+                if (!indexBuildTask.IsCompleted)
+                {
+                    await Task.WhenAny(indexBuildTask, searchTask);
+                }
+                else
+                {
+                    await searchTask;
+                }
 
                 if (SearchResults.Count == 0)
                 {
