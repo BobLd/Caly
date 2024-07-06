@@ -445,7 +445,26 @@ namespace Caly.Core.Handlers
             {
                 ClearSelection(control);
 
-                // TODO - Get link under cursor, and execute link if need be
+                // Check link
+                if (!_isSelecting)
+                {
+                    var point = pointerPoint.Position;
+                    PdfWord? word = control.PdfTextLayer.FindWordOver(point.X, point.Y);
+
+                    if (word is not null)
+                    {
+                        ReadOnlySequence<char> sequence = word.Value;
+                        Span<char> output = sequence.Length < 512
+                            ? stackalloc char[(int)sequence.Length]
+                            : new char[sequence.Length]; // This allocates and could be improved using ArrayPool<T>
+
+                        sequence.CopyTo(output);
+                        if (UrlMatch.IsMatch(output))
+                        {
+                            CalyExtensions.OpenBrowser(output);
+                        }
+                    }
+                }
             }
 
             _isSelecting = false;

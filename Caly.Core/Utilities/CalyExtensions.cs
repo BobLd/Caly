@@ -16,6 +16,8 @@
 using System;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 
@@ -77,6 +79,42 @@ namespace Caly.Core.Utilities
             lock (list.SyncRoot)
             {
                 return list.IndexOf(element);
+            }
+        }
+
+        internal static void OpenBrowser(ReadOnlySpan<char> url)
+        {
+            OpenBrowser(new string(url));
+        }
+
+        internal static void OpenBrowser(string url)
+        {
+            // https://brockallen.com/2016/09/24/process-start-for-urls-on-net-core/
+
+            try
+            {
+                Process.Start(url);
+            }
+            catch
+            {
+                // hack because of this: https://github.com/dotnet/corefx/issues/10361
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    url = url.Replace("&", "^&");
+                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Process.Start("xdg-open", url);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Process.Start("open", url);
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
 
