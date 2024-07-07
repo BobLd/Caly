@@ -363,8 +363,8 @@ namespace Caly.Core.ViewModels
             }
         }
 
-        Task? _pendingTask = null; // pending session
-        CancellationTokenSource? _pendingTaskCts = null; // CTS for pending session
+        private Task? _pendingSearchTask = null; // pending session
+        private CancellationTokenSource? _pendingSearchTaskCts = null; // CTS for pending session
 
         // https://stackoverflow.com/questions/18999827/a-pattern-for-self-cancelling-and-restarting-task
         [RelayCommand]
@@ -372,21 +372,21 @@ namespace Caly.Core.ViewModels
         {
             try
             {
-                var previousCts = _pendingTaskCts;
+                var previousCts = _pendingSearchTaskCts;
                 var newCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-                _pendingTaskCts = newCts;
+                _pendingSearchTaskCts = newCts;
 
                 if (previousCts != null)
                 {
                     // cancel the previous session and wait for its termination
                     System.Diagnostics.Debug.WriteLine("cancel the previous session and wait for its termination");
                     await previousCts.CancelAsync();
-                    try { await _pendingTask; } catch { }
+                    try { await _pendingSearchTask; } catch { }
                 }
 
                 newCts.Token.ThrowIfCancellationRequested();
-                _pendingTask = SearchTextHelper(newCts.Token);
-                await _pendingTask;
+                _pendingSearchTask = SearchTextHelper(newCts.Token);
+                await _pendingSearchTask;
             }
             catch (OperationCanceledException e)
             {
