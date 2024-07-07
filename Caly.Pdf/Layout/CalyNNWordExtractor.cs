@@ -1,4 +1,5 @@
-﻿using Caly.Pdf.Models;
+﻿using System.Buffers;
+using Caly.Pdf.Models;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
@@ -138,6 +139,11 @@ namespace Caly.Pdf.Layout
         /// </summary>
         public class CalyNNWordExtractorOptions
         {
+            private static readonly SearchValues<char> _punctuation = SearchValues.Create(['(', '[', ')', ']', '!', '?', ';', ',']);
+            //private static readonly SearchValues<char> _cannotStartWord = SearchValues.Create([')', ']', '!', '?', ';', ':']);
+            //private static readonly SearchValues<char> _cannotEndWord = SearchValues.Create(['(', '[', '.', ',']);
+            private static readonly SearchValues<char> _noWord = SearchValues.Create(['(', ')', '[', ']', ',']); //  '!', '?', ';', ':',
+
             /// <summary>
             /// <inheritdoc/>
             /// Default value is -1.
@@ -181,13 +187,20 @@ namespace Caly.Pdf.Layout
             /// If the function returns <c>false</c>, letters will belong to different words.
             /// <para>Default value checks whether the neighbour is a white space or not. If it is the case, it returns <c>false</c>.</para>
             /// </summary>
-            public Func<PdfLetter, PdfLetter, bool> Filter { get; set; } = (_, l2) => !l2.Value.Span.IsWhiteSpace();
+            public Func<PdfLetter, PdfLetter, bool> Filter { get; set; } = (pivot, candidate) =>
+                !candidate.Value.Span.IsEmpty &&
+                !candidate.Value.Span.IsWhiteSpace() &&
+                !candidate.Value.Span.ContainsAny(_noWord) &&
+                !pivot.Value.Span.ContainsAny(_noWord);
 
             /// <summary>
             /// Function used prior searching for the nearest neighbour. If return false, no search will be done.
             /// <para>Default value checks whether the current letter is a white space or not. If it is the case, it returns false and no search is done.</para>
             /// </summary>
-            public Func<PdfLetter, bool> FilterPivot { get; set; } = l => !l.Value.Span.IsWhiteSpace();
+            public Func<PdfLetter, bool> FilterPivot { get; set; } = pivot =>
+                !pivot.Value.Span.IsEmpty &&
+                !pivot.Value.Span.IsWhiteSpace() &&
+                !pivot.Value.Span.ContainsAny(_punctuation);
 
             /// <summary>
             /// If <c>true</c>, letters will be grouped by <see cref="TextOrientation"/> before processing.
