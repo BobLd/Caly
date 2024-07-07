@@ -14,29 +14,20 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
-using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
-using Caly.Core.Utilities;
-using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Caly.Core.ViewModels
 {
     public sealed partial class PdfDocumentViewModel : ViewModelBase
     {
-        private static readonly double[] _zoomLevelsDiscrete = [0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64];
-
         private const int _initialPagesInfoToLoad = 25;
 
         private readonly IPdfService _pdfService;
@@ -44,37 +35,19 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = new();
 
-        [ObservableProperty] private ObservableCollection<PdfBookmarkNode>? _bookmarks;
-
-        [ObservableProperty] private PdfBookmarkNode? _selectedBookmark;
-
         [ObservableProperty] private int? _selectedPageIndex = 1;
 
         [ObservableProperty] private int _pageCount;
 
         [ObservableProperty] private string? _fileName;
 
-        [ObservableProperty] private double _zoomLevel = 1;
-
         [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
-
-        /*
-         * See PDF Reference 1.7 - C.2 Architectural limits
-         * The magnification factor of a view should be constrained to be between approximately 8 percent and 6400 percent.
-         */
-#pragma warning disable CA1822
-        public double MinZoomLevel => 0.08;
-        public double MaxZoomLevel => 64;
-#pragma warning restore CA1822
 
         private readonly ChannelWriter<PdfPageViewModel>? _channelWriter;
         private readonly ChannelReader<PdfPageViewModel>? _channelReader;
 
         private readonly Lazy<Task> _loadPagesTask;
         public Task LoadPagesTask => _loadPagesTask.Value;
-
-        private readonly Lazy<Task> _loadBookmarksTask;
-        public Task LoadBookmarksTask => _loadBookmarksTask.Value;
 
         internal string? LocalPath { get; private set; }
 
@@ -198,26 +171,6 @@ namespace Caly.Core.ViewModels
             }, _cts.Token);
         }
 
-        private async Task LoadBookmarks()
-        {
-            _cts.Token.ThrowIfCancellationRequested();
-            Bookmarks = await Task.Run(() => _pdfService.GetPdfBookmark(_cts.Token));
-        }
-
-        private static ReadOnlySequence<char> FullWord(PdfWord word)
-        {
-            return word.Value;
-        }
-
-        private static ReadOnlySequence<char> PartialWord(PdfWord word, int startIndex, int endIndex)
-        {
-            System.Diagnostics.Debug.Assert(startIndex != -1);
-            System.Diagnostics.Debug.Assert(endIndex != -1);
-            System.Diagnostics.Debug.Assert(startIndex <= endIndex);
-
-            return word.Value.Slice(startIndex, endIndex - startIndex + 1);
-        }
-
         [RelayCommand]
         private void GoToPreviousPage()
         {
@@ -236,97 +189,6 @@ namespace Caly.Core.ViewModels
                 return;
             }
             SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex.Value + 1);
-        }
-
-        [RelayCommand]
-        private void ZoomIn()
-        {
-            var index = Array.BinarySearch(_zoomLevelsDiscrete, ZoomLevel);
-            if (index < -1)
-            {
-                ZoomLevel = Math.Min(MaxZoomLevel, _zoomLevelsDiscrete[~index]);
-            }
-            else
-            {
-                if (index >= _zoomLevelsDiscrete.Length - 1)
-                {
-                    return;
-                }
-
-                ZoomLevel = Math.Min(MaxZoomLevel, _zoomLevelsDiscrete[index + 1]);
-            }
-        }
-
-        [RelayCommand]
-        private void ZoomOut()
-        {
-            var index = Array.BinarySearch(_zoomLevelsDiscrete, ZoomLevel);
-            if (index < -1)
-            {
-                ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[~index - 1]);
-            }
-            else
-            {
-                if (index == 0)
-                {
-                    return;
-                }
-
-                ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[index - 1]);
-            }
-        }
-
-        [RelayCommand]
-        private async Task CopyText(CancellationToken token)
-        {
-            try
-            {
-                var selection = TextSelectionHandler.Selection;
-
-                if (!selection.HasStarted())
-                {
-                    return;
-                }
-
-                // https://docs.avaloniaui.net/docs/next/concepts/services/clipboardS
-
-                var clipboardService = App.Current?.Services?.GetRequiredService<IClipboardService>();
-                if (clipboardService is null)
-                {
-                    throw new NullReferenceException($"Missing {nameof(IClipboardService)} instance.");
-                }
-
-                System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync");
-
-                string text = await Task.Run(async () =>
-                {
-                    System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync: Get text");
-                    var sb = new StringBuilder();
-
-                    await foreach (var word in selection.GetDocumentSelectionAsAsync(FullWord, PartialWord, this, token))
-                    {
-                        ReadOnlySequenceExtensions.Append(sb, word);
-
-                        if (sb.Length == 0 || !char.IsWhiteSpace(sb[^1]))
-                        {
-                            sb.Append(' ');
-                        }
-                    }
-
-                    sb.Length--; // Last char added was a space
-                    return sb.ToString();
-                }, token);
-
-                System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync: Get text Done");
-
-                await clipboardService.SetAsync(text);
-                System.Diagnostics.Debug.WriteLine("Ended SetClipboardAsync");
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.Write(e.ToString());
-                Exception = new ExceptionViewModel(e);
-            }
         }
     }
 }
