@@ -139,10 +139,14 @@ namespace Caly.Pdf.Layout
         /// </summary>
         public class CalyNNWordExtractorOptions
         {
-            private static readonly SearchValues<char> _punctuation = SearchValues.Create(['(', '[', ')', ']', '!', '?', ';', ',']);
-            //private static readonly SearchValues<char> _cannotStartWord = SearchValues.Create([')', ']', '!', '?', ';', ':']);
-            //private static readonly SearchValues<char> _cannotEndWord = SearchValues.Create(['(', '[', '.', ',']);
-            private static readonly SearchValues<char> _noWord = SearchValues.Create(['(', ')', '[', ']', ',']); //  '!', '?', ';', ':',
+            private static readonly SearchValues<char> _punctuation = SearchValues.Create(
+            [
+                '[', ']', '(', ')', '（', '）',
+                '“', '”', '‘', '’', '"', '„',
+                '«', '»', '《', '》', '「', '」',
+                '‹', '›', '<', '>',
+                '—', ';'
+            ]);
 
             /// <summary>
             /// <inheritdoc/>
@@ -190,8 +194,8 @@ namespace Caly.Pdf.Layout
             public Func<PdfLetter, PdfLetter, bool> Filter { get; set; } = (pivot, candidate) =>
                 !candidate.Value.Span.IsEmpty &&
                 !candidate.Value.Span.IsWhiteSpace() &&
-                !candidate.Value.Span.ContainsAny(_noWord) &&
-                !pivot.Value.Span.ContainsAny(_noWord);
+                !candidate.Value.Span.ContainsAny(_punctuation) &&
+                !pivot.Value.Span.ContainsAny(_punctuation);
 
             /// <summary>
             /// Function used prior searching for the nearest neighbour. If return false, no search will be done.
