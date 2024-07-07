@@ -459,9 +459,16 @@ namespace Caly.Core.Handlers
                             : new char[sequence.Length]; // This allocates and could be improved using ArrayPool<T>
 
                         sequence.CopyTo(output);
-                        if (UrlMatch.IsMatch(output))
+
+                        foreach (ValueMatch match in UrlMatch.EnumerateMatches(output))
                         {
-                            CalyExtensions.OpenBrowser(output);
+                            if (match.Length == 0)
+                            {
+                                continue;
+                            }
+
+                            CalyExtensions.OpenBrowser(output.Slice(match.Index, match.Length));
+                            break; // Only opens first url matched
                         }
                     }
                 }
