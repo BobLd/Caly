@@ -38,7 +38,7 @@ namespace Caly.Core.Handlers
     // See https://github.com/AvaloniaUI/Avalonia/pull/13107/files#diff-f183b476e3366d748fd935e515bf1c8d8845525dcb130aae00ebd70422cd453e
     // See https://github.com/AvaloniaUI/AvaloniaEdit/blob/master/src/AvaloniaEdit/Editing/SelectionLayer.cs
 
-    public sealed class TextSelectionHandler : ITextSelectionHandler
+    public sealed partial class TextSelectionHandler : ITextSelectionHandler
     {
         private static readonly Color _selectionColor = Color.FromArgb(0xa9, 0x33, 0x99, 0xFF);
 
@@ -298,8 +298,8 @@ namespace Caly.Core.Handlers
                             (Selection.AnchorOffset != -1 && Selection.FocusOffset != -1)); // Selection within same word
         }
 
-        // https://stevetalkscode.co.uk/regex-source-generator
-        private static readonly Regex UrlMatch = new Regex(@"(?i)(http(s)?:\/\/)?(\w{2,25}\.)+\w{3}([a-z0-9\-?=$-_.+!*()]+)(?i)", RegexOptions.Compiled);
+        [GeneratedRegex(@"(?i)(http(s)?:\/\/)?(\w{2,25}\.)+\w{3}([a-z0-9\-?=$-_.+!*()]+)(?i)")]
+        private static partial Regex UrlMatch();
 
         /// <summary>
         /// Handle mouse hover over words, links or others
@@ -316,7 +316,7 @@ namespace Caly.Core.Handlers
 
                 sequence.CopyTo(output);
 
-                if (UrlMatch.IsMatch(output))
+                if (UrlMatch().IsMatch(output))
                 {
                     control.SetHandCursor();
                 }
@@ -460,7 +460,7 @@ namespace Caly.Core.Handlers
 
                         sequence.CopyTo(output);
 
-                        foreach (ValueMatch match in UrlMatch.EnumerateMatches(output))
+                        foreach (ValueMatch match in UrlMatch().EnumerateMatches(output))
                         {
                             if (match.Length == 0)
                             {
