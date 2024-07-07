@@ -32,9 +32,20 @@ namespace Caly.Core.Handlers.Interfaces
 
         void OnPointerReleased(PointerReleasedEventArgs e);
 
-        void SetTextSearchResult(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults);
+        /// <summary>
+        /// Clear current results and set the new ones.
+        /// </summary>
+        void SetTextSearchResults(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults);
 
-        void ClearTextSearchResult(PdfDocumentViewModel documentViewModel);
+        /// <summary>
+        /// Add results to existing ones.
+        /// </summary>
+        void AddTextSearchResults(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults);
+
+        /// <summary>
+        /// Clear current results.
+        /// </summary>
+        void ClearTextSearchResults(PdfDocumentViewModel documentViewModel);
 
         /// <summary>
         /// TODO - Should not be in selection handler.

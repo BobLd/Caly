@@ -15,9 +15,9 @@
 
 using System;
 using System.Buffers;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -168,17 +168,44 @@ namespace Caly.Core.ViewModels
             _searchResultsDisposable = SearchResults
                 .GetWeakCollectionChangedObservable()
                 .ObserveOn(Scheduler.Default)
-                .Subscribe(_ =>
+                .Subscribe(e =>
                 {
                     try
                     {
-                        if (SearchResults.Count > 0 && SearchResults[0].PageNumber != -1)
+                        switch (e.Action)
                         {
-                            TextSelectionHandler.SetTextSearchResult(this, SearchResults);
-                        }
-                        else
-                        {
-                            TextSelectionHandler.ClearTextSearchResult(this);
+                            case NotifyCollectionChangedAction.Reset:
+                                TextSelectionHandler.ClearTextSearchResults(this);
+                                break;
+
+                            case NotifyCollectionChangedAction.Add:
+                                if (e.NewItems?.Count > 0)
+                                {
+                                    var searchResult = e.NewItems.OfType<TextSearchResultViewModel>().ToArray();
+
+                                    var first = searchResult.FirstOrDefault();
+
+                                    if (first is null || first.PageNumber <= 0)
+                                    {
+                                        TextSelectionHandler.ClearTextSearchResults(this);
+                                    }
+                                    else
+                                    {
+                                        TextSelectionHandler.AddTextSearchResults(this, searchResult);
+                                    }
+                                }
+
+                                if (e.OldItems?.Count > 0)
+                                {
+                                    throw new NotImplementedException($"SearchResults Action '{e.Action}' with OldItems.");
+                                }
+                                break;
+
+                            case NotifyCollectionChangedAction.Remove:
+                            case NotifyCollectionChangedAction.Replace:
+                            case NotifyCollectionChangedAction.Move:
+                                throw new NotImplementedException($"SearchResults Action '{e.Action}'.");
+                                break;
                         }
                     }
                     catch (OperationCanceledException)

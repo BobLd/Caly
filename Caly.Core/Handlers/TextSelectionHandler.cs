@@ -459,7 +459,7 @@ namespace Caly.Core.Handlers
 
         private readonly Dictionary<int, PdfWord[]> _searchResults = new();
 
-        public void ClearTextSearchResult(PdfDocumentViewModel documentViewModel)
+        public void ClearTextSearchResults(PdfDocumentViewModel documentViewModel)
         {
             var currentPages = _searchResults.Keys.ToArray();
             _searchResults.Clear();
@@ -470,7 +470,8 @@ namespace Caly.Core.Handlers
             }
         }
 
-        public void SetTextSearchResult(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults)
+        public void SetTextSearchResults(PdfDocumentViewModel documentViewModel,
+            IReadOnlyCollection<TextSearchResultViewModel> searchResults)
         {
             var currentPages = _searchResults.Keys.ToList();
             _searchResults.Clear();
@@ -494,6 +495,25 @@ namespace Caly.Core.Handlers
             foreach (int p in currentPages)
             {
                 Dispatcher.UIThread.Post(documentViewModel.Pages[p - 1].FlagSelectionChanged);
+            }
+        }
+
+        public void AddTextSearchResults(PdfDocumentViewModel documentViewModel,
+            IReadOnlyCollection<TextSearchResultViewModel> searchResults)
+        {
+            if (searchResults.Count > 0)
+            {
+                foreach (var result in searchResults)
+                {
+                    System.Diagnostics.Debug.Assert(result.Nodes != null);
+
+                    _searchResults[result.PageNumber] = result.Nodes
+                        .Where(x => x.Word is not null)
+                        .Select(x => x.Word!)
+                        .ToArray();
+
+                    Dispatcher.UIThread.Post(documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged);
+                }
             }
         }
 
