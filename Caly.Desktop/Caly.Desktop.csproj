@@ -31,6 +31,7 @@
 		<UseNativeHttpHandler>true</UseNativeHttpHandler>
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 		<DebugSymbols>false</DebugSymbols>
+		<MetricsSupport>false</MetricsSupport>
 	</PropertyGroup>
 
 	<!--
