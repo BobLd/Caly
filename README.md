@@ -15,7 +15,7 @@ The aim is to develop a C# cross-platform open source pdf reader/viewer applicat
 | Navigate and zoom document (go to page, zoom in/out, etc.) | High | Done | | Performance to improve |
 | Text selection | High | Done | | Improve rendering by merging words into lines |
 | Copy text selection to clipboard | High | Done | | |
-| Search text | High | Work in Progress | Use [Lifti](https://github.com/mikegoatly/lifti) lib, see [`branch`](https://github.com/BobLd/Caly/tree/text-search-lifti-2-build-search) | |
+| Search text | High | Done | | Improve word matching |
 | Run JavaScript embedded in a PDF | Medium | Not started | Use [Jint](https://github.com/sebastienros/jint) | |
 | UI / UX | Low | Work in Progress | How the app feels | Need better colors, icons, transitions, etc. |
 | OCR | Low | Not started | Use [RapidOCR](https://github.com/RapidAI/RapidOCR) onnx models | |
