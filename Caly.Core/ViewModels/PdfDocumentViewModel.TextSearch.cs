@@ -113,6 +113,16 @@ namespace Caly.Core.ViewModels
                 if (!indexBuildTask.IsCompleted)
                 {
                     await Task.WhenAny(indexBuildTask, searchTask);
+                    if (indexBuildTask is { IsCompleted: true, Exception: not null })
+                    {
+                        throw new Exception("Something wrong happened while indexing the document.",
+                            indexBuildTask.Exception);
+                    }
+
+                    if (searchTask is { IsCompleted: true, Exception: not null })
+                    {
+                        throw searchTask.Exception;
+                    }
                 }
                 else
                 {

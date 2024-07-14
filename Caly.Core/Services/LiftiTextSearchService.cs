@@ -14,16 +14,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.ViewModels;
-using Caly.Pdf.Models;
 using Lifti;
 using Lifti.Tokenization;
 
@@ -81,23 +78,25 @@ namespace Caly.Core.Services
         {
             Debug.ThrowOnUiThread();
 
-            for (int i = 0; i < pdfDocument.PageCount; i++)
+            for (int i = 0; i < pdfDocument.PageCount; ++i)
             {
                 if (i % 10 == 0)
                 {
+                    token.ThrowIfCancellationRequested();
+                    if (i > 0)
+                    {
+                        await _index.CommitBatchChangeAsync(token);
+                    }
                     _index.BeginBatchChange();
                 }
 
                 await _index.AddAsync(pdfDocument.Pages[i], token);
 
-                if (i % 10 == 0)
-                {
-                    await _index.CommitBatchChangeAsync(token);
-                }
-
                 System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer is not null);
-                System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer!.Count == _index.Metadata.GetDocumentMetadata(i).DocumentStatistics.TotalTokenCount);
+                //System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer!.Count == _index.Metadata.GetDocumentMetadata(i).DocumentStatistics.TotalTokenCount); // Can't do that with batch
             }
+
+            await _index.CommitBatchChangeAsync(token);
         }
 
         public async Task<IEnumerable<TextSearchResultViewModel>> Search(PdfDocumentViewModel pdfDocument, string text, CancellationToken token)
@@ -110,7 +109,7 @@ namespace Caly.Core.Services
             }
 
             var results = _index.Search(text);
-            
+
             return results.Select(r =>
                 new TextSearchResultViewModel()
                 {
