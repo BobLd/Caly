@@ -51,12 +51,12 @@ namespace Caly.Pdf.Layout
         public IReadOnlyList<PdfTextBlock> GetBlocks(IEnumerable<PdfWord> words, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             PdfWord[]? array = words?.Where(w => !w.Value.IsEmptyOrWhiteSpace()).ToArray();
 
-            if (array == null || array.Length == 0)
+            if (array is null || array.Length == 0)
             {
-                return Array.Empty<PdfTextBlock>();
+                return [];
             }
 
             var parallelOptions = new ParallelOptions()
@@ -250,7 +250,7 @@ namespace Caly.Pdf.Layout
             var best = default(List<double>);
             foreach (var bin in bins)
             {
-                if (best == null || bin.Value.Count > best.Count)
+                if (best is null || bin.Value.Count > best.Count)
                 {
                     best = bin.Value;
                 }

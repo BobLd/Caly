@@ -363,7 +363,7 @@ namespace Caly.Core.Services
 
                 System.Diagnostics.Debug.WriteLine($"Disposing document async for {FileName}");
                 _semaphore.Dispose();
-                
+
                 _textSearchService.Dispose();
 
                 if (_fileStream is not null)

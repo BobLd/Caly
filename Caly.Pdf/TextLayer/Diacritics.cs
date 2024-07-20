@@ -48,7 +48,7 @@ namespace Caly.Pdf.TextLayer
         {
             result = null;
 
-            if (previous == null)
+            if (previous is null)
             {
                 return false;
             }

@@ -42,8 +42,8 @@ namespace Caly.Pdf.Models
 
             foreach (PdfTextBlock block in TextBlocks)
             {
-                var candidate = block.FindWordOver(x, y);
-                if (candidate != null)
+                PdfWord? candidate = block.FindWordOver(x, y);
+                if (candidate is not null)
                 {
                     return candidate;
                 }
@@ -58,8 +58,8 @@ namespace Caly.Pdf.Models
 
             foreach (PdfTextBlock block in TextBlocks)
             {
-                var candidate = block.FindTextLineOver(x, y);
-                if (candidate != null)
+                PdfTextLine? candidate = block.FindTextLineOver(x, y);
+                if (candidate is not null)
                 {
                     return candidate;
                 }
@@ -87,17 +87,18 @@ namespace Caly.Pdf.Models
             // Handle whole page selected
             if (start.IndexInPage == 0 && end.IndexInPage == this.Count - 1)
             {
-                foreach (var word in this)
+                foreach (PdfWord word in this)
                 {
                     yield return word;
                 }
+
                 yield break;
             }
 
             // Handle single block
             if (start.TextBlockIndex == end.TextBlockIndex)
             {
-                var block = TextBlocks[start.TextBlockIndex];
+                PdfTextBlock block = TextBlocks[start.TextBlockIndex];
 
                 int lineStartIndex = block.TextLines[0].IndexInPage;
 
@@ -106,7 +107,7 @@ namespace Caly.Pdf.Models
 
                 for (int l = startIndex; l <= endIndex; ++l)
                 {
-                    var line = block.TextLines[l];
+                    PdfTextLine line = block.TextLines[l];
                     if (l == startIndex)
                     {
                         // we are in first line
@@ -131,7 +132,7 @@ namespace Caly.Pdf.Models
                     }
                     else
                     {
-                        foreach (var word in line.Words)
+                        foreach (PdfWord word in line.Words)
                         {
                             yield return word;
                         }
@@ -143,7 +144,7 @@ namespace Caly.Pdf.Models
 
             for (int b = start.TextBlockIndex; b <= end.TextBlockIndex; ++b)
             {
-                var block = TextBlocks[b];
+                PdfTextBlock block = TextBlocks[b];
 
                 int lineStartIndex = block.TextLines[0].IndexInPage;
 
@@ -153,7 +154,7 @@ namespace Caly.Pdf.Models
                     int startIndex = start.TextLineIndex - lineStartIndex;
                     for (int l = startIndex; l < block.TextLines.Count; ++l)
                     {
-                        var line = block.TextLines[l];
+                        PdfTextLine line = block.TextLines[l];
                         if (l == startIndex)
                         {
                             // we are in first line (no need to check if there is a
@@ -166,7 +167,7 @@ namespace Caly.Pdf.Models
                         }
                         else
                         {
-                            foreach (var word in line.Words)
+                            foreach (PdfWord word in line.Words)
                             {
                                 yield return word;
                             }
@@ -191,7 +192,7 @@ namespace Caly.Pdf.Models
                         }
                         else
                         {
-                            foreach (var word in line.Words)
+                            foreach (PdfWord word in line.Words)
                             {
                                 yield return word;
                             }
@@ -201,9 +202,9 @@ namespace Caly.Pdf.Models
                 else
                 {
                     // we are in a block in the middle
-                    foreach (var line in block.TextLines)
+                    foreach (PdfTextLine line in block.TextLines)
                     {
-                        foreach (var word in line.Words)
+                        foreach (PdfWord word in line.Words)
                         {
                             yield return word;
                         }
@@ -219,15 +220,11 @@ namespace Caly.Pdf.Models
                 yield break;
             }
 
-            foreach (var block in TextBlocks)
+            foreach (PdfTextBlock block in TextBlocks)
             {
-                if (block?.TextLines is null) continue;
-
-                foreach (var line in block.TextLines)
+                foreach (PdfTextLine line in block.TextLines)
                 {
-                    if (line?.Words is null) continue;
-
-                    foreach (var word in line.Words)
+                    foreach (PdfWord word in line.Words)
                     {
                         yield return word;
                     }
@@ -254,14 +251,15 @@ namespace Caly.Pdf.Models
                     throw new NullReferenceException($"Cannot access word at index {index} because TextBlocks is null.");
                 }
 
-                PdfTextBlock? block = TextBlocks.FirstOrDefault(f => f.ContainsWord(index)); // TODO - Optimise that
-
-                if (block is null)
+                foreach (PdfTextBlock block in TextBlocks)
                 {
-                    throw new NullReferenceException($"Cannot find word at index {index}.");
+                    if (block.ContainsWord(index))
+                    {
+                        return block.GetWordInPageAt(index);
+                    }
                 }
 
-                return block.GetWordInPageAt(index);
+                throw new NullReferenceException($"Cannot find word at index {index}.");
             }
         }
     }

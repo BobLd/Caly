@@ -18,7 +18,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.Threading;
 using Caly.Core;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
@@ -175,9 +174,9 @@ namespace Caly.Desktop
                     .WithInterFont()
                     .UseSkia()
                     // https://github.com/AvaloniaUI/Avalonia/discussions/12597
-                    .With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
-                    .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software }, WmClass = _appName })
-                    .With(new AvaloniaNativePlatformOptions { RenderingMode = new[] { AvaloniaNativeRenderingMode.Software } })
+                    .With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Software] })
+                    .With(new X11PlatformOptions { RenderingMode = [X11RenderingMode.Software], WmClass = _appName })
+                    .With(new AvaloniaNativePlatformOptions { RenderingMode = [AvaloniaNativeRenderingMode.Software] })
                     .LogToTrace();
             }
             catch (Exception e)

@@ -313,7 +313,7 @@ namespace Caly.Core.Handlers
         private static void HandleMouseMoveOver(PdfPageTextLayerControl control, Point loc)
         {
             PdfWord? word = control.PdfTextLayer!.FindWordOver(loc.X, loc.Y);
-            if (word != null)
+            if (word is not null)
             {
                 ReadOnlySequence<char> sequence = word.Value;
 
@@ -411,12 +411,12 @@ namespace Caly.Core.Handlers
             {
                 PdfWord? word = control.PdfTextLayer.FindWordOver(point.X, point.Y);
 
-                if (word != null && Selection.IsWordSelected(control.PageNumber!.Value, word))
+                if (word is not null && Selection.IsWordSelected(control.PageNumber!.Value, word))
                 {
                     clearSelection = e.ClickCount == 1; // Clear selection if single click
                     HandleMultipleClick(control, e, word); // TODO - we pass 1 click here too
                 }
-                else if (word != null && e.ClickCount == 2)
+                else if (word is not null && e.ClickCount == 2)
                 {
                     // TODO - do better multiple click selection
                     HandleMultipleClick(control, e, word);
@@ -506,7 +506,7 @@ namespace Caly.Core.Handlers
             {
                 foreach (var result in searchResults)
                 {
-                    System.Diagnostics.Debug.Assert(result.Nodes != null);
+                    System.Diagnostics.Debug.Assert(result.Nodes is not null);
 
                     _searchResults[result.PageNumber] = result.Nodes
                         .Where(x => x.Word is not null)
@@ -531,7 +531,7 @@ namespace Caly.Core.Handlers
             {
                 foreach (var result in searchResults)
                 {
-                    System.Diagnostics.Debug.Assert(result.Nodes != null);
+                    System.Diagnostics.Debug.Assert(result.Nodes is not null);
 
                     _searchResults[result.PageNumber] = result.Nodes
                         .Where(x => x.Word is not null)

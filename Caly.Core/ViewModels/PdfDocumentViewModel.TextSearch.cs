@@ -47,7 +47,7 @@ namespace Caly.Core.ViewModels
                 var newCts = CancellationTokenSource.CreateLinkedTokenSource(token);
                 _pendingSearchTaskCts = newCts;
 
-                if (previousCts != null)
+                if (previousCts is not null)
                 {
                     // cancel the previous session and wait for its termination
                     System.Diagnostics.Debug.WriteLine("cancel the previous session and wait for its termination");

@@ -99,7 +99,7 @@ namespace Caly.Pdf.PageFactories
         /// </summary>
         private static int GetUserSpaceUnits(DictionaryToken dictionary)
         {
-            if (dictionary.TryGet(NameToken.UserUnit, out var userUnitBase) && userUnitBase is NumericToken userUnitNumber)
+            if (dictionary.TryGet(NameToken.UserUnit, out IToken? userUnitBase) && userUnitBase is NumericToken userUnitNumber)
             {
                 return userUnitNumber.Int;
             }
@@ -112,28 +112,21 @@ namespace Caly.Pdf.PageFactories
         /// </summary>
         private CropBox GetCropBox(DictionaryToken dictionary, MediaBox mediaBox)
         {
-            CropBox cropBox;
             if (dictionary.TryGet(NameToken.CropBox, out var cropBoxObject) &&
                 DirectObjectFinder.TryGet(cropBoxObject, _pdfScanner, out ArrayToken? cropBoxArray))
             {
-                if (cropBoxArray.Length != 4)
+                if (cropBoxArray.Length == 4)
                 {
-                    _parsingOptions.Logger.Error(
-                        $"The CropBox was the wrong length in the dictionary: {dictionary}. Array was: {cropBoxArray}. Using MediaBox.");
-
-                    cropBox = new CropBox(mediaBox.Bounds);
-
-                    return cropBox;
+                    return new CropBox(cropBoxArray.ToRectangle(_pdfScanner));
                 }
 
-                cropBox = new CropBox(cropBoxArray.ToRectangle(_pdfScanner));
-            }
-            else
-            {
-                cropBox = new CropBox(mediaBox.Bounds);
+                _parsingOptions.Logger.Error(
+                    $"The CropBox was the wrong length in the dictionary: {dictionary}. Array was: {cropBoxArray}. Using MediaBox.");
+
+                return new CropBox(mediaBox.Bounds);
             }
 
-            return cropBox;
+            return new CropBox(mediaBox.Bounds);
         }
 
         /// <summary>
@@ -141,37 +134,31 @@ namespace Caly.Pdf.PageFactories
         /// </summary>
         private MediaBox GetMediaBox(int number, DictionaryToken dictionary, PageTreeMembers pageTreeMembers)
         {
-            MediaBox mediaBox;
             if (dictionary.TryGet(NameToken.MediaBox, out var mediaBoxObject)
                 && DirectObjectFinder.TryGet(mediaBoxObject, _pdfScanner, out ArrayToken? mediaBoxArray))
             {
-                if (mediaBoxArray.Length != 4)
+                if (mediaBoxArray.Length == 4)
                 {
-                    _parsingOptions.Logger.Error(
-                        $"The MediaBox was the wrong length in the dictionary: {dictionary}. Array was: {mediaBoxArray}. Defaulting to US Letter.");
-
-                    mediaBox = MediaBox.Letter;
-
-                    return mediaBox;
+                    return new MediaBox(mediaBoxArray.ToRectangle(_pdfScanner));
                 }
 
-                mediaBox = new MediaBox(mediaBoxArray.ToRectangle(_pdfScanner));
+                _parsingOptions.Logger.Error(
+                    $"The MediaBox was the wrong length in the dictionary: {dictionary}. Array was: {mediaBoxArray}. Defaulting to US Letter.");
+
+                return MediaBox.Letter;
             }
-            else
+
+            MediaBox mediaBox = pageTreeMembers.MediaBox;
+
+            if (mediaBox is not null)
             {
-                mediaBox = pageTreeMembers.MediaBox;
-
-                if (mediaBox is null)
-                {
-                    _parsingOptions.Logger.Error(
-                        $"The MediaBox was the wrong missing for page {number}. Using US Letter.");
-
-                    // PDFBox defaults to US Letter.
-                    mediaBox = MediaBox.Letter;
-                }
+                return mediaBox;
             }
 
-            return mediaBox;
+            _parsingOptions.Logger.Error($"The MediaBox was the wrong missing for page {number}. Using US Letter.");
+
+            // PDFBox defaults to US Letter.
+            return MediaBox.Letter;
         }
 
         /// <summary>

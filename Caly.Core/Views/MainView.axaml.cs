@@ -55,11 +55,8 @@ namespace Caly.Core.Views
                     return;
                 }
 
-                var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
-                if (pdfDocumentsService is null)
-                {
-                    throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
-                }
+                var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>()
+                                          ?? throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
 
                 await Task.Run(() => pdfDocumentsService.OpenLoadDocuments(files, CancellationToken.None));
             }

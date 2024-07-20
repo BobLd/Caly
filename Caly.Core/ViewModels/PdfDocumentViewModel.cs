@@ -38,7 +38,7 @@ namespace Caly.Core.ViewModels
         private readonly IPdfService _pdfService;
         private readonly CancellationTokenSource _cts = new();
 
-        [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = new();
+        [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = [];
 
         [ObservableProperty] private int _selectedTabIndex;
 
@@ -50,7 +50,7 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
 
-        [ObservableProperty] private ObservableCollection<TextSearchResultViewModel> _searchResults = new();
+        [ObservableProperty] private ObservableCollection<TextSearchResultViewModel> _searchResults = [];
 
         [ObservableProperty] private string? _textSearch;
 
@@ -61,7 +61,7 @@ namespace Caly.Core.ViewModels
 
         private readonly Lazy<Task> _loadPagesTask;
         public Task LoadPagesTask => _loadPagesTask.Value;
-        
+
         private readonly Lazy<Task> _buildSearchIndex;
 
         internal string? LocalPath { get; private set; }

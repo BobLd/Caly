@@ -82,19 +82,15 @@ namespace Caly.Pdf
             int lineIndex = 0;
             int blockIndex = 0;
 
-            for (int b = 0; b < pdfBlocks.Count; b++)
+            foreach (PdfTextBlock block in pdfBlocks)
             {
-                var block = pdfBlocks[b];
-                var lines = block.TextLines;
                 int blockStartIndex = wordIndex;
 
-                for (int l = 0; l < lines.Count; l++)
+                foreach (PdfTextLine line in block.TextLines)
                 {
-                    var line = block.TextLines[l];
-                    var pdfWords = line.Words;
                     int lineStartIndex = wordIndex;
 
-                    for (int w = 0; w < pdfWords.Count; w++)
+                    foreach (PdfWord word in line.Words)
                     {
                         // throw if cancelled every now and then
                         if (wordIndex % 100 == 0)
@@ -102,19 +98,19 @@ namespace Caly.Pdf
                             cancellationToken.ThrowIfCancellationRequested();
                         }
 
-                        pdfWords[w].IndexInPage = wordIndex++;
-                        pdfWords[w].TextLineIndex = lineIndex;
-                        pdfWords[w].TextBlockIndex = blockIndex;
+                        word.IndexInPage = wordIndex++;
+                        word.TextLineIndex = lineIndex;
+                        word.TextBlockIndex = blockIndex;
                     }
 
-                    lines[l].IndexInPage = lineIndex++;
-                    lines[l].TextBlockIndex = blockIndex;
-                    lines[l].WordStartIndex = lineStartIndex;
+                    line.IndexInPage = lineIndex++;
+                    line.TextBlockIndex = blockIndex;
+                    line.WordStartIndex = lineStartIndex;
                 }
 
-                pdfBlocks[b].IndexInPage = blockIndex++;
-                pdfBlocks[b].WordStartIndex = blockStartIndex;
-                pdfBlocks[b].WordEndIndex = wordIndex - 1;
+                block.IndexInPage = blockIndex++;
+                block.WordStartIndex = blockStartIndex;
+                block.WordEndIndex = wordIndex - 1;
             }
 
             return new PdfTextLayer(pdfBlocks);
@@ -127,10 +123,10 @@ namespace Caly.Pdf
 
         private static PdfRectangle InverseYAxis(PdfRectangle rectangle, double height)
         {
-            var topLeft = InverseYAxis(rectangle.TopLeft, height);
-            var topRight = InverseYAxis(rectangle.TopRight, height);
-            var bottomLeft = InverseYAxis(rectangle.BottomLeft, height);
-            var bottomRight = InverseYAxis(rectangle.BottomRight, height);
+            PdfPoint topLeft = InverseYAxis(rectangle.TopLeft, height);
+            PdfPoint topRight = InverseYAxis(rectangle.TopRight, height);
+            PdfPoint bottomLeft = InverseYAxis(rectangle.BottomLeft, height);
+            PdfPoint bottomRight = InverseYAxis(rectangle.BottomRight, height);
             return new PdfRectangle(topLeft, topRight, bottomLeft, bottomRight);
         }
 
@@ -141,15 +137,17 @@ namespace Caly.Pdf
                 return letters[0].TextOrientation;
             }
 
-            var tempTextOrientation = letters[0].TextOrientation;
-            if (tempTextOrientation != TextOrientation.Other)
+            TextOrientation tempTextOrientation = letters[0].TextOrientation;
+            if (tempTextOrientation == TextOrientation.Other)
             {
-                foreach (var letter in letters)
+                return tempTextOrientation;
+            }
+
+            foreach (IPdfTextElement letter in letters)
+            {
+                if (letter.TextOrientation != tempTextOrientation)
                 {
-                    if (letter.TextOrientation != tempTextOrientation)
-                    {
-                        return TextOrientation.Other;
-                    }
+                    return TextOrientation.Other;
                 }
             }
             return tempTextOrientation;
