@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.VisualTree;
@@ -37,6 +38,17 @@ namespace Caly.Core.Views
         {
             InitializeComponent();
             AddHandler(DragDrop.DropEvent, Drop);
+        }
+
+        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        {
+            base.OnApplyTemplate(e);
+
+            // Pass KeyBindings to top level
+            if (TopLevel.GetTopLevel(this) is Window w)
+            {
+                w.KeyBindings.AddRange(KeyBindings);
+            }
         }
 
         private async void Drop(object? sender, DragEventArgs e)

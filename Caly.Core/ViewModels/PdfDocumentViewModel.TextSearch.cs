@@ -34,6 +34,12 @@ namespace Caly.Core.ViewModels
             await SearchText(CancellationToken.None); // TODO - subscribe to event change instead and use rolling time window
         }
 
+        [RelayCommand]
+        private void ActivateSearchTextTab()
+        {
+            SelectedTabIndex = 2;
+        }
+
         private Task? _pendingSearchTask;
         private CancellationTokenSource? _pendingSearchTaskCts;
 
@@ -69,7 +75,7 @@ namespace Caly.Core.ViewModels
         {
             try
             {
-                SelectedTabIndex = 2;
+                ActivateSearchTextTab();
                 SelectedTextSearchResult = null;
                 SearchResults.ClearSafely();
 

@@ -73,6 +73,19 @@ namespace Caly.Core.ViewModels
                 });
         }
 
+        private PdfDocumentViewModel? getCurrentPdfDocument()
+        {
+            try
+            {
+                return SelectedDocumentIndex < 0 ? null : PdfDocuments[SelectedDocumentIndex];
+            }
+            catch (Exception e)
+            {
+                Debug.WriteExceptionToFile(e);
+                return null;
+            }
+        }
+
         [RelayCommand]
         private async Task OpenFile(CancellationToken token)
         {
@@ -103,14 +116,40 @@ namespace Caly.Core.ViewModels
             // TODO - Finish proper dispose / unload of document on close 
             if (((DragTabItem)tabItem)?.DataContext is PdfDocumentViewModel vm)
             {
-                var pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>();
-                if (pdfDocumentsService is null)
-                {
-                    throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
-                }
-
-                await Task.Run(() => pdfDocumentsService.CloseUnloadDocument(vm));
+                await CloseDocumentInternal(vm);
             }
+        }
+
+        [RelayCommand]
+        private async Task CloseDocument(CancellationToken token)
+        {
+            PdfDocumentViewModel? vm = getCurrentPdfDocument();
+            if (vm is null)
+            {
+                return;
+            }
+            await CloseDocumentInternal(vm);
+        }
+
+        private async Task CloseDocumentInternal(PdfDocumentViewModel vm)
+        {
+            IPdfDocumentsService pdfDocumentsService = App.Current?.Services?.GetRequiredService<IPdfDocumentsService>()
+                ?? throw new NullReferenceException($"Missing {nameof(IPdfDocumentsService)} instance.");
+
+            await Task.Run(() => pdfDocumentsService.CloseUnloadDocument(vm));
+        }
+
+        [RelayCommand]
+        private void ActivateSearchTextTab()
+        {
+            getCurrentPdfDocument()?.ActivateSearchTextTabCommand.Execute(null);
+        }
+
+        [RelayCommand]
+        private Task CopyText(CancellationToken token)
+        {
+            PdfDocumentViewModel? vm = getCurrentPdfDocument();
+            return vm is null ? Task.CompletedTask : vm.CopyTextCommand.ExecuteAsync(null);
         }
     }
 }

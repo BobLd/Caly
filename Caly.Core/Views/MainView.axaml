@@ -23,13 +23,20 @@
 		</ResourceDictionary>
 	</UserControl.Resources>
 
+	<UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
+        <KeyBinding Gesture="Ctrl+F4" Command="{Binding CloseDocumentCommand}" />
+		<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
+		<KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
+	</UserControl.KeyBindings>
+
 	<tabalonia:TabsControl Background="Transparent"
                            Padding="0"
                            AddItemCommand="{Binding OpenFileCommand}"
                            CloseItemCommand="{Binding CloseTabCommand}"
                            ItemsSource="{Binding PdfDocuments}"
                            SelectedIndex="{Binding SelectedDocumentIndex}">
-		<TabControl.ItemTemplate>
+        <TabControl.ItemTemplate>
 			<DataTemplate>
 				<TextBlock DockPanel.Dock="Left"
                            Text="{Binding FileName}"
@@ -88,11 +95,6 @@
 
 							<!-- Document text search -->
 							<TextBox Width="120" Watermark="Search..." Text="{Binding TextSearch}"/>
-							<Button HorizontalAlignment="Center" Command="{Binding SearchTextCommand}">
-								<PathIcon Data="{StaticResource document_search_regular}">
-									<ToolTip.Tip>Search</ToolTip.Tip>
-								</PathIcon>
-							</Button>
 
 						</StackPanel>
 

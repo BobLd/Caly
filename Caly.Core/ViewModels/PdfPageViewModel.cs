@@ -300,9 +300,14 @@ namespace Caly.Core.ViewModels
                     return;
                 }
 
+                await _mutex.WaitAsync();
                 try
                 {
-                    await _mutex.WaitAsync();
+                    if (_cts.IsCancellationRequested)
+                    {
+                        return; // already cancelled
+                    }
+
                     var t = Thumbnail;
                     Thumbnail = null;
                     t?.Dispose();
@@ -341,6 +346,7 @@ namespace Caly.Core.ViewModels
 
         public async ValueTask DisposeAsync()
         {
+            await UnloadThumbnail();
             await UnloadPagePicture();
             _cts?.Dispose();
             _cts = null;
