@@ -731,23 +731,15 @@ public class PdfPageItemsControl : ItemsControl
         // There's a bug in VirtualizingStackPanel. Scroll bars do not display correctly
         // This hack fixes that by scrolling into view a page that's not realised
         int currentPage = SelectedPageIndex.HasValue ? SelectedPageIndex.Value - 1 : 0;
-        if (currentPage >= GetMinPageIndex() && currentPage <= GetMaxPageIndex())
+        if (currentPage != 0)
         {
-            // Current page is realised
-            if (currentPage != 0)
-            {
-                ScrollIntoView(0);
-            }
-            else if (currentPage != PageCount - 1)
-            {
-                ScrollIntoView(PageCount - 1);
-            }
+            ScrollIntoView(0);
+        }
+        else if (currentPage != PageCount - 1)
+        {
+            ScrollIntoView(PageCount - 1);
+        }
 
-            ScrollIntoView(currentPage);
-        }
-        else
-        {
-            ScrollIntoView(currentPage);
-        }
+        ScrollIntoView(currentPage);
     }
 }
