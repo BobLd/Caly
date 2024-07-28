@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Management;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
@@ -171,6 +172,25 @@ namespace Caly.Core.Services
         public async Task<IRef<SKPicture>?> GetRenderPageAsync(int pageNumber, CancellationToken cancellationToken)
         {
             Debug.ThrowOnUiThread();
+
+            // https://github.com/Zelenov/SharpIpp
+
+            var printerQuery = new ManagementObjectSearcher("SELECT * from Win32_Printer");
+            foreach (var printer in printerQuery.Get())
+            {
+                if (printer is not ManagementObject mo)
+                {
+                    continue;
+                }
+
+                var name = mo.GetPropertyValue("Name");
+                var status = mo.GetPropertyValue("Status");
+                var isDefault = mo.GetPropertyValue("Default");
+                var isNetworkPrinter = mo.GetPropertyValue("Network");
+
+                System.Diagnostics.Debug.WriteLine("{0} (Status: {1}, Default: {2}, Network: {3}",
+                    name, status, isDefault, isNetworkPrinter);
+            }
 
             SKPicture? pic;
             try
