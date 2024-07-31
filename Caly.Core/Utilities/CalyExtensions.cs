@@ -20,6 +20,9 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
+using Caly.Core.Services.Interfaces;
+using Caly.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Caly.Core.Utilities
 {
@@ -128,6 +131,16 @@ namespace Caly.Core.Utilities
                     throw;
                 }
             }
+        }
+
+        public static IServiceCollection AddPlatformSpecificServices(this IServiceCollection services)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                services.AddSingleton<IPrinterService, WindowsPrinterService>();
+            }
+
+            return services;
         }
 
         /*

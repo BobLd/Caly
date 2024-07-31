@@ -87,7 +87,7 @@ namespace Caly.Core
                 services.AddSingleton(_ => (Visual)singleViewPlatform.MainView);
             }
 #if DEBUG
-            else if (ApplicationLifetime is null && Avalonia.Controls.Design.IsDesignMode)
+            else if (ApplicationLifetime is null && Design.IsDesignMode)
             {
                 var mainView = new MainView { DataContext = new MainViewModel() };
                 services.AddSingleton(_ => (Visual)mainView);
@@ -99,6 +99,7 @@ namespace Caly.Core
             services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
             services.AddTransient<IPdfService, PdfPigPdfService>();
             services.AddTransient<ITextSearchService, LiftiTextSearchService>();
+            services.AddPlatformSpecificServices();
 
             Services = services.BuildServiceProvider();
 
