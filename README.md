@@ -17,9 +17,9 @@ The aim is to develop a C# cross-platform open source pdf reader/viewer applicat
 | Copy text selection to clipboard | High | Done | | |
 | Search text | High | Done | | Improve word matching |
 | Printing | High | Work in Progress | See [branch](https://github.com/BobLd/Caly/tree/printing). Way more complicated than expected without using `System.Drawing`. See https://github.com/Zelenov/SharpIpp https://github.com/dotnet/maui/issues/9931 https://devblogs.microsoft.com/xamarin/native-printing-with-android/ | |
-| Run JavaScript embedded in a PDF | Low | Not started | Use [Jint](https://github.com/sebastienros/jint) | |
+| Run JavaScript embedded in a PDF | Won't do | Not started | Use [Jint](https://github.com/sebastienros/jint) | |
 | UI / UX | Low | Work in Progress | How the app feels | Need better colors, icons, transitions, etc. |
-| OCR | Low | Not started | Use [RapidOCR](https://github.com/RapidAI/RapidOCR) onnx models | |
+| OCR | Low | Not started | Use [RapidOCR](https://github.com/RapidAI/RapidOCR) onnx models, see [RapidOcrNet](https://github.com/BobLd/RapidOcrNet) | |
 | Table extraction | Low | Not started  | Use [tabula-sharp](https://github.com/BobLd/tabula-sharp) or [camelot-sharp](https://github.com/BobLd/camelot-sharp) | |
 
 ## Windows, Linux, MacOS and mobile compatible
