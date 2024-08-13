@@ -520,9 +520,15 @@ public class PdfPageItemsControl : ItemsControl
 
         if (indexMaxOverlap != -1 && SelectedPageIndex != indexMaxOverlap)
         {
-            _isSettingPageVisibility = true;
-            SetCurrentValue(SelectedPageIndexProperty, indexMaxOverlap);
-            _isSettingPageVisibility = false;
+            try
+            {
+                _isSettingPageVisibility = true;
+                SetCurrentValue(SelectedPageIndexProperty, indexMaxOverlap);
+            }
+            finally
+            {
+                _isSettingPageVisibility = false;
+            }
         }
     }
 
@@ -728,25 +734,31 @@ public class PdfPageItemsControl : ItemsControl
     /// </summary>
     private void EnsureScrollBars()
     {
-        // There's a bug in VirtualizingStackPanel. Scroll bars do not display correctly
-        // This hack fixes that by scrolling into view a page that's not realised
         int currentPage = SelectedPageIndex.HasValue ? SelectedPageIndex.Value - 1 : 0;
-        if (currentPage >= GetMinPageIndex() && currentPage <= GetMaxPageIndex())
-        {
-            // Current page is realised
-            if (currentPage != 0)
-            {
-                ScrollIntoView(0);
-            }
-            else if (currentPage != PageCount - 1)
-            {
-                ScrollIntoView(PageCount - 1);
-            }
 
-            ScrollIntoView(currentPage);
-        }
-        else
+        try
         {
+            _isSettingPageVisibility = true;
+
+            // There's a bug in VirtualizingStackPanel. Scroll bars do not display correctly
+            // This hack fixes that by scrolling into view a page that's not realised
+            if (currentPage >= GetMinPageIndex() && currentPage <= GetMaxPageIndex())
+            {
+                // Current page is realised
+                if (currentPage != 0)
+                {
+                    ScrollIntoView(0);
+                }
+                else if (currentPage != PageCount - 1)
+                {
+                    ScrollIntoView(PageCount - 1);
+                }
+            }
+        }
+        finally
+        {
+            _isSettingPageVisibility = false;
+
             ScrollIntoView(currentPage);
         }
     }
