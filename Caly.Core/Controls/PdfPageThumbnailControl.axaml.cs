@@ -133,7 +133,6 @@ namespace Caly.Core.Controls
         public override void Render(DrawingContext context)
         {
             base.Render(context);
-            context.FillRectangle(Brushes.White, Bounds);
 
             try
             {
