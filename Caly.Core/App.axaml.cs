@@ -42,7 +42,7 @@ namespace Caly.Core
         private IPdfDocumentsService _pdfDocumentsService;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        public new static App? Current => Application.Current as App;
+        public static new App? Current => Application.Current as App;
 
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/> instance to resolve application services.

@@ -28,8 +28,6 @@ using Caly.Core.ViewModels;
 
 namespace Caly.Core.Controls
 {
-    [TemplatePart("PART_ScrollViewer", typeof(IScrollable))]
-    [TemplatePart("PART_LayoutTransformControl", typeof(CalyLayoutTransformControl))]
     [TemplatePart("PART_PdfPageItemsControl", typeof(PdfPageItemsControl))]
     public class PdfDocumentControl : CalyTemplatedControl
     {
@@ -160,6 +158,8 @@ namespace Caly.Core.Controls
                     return;
                 }
 
+                double dZoom = newZoom / (double?)change.OldValue ?? 1.0;
+
                 var pixelPoint = new PixelPoint();
                 if (!_pdfPageItemsControl.DesiredSize.IsEmpty())
                 {
@@ -172,11 +172,9 @@ namespace Caly.Core.Controls
                     pixelPoint = new PixelPoint((int)(w / 2.0), (int)(h / 2.0));
                 }
 
-                var point = _pdfPageItemsControl.LayoutTransformControl.PointToClient(pixelPoint);
+                Point point = _pdfPageItemsControl.LayoutTransformControl.PointToClient(pixelPoint);
 
-                double oldZoom = (double?)change.OldValue ?? 1.0;
-                double dZoom = newZoom / oldZoom;
-                _pdfPageItemsControl?.ZoomTo(dZoom, point);
+                _pdfPageItemsControl.ZoomTo(dZoom, point);
             }
         }
 
@@ -202,12 +200,12 @@ namespace Caly.Core.Controls
         /// <returns>The page control, or <c>null</c> if not found.</returns>
         public PdfPageItem? GetPdfPageItem(int pageNumber)
         {
-            return _pdfPageItemsControl!.GetPdfPageItem(pageNumber);
+            return _pdfPageItemsControl?.GetPdfPageItem(pageNumber);
         }
 
         public PdfPageItem? GetPdfPageItemOver(PointerEventArgs e)
         {
-            return _pdfPageItemsControl!.GetPdfPageItemOver(e);
+            return _pdfPageItemsControl?.GetPdfPageItemOver(e);
         }
     }
 }
