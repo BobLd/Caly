@@ -248,16 +248,26 @@ namespace Caly.Core.Utilities
         {
             throw new Exception();
             /*
-            var baseLinePoints = letters.Take(length).SelectMany(r => new[]
-            {
-                r.BottomLeft,
-                r.BottomRight,
-            }).ToArray();
+            Span<PdfPoint> baseLinePoints = (length * 2) < 128 ? stackalloc PdfPoint[length * 2]
+                : new PdfPoint[length * 2]; // This allocates and could be improved using ArrayPool<T>
 
             // Fitting a line through the base lines points
             // to find the orientation (slope)
-            double x0 = baseLinePoints.Average(p => p.X);
-            double y0 = baseLinePoints.Average(p => p.Y);
+            double x0 = 0;
+            double y0 = 0;
+
+            for (var i = 0; i < length; ++i)
+            {
+                var r = letters[i];
+                baseLinePoints[i * 2] = r.BottomLeft;
+                baseLinePoints[i * 2 + 1] = r.BottomRight;
+                x0 += r.BottomLeft.X + r.BottomRight.X;
+                y0 += r.BottomLeft.Y + r.BottomRight.Y;
+            }
+
+            x0 /= (length * 2);
+            y0 /= (length * 2);
+
             double sumProduct = 0;
             double sumDiffSquaredX = 0;
 
