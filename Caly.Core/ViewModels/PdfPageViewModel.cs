@@ -138,7 +138,22 @@ namespace Caly.Core.ViewModels
 
                 try
                 {
-                    await LoadPagePictureLocal();
+                    _cts.Token.ThrowIfCancellationRequested();
+
+                    await LoadPagePictureInternal();
+
+                    if (PdfPicture is not null)
+                    {
+                        float? w = PdfPicture?.Item?.CullRect.Width;
+                        float? h = PdfPicture?.Item?.CullRect.Height;
+                        if (w.HasValue && h.HasValue)
+                        {
+                            Width = w.Value;
+                            Height = h.Value;
+                        }
+
+                        await LoadInteractiveLayer(_cts.Token);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -156,7 +171,7 @@ namespace Caly.Core.ViewModels
             });
         }
 
-        private async Task LoadPagePictureLocal()
+        private async Task LoadPagePictureInternal()
         {
             if (PdfPicture?.Item is not null)
             {
@@ -166,19 +181,6 @@ namespace Caly.Core.ViewModels
             _cts.Token.ThrowIfCancellationRequested();
 
             PdfPicture = await _pdfService.GetRenderPageAsync(PageNumber, _cts.Token);
-
-            if (PdfPicture is not null)
-            {
-                float? w = PdfPicture?.Item.CullRect.Width;
-                float? h = PdfPicture?.Item.CullRect.Height;
-                if (w.HasValue && h.HasValue)
-                {
-                    Width = w.Value;
-                    Height = h.Value;
-                }
-
-                await LoadInteractiveLayer(_cts.Token);
-            }
         }
 
         [RelayCommand]
@@ -243,7 +245,7 @@ namespace Caly.Core.ViewModels
 
                     if (PdfPicture is null)
                     {
-                        await LoadPagePictureLocal();
+                        await LoadPagePictureInternal();
                         if (PdfPicture is null)
                         {
                             return;
