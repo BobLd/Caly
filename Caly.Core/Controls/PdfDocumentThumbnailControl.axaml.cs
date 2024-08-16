@@ -30,7 +30,18 @@ namespace Caly.Core.Controls
         {
             base.OnApplyTemplate(e);
             _listBox = e.NameScope.FindFromNameScope<ListBox>("PART_ListBox");
-            _listBox.ContainerPrepared += _listBox_ContainerPrepared;
+            _listBox.ContainerPrepared += _listBox_ContainerPrepared; // TODO - Unsubscribe
+            _listBox.ContainerClearing += _listBox_ContainerClearing;
+        }
+
+        private async void _listBox_ContainerClearing(object? sender, ContainerClearingEventArgs e)
+        {
+            if (e.Container.DataContext is PdfPageViewModel vm)
+            {
+                System.Diagnostics.Debug.WriteLine($"_listBox_ContainerClearing: {vm.PageNumber}.");
+                await vm.UnloadThumbnailCommand.ExecuteAsync(null);
+                // Seems like there's a bug in ListBox when scrolling up/down via arrows. some visible containers are cleared (whereas they should not)
+            }
         }
 
         private async void _listBox_ContainerPrepared(object? sender, ContainerPreparedEventArgs e)

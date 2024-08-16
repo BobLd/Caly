@@ -117,16 +117,10 @@ namespace Caly.Core.Controls
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
             base.OnPropertyChanged(change);
+
             if (change.Property == ThumbnailHeightProperty || change.Property == PageHeightProperty)
             {
                 UpdateScaleMatrix();
-            }
-            else if (change.Property == UnloadThumbnailCommandProperty)
-            {
-                if (change.OldValue is ICommand o)
-                {
-                    o.Execute(null);
-                }
             }
         }
 

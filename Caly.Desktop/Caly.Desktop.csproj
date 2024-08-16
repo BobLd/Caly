@@ -14,6 +14,18 @@
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-7-0#trimming-framework-library-features-->
 	<!--https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0-->
 
+	<!--
+	<ItemGroup>
+		<DirectPInvoke Include="libSkiaSharp" />
+		<NativeLibrary Include="$(MSBuildThisFileDirectory)bin\Release\net8.0\win-x64\libSkiaSharp.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+		<NativeLibrary Include="Dependency.a" Condition="!$(RuntimeIdentifier.StartsWith('win'))" />
+
+		<DirectPInvoke Include="libHarfBuzzSharp" />
+		<NativeLibrary Include="$(MSBuildThisFileDirectory)bin\Release\net8.0\win-x64\libHarfBuzzSharp.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+		<NativeLibrary Include="Dependency.a" Condition="!$(RuntimeIdentifier.StartsWith('win'))" />
+	</ItemGroup>
+	-->
+	
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<!-- Only for Release config to allow Avalonia design mode -->
 		<PublishAot>true</PublishAot>
