@@ -220,7 +220,7 @@ namespace Caly.Pdf.Layout
             int[][] adjacency = new int[edges.Length][];
             for (int i = 0; i < edges.Length; i++)
             {
-                HashSet<int> matches = new HashSet<int>();
+                HashSet<int> matches = new HashSet<int>(6);
                 if (edges[i] != -1) matches.Add(edges[i]);
                 for (int j = 0; j < edges.Length; j++)
                 {
@@ -229,7 +229,7 @@ namespace Caly.Pdf.Layout
                 adjacency[i] = matches.ToArray();
             }
 
-            List<HashSet<int>> groupedIndexes = new List<HashSet<int>>();
+            List<HashSet<int>> groupedIndexes = new List<HashSet<int>>(edges.Length <= 1 ? 1 : edges.Length / 2);
             bool[] isDone = new bool[edges.Length];
 
             for (int p = 0; p < edges.Length; p++)
@@ -284,8 +284,8 @@ namespace Caly.Pdf.Layout
         /// </summary>
         private static HashSet<int> DfsIterative(int s, int[][] adj, ref bool[] isDone)
         {
-            HashSet<int> group = new HashSet<int>();
-            Stack<int> S = new Stack<int>();
+            HashSet<int> group = new HashSet<int>(6);
+            Stack<int> S = new Stack<int>(6);
             S.Push(s);
 
             while (S.Count > 0)
