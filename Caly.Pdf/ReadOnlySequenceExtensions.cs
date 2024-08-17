@@ -31,11 +31,28 @@ namespace Caly.Pdf
                 return sequence.FirstSpan.IsWhiteSpace();
             }
 
-            Span<char> output = sequence.Length < 512 ? stackalloc char[(int)sequence.Length] : new char[sequence.Length];
+            const int maxStackSize = 512;
 
-            sequence.CopyTo(output);
+            char[]? rentedFromPool = null;
+            Span<char> buffer = sequence.Length <= maxStackSize
+                ? stackalloc char[maxStackSize]
+                : rentedFromPool = ArrayPool<char>.Shared.Rent((int)sequence.Length);
 
-            return MemoryExtensions.IsWhiteSpace(output);
+            Span<char> output = buffer.Slice(0, (int)sequence.Length);
+
+            try
+            {
+                sequence.CopyTo(output);
+
+                return MemoryExtensions.IsWhiteSpace(output);
+            }
+            finally
+            {
+                if (rentedFromPool is not null)
+                {
+                    ArrayPool<char>.Shared.Return(rentedFromPool);
+                }
+            }
         }
     }
 }

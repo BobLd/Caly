@@ -15,7 +15,6 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Text;
 
 namespace Caly.Core.Utilities
@@ -24,13 +23,30 @@ namespace Caly.Core.Utilities
     {
         public static void Append(this StringBuilder sb, ReadOnlySequence<char> sequence)
         {
-            Span<char> output = sequence.Length < 512 ? stackalloc char[(int)sequence.Length] : new char[sequence.Length];
+            const int maxStackSize = 512;
 
-            sequence.CopyTo(output);
+            char[]? rentedFromPool = null;
+            Span<char> buffer = sequence.Length <= maxStackSize
+                ? stackalloc char[maxStackSize]
+                : rentedFromPool = ArrayPool<char>.Shared.Rent((int)sequence.Length);
 
-            if (!output.IsEmpty && !MemoryExtensions.IsWhiteSpace(output))
+            Span<char> output = buffer.Slice(0, (int)sequence.Length);
+
+            try
             {
-                sb.Append(output);
+                sequence.CopyTo(output);
+
+                if (!output.IsEmpty && !MemoryExtensions.IsWhiteSpace(output))
+                {
+                    sb.Append(output);
+                }
+            }
+            finally
+            {
+                if (rentedFromPool is not null)
+                {
+                    ArrayPool<char>.Shared.Return(rentedFromPool);
+                }
             }
         }
     }

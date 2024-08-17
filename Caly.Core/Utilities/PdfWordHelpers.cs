@@ -55,10 +55,17 @@ namespace Caly.Core.Utilities
 
             int length = endIndex - startIndex + 1;
 
-            Span<PdfRectangle> rects = length < 128 ? stackalloc PdfRectangle[length]
-                : new PdfRectangle[length]; // This allocates and could be improved using ArrayPool<T>
+            if (length == 1)
+            {
+                return GetGeometry(word.LettersBoundingBoxes[0], true);
+            }
 
-            //PdfRectangle[] rects = _rectPool.Rent(length);
+            const int maxStackSize = 128;
+
+            PdfRectangle[]? rentedFromPool = null;
+            Span<PdfRectangle> rects = length <= maxStackSize
+                ? stackalloc PdfRectangle[maxStackSize]
+                : rentedFromPool = ArrayPool<PdfRectangle>.Shared.Rent(length);
 
             try
             {
@@ -67,30 +74,28 @@ namespace Caly.Core.Utilities
                     rects[l - startIndex] = word.LettersBoundingBoxes[l];
                 }
 
-                if (length == 1)
-                {
-                    return GetGeometry(rects[0], true);
-                }
-
                 PdfRectangle bbox = word.TextOrientation switch
                 {
-                    TextOrientation.Horizontal => GetBoundingBoxH(rects, length),
-                    TextOrientation.Rotate180 => GetBoundingBox180(rects, length),
-                    TextOrientation.Rotate90 => GetBoundingBox90(rects, length),
-                    TextOrientation.Rotate270 => GetBoundingBox270(rects, length),
-                    _ => GetBoundingBoxOther(rects, length)
+                    TextOrientation.Horizontal => GetBoundingBoxH(rects.Slice(0, length)),
+                    TextOrientation.Rotate180 => GetBoundingBox180(rects.Slice(0, length)),
+                    TextOrientation.Rotate90 => GetBoundingBox90(rects.Slice(0, length)),
+                    TextOrientation.Rotate270 => GetBoundingBox270(rects.Slice(0, length)),
+                    _ => GetBoundingBoxOther(rects.Slice(0, length))
                 };
 
                 return GetGeometry(bbox, true);
             }
             finally
             {
-                //_rectPool.Return(rects);
+                if (rentedFromPool is not null)
+                {
+                    ArrayPool<PdfRectangle>.Shared.Return(rentedFromPool);
+                }
             }
         }
 
         #region Bounding box - Same as PdfWord
-        private static PdfRectangle GetBoundingBoxH(ReadOnlySpan<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBoxH(ReadOnlySpan<PdfRectangle> letters)
         {
             var blX = double.MaxValue;
             var trX = double.MinValue;
@@ -99,7 +104,7 @@ namespace Caly.Core.Utilities
             var blY = double.MinValue;
             var trY = double.MaxValue;
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < letters.Length; i++)
             {
                 var letter = letters[i];
 
@@ -128,7 +133,7 @@ namespace Caly.Core.Utilities
             return new PdfRectangle(blX, blY, trX, trY);
         }
 
-        private static PdfRectangle GetBoundingBox180(ReadOnlySpan<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBox180(ReadOnlySpan<PdfRectangle> letters)
         {
             var blX = double.MinValue;
             var trX = double.MaxValue;
@@ -137,7 +142,7 @@ namespace Caly.Core.Utilities
             var blY = double.MaxValue;
             var trY = double.MinValue;
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < letters.Length; i++)
             {
                 var letter = letters[i];
 
@@ -166,7 +171,7 @@ namespace Caly.Core.Utilities
             return new PdfRectangle(blX, blY, trX, trY);
         }
 
-        private static PdfRectangle GetBoundingBox90(ReadOnlySpan<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBox90(ReadOnlySpan<PdfRectangle> letters)
         {
             var b = double.MaxValue; // x
             var t = double.MinValue; // x
@@ -175,7 +180,7 @@ namespace Caly.Core.Utilities
             var r = double.MinValue; // y
             var l = double.MaxValue; // y
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < letters.Length; i++)
             {
                 var letter = letters[i];
 
@@ -205,7 +210,7 @@ namespace Caly.Core.Utilities
                                     new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
-        private static PdfRectangle GetBoundingBox270(ReadOnlySpan<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBox270(ReadOnlySpan<PdfRectangle> letters)
         {
             var t = double.MaxValue;
             var b = double.MinValue;
@@ -214,7 +219,7 @@ namespace Caly.Core.Utilities
             var l = double.MinValue; // y
             var r = double.MaxValue; // y
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < letters.Length; i++)
             {
                 var letter = letters[i];
 
@@ -244,7 +249,7 @@ namespace Caly.Core.Utilities
                                     new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
-        private static PdfRectangle GetBoundingBoxOther(ReadOnlySpan<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBoxOther(ReadOnlySpan<PdfRectangle> letters)
         {
             throw new Exception();
             /*
