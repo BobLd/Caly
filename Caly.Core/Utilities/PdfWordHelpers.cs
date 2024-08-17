@@ -90,7 +90,7 @@ namespace Caly.Core.Utilities
         }
 
         #region Bounding box - Same as PdfWord
-        private static PdfRectangle GetBoundingBoxH(Span<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBoxH(ReadOnlySpan<PdfRectangle> letters, int length)
         {
             var blX = double.MaxValue;
             var trX = double.MinValue;
@@ -128,7 +128,7 @@ namespace Caly.Core.Utilities
             return new PdfRectangle(blX, blY, trX, trY);
         }
 
-        private static PdfRectangle GetBoundingBox180(Span<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBox180(ReadOnlySpan<PdfRectangle> letters, int length)
         {
             var blX = double.MinValue;
             var trX = double.MaxValue;
@@ -166,7 +166,7 @@ namespace Caly.Core.Utilities
             return new PdfRectangle(blX, blY, trX, trY);
         }
 
-        private static PdfRectangle GetBoundingBox90(Span<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBox90(ReadOnlySpan<PdfRectangle> letters, int length)
         {
             var b = double.MaxValue; // x
             var t = double.MinValue; // x
@@ -205,7 +205,7 @@ namespace Caly.Core.Utilities
                                     new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
-        private static PdfRectangle GetBoundingBox270(Span<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBox270(ReadOnlySpan<PdfRectangle> letters, int length)
         {
             var t = double.MaxValue;
             var b = double.MinValue;
@@ -244,7 +244,7 @@ namespace Caly.Core.Utilities
                                     new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
-        private static PdfRectangle GetBoundingBoxOther(Span<PdfRectangle> letters, int length)
+        private static PdfRectangle GetBoundingBoxOther(ReadOnlySpan<PdfRectangle> letters, int length)
         {
             throw new Exception();
             /*
