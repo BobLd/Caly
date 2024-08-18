@@ -1,4 +1,5 @@
-﻿using UglyToad.PdfPig.Core;
+﻿using System.Buffers;
+using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 
 namespace Caly.Pdf.Layout
@@ -215,86 +216,62 @@ namespace Caly.Pdf.Layout
         /// </summary>
         /// <param name="edges">The graph. edges[i] = j indicates that there is an edge between i and j.</param>
         /// <returns>A List of HashSets containing the grouped indexes.</returns>
-        internal static List<HashSet<int>> GroupIndexes(int[] edges)
+        internal static List<List<int>> GroupIndexes(int[] edges)
         {
             int[][] adjacency = new int[edges.Length][];
             for (int i = 0; i < edges.Length; i++)
             {
-                HashSet<int> matches = new HashSet<int>(6);
+                var matches = new List<int>();
                 if (edges[i] != -1) matches.Add(edges[i]);
                 for (int j = 0; j < edges.Length; j++)
                 {
-                    if (edges[j] == i) matches.Add(j);
-                }
-                adjacency[i] = matches.ToArray();
-            }
-
-            List<HashSet<int>> groupedIndexes = new List<HashSet<int>>(edges.Length <= 1 ? 1 : edges.Length / 2);
-            bool[] isDone = new bool[edges.Length];
-
-            for (int p = 0; p < edges.Length; p++)
-            {
-                if (isDone[p]) continue;
-                groupedIndexes.Add(DfsIterative(p, adjacency, ref isDone));
-            }
-            return groupedIndexes;
-        }
-
-        /// <summary>
-        /// Group elements using Depth-first search.
-        /// <para>https://en.wikipedia.org/wiki/Depth-first_search</para>
-        /// </summary>
-        /// <param name="edges">The graph. edges[i] = [j, k, l, ...] indicates that there is an edge between i and each element j, k, l, ...</param>
-        /// <returns>A List of HashSets containing the grouped indexes.</returns>
-        internal static List<HashSet<int>> GroupIndexes(int[][] edges)
-        {
-            int[][] adjacency = new int[edges.Length][];
-            for (int i = 0; i < edges.Length; i++)
-            {
-                HashSet<int> matches = new HashSet<int>();
-                for (int j = 0; j < edges[i].Length; j++)
-                {
-                    if (edges[i][j] != -1) matches.Add(edges[i][j]);
-                }
-
-                for (int j = 0; j < edges.Length; j++)
-                {
-                    for (int k = 0; k < edges[j].Length; k++)
+                    if (i != j && edges[j] == i)
                     {
-                        if (edges[j][k] == i) matches.Add(j);
+                        matches.Add(j);
                     }
                 }
                 adjacency[i] = matches.ToArray();
             }
 
-            List<HashSet<int>> groupedIndexes = new List<HashSet<int>>();
-            bool[] isDone = new bool[edges.Length];
+            var groupedIndexes = new List<List<int>>(edges.Length <= 1 ? 1 : edges.Length / 2);
+            bool[] buffer = ArrayPool<bool>.Shared.Rent(edges.Length);
 
-            for (int p = 0; p < edges.Length; p++)
+            try
             {
-                if (isDone[p]) continue;
-                groupedIndexes.Add(DfsIterative(p, adjacency, ref isDone));
-            }
-            return groupedIndexes;
-        }
+                Span<bool> isDone = buffer.AsSpan(0, edges.Length);
+                isDone.Clear();
 
+                for (int p = 0; p < edges.Length; ++p)
+                {
+                    if (isDone[p]) continue;
+                    groupedIndexes.Add(DfsIterative(p, adjacency, ref isDone));
+                }
+                return groupedIndexes;
+            }
+            finally
+            {
+                ArrayPool<bool>.Shared.Return(buffer);
+            }
+        }
+        
         /// <summary>
         /// Depth-first search
         /// <para>https://en.wikipedia.org/wiki/Depth-first_search</para>
         /// </summary>
-        private static HashSet<int> DfsIterative(int s, int[][] adj, ref bool[] isDone)
+        private static List<int> DfsIterative(int s, int[][] adj, ref Span<bool> isDone)
         {
-            HashSet<int> group = new HashSet<int>(6);
+            var group = new List<int>(6);
             Stack<int> S = new Stack<int>(6);
             S.Push(s);
 
             while (S.Count > 0)
             {
                 var u = S.Pop();
-                if (!isDone[u])
+                ref bool done = ref isDone[u];
+                if (!done)
                 {
                     group.Add(u);
-                    isDone[u] = true;
+                    done = true;
                     foreach (var v in adj[u])
                     {
                         S.Push(v);

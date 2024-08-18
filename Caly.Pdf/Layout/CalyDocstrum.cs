@@ -2,7 +2,6 @@
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
-using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 
 namespace Caly.Pdf.Layout
 {
