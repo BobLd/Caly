@@ -111,7 +111,7 @@ namespace Caly.Pdf.TextLayer
                 {
                     // TODO: union of bounding boxes.
                     letters.Remove(attachTo);
-                    letter = attachTo with { Value = newLetter.AsMemory() };
+                    letter = new PdfLetter(newLetter.AsMemory(), attachTo.BoundingBox, attachTo.PointSize, attachTo.TextSequence);
                 }
             }
 
