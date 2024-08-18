@@ -18,9 +18,9 @@ using UglyToad.PdfPig.Core;
 
 namespace Caly.Pdf.Models
 {
-    public sealed record PdfLetter : IPdfTextElement
+    public sealed class PdfLetter : IPdfTextElement
     {
-        public ReadOnlyMemory<char> Value { get; init; }
+        public ReadOnlyMemory<char> Value { get; }
 
         public TextOrientation TextOrientation { get; }
 
