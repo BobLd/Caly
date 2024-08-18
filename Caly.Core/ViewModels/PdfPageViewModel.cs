@@ -87,7 +87,7 @@ namespace Caly.Core.ViewModels
         /// </summary>
         public PdfPageViewModel()
         {
-            if (Design.IsDesignMode)
+            if (Avalonia.Controls.Design.IsDesignMode)
             {
                 //_pdfService = DummyPdfPageService.Instance; // TODO
             }

@@ -14,18 +14,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Styling;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
-using UglyToad.PdfPig.Geometry;
 
 namespace Caly.Core.Utilities
 {
@@ -56,17 +50,19 @@ namespace Caly.Core.Utilities
             System.Diagnostics.Debug.Assert(startIndex > -1);
             System.Diagnostics.Debug.Assert(endIndex > -1);
             System.Diagnostics.Debug.Assert(startIndex <= endIndex);
+            
+            int length = endIndex - startIndex + 1;
 
-            PdfRectangle[] rects = new PdfRectangle[endIndex - startIndex + 1];
+            if (length == 1)
+            {
+                return GetGeometry(word.LettersBoundingBoxes[0], true);
+            }
+
+            Span<PdfRectangle> rects = length <= 128 ? stackalloc PdfRectangle[length] : new PdfRectangle[length];
 
             for (int l = startIndex; l <= endIndex; ++l)
             {
                 rects[l - startIndex] = word.LettersBoundingBoxes[l];
-            }
-
-            if (rects.Length == 1)
-            {
-                return GetGeometry(rects[0], true);
             }
 
             PdfRectangle bbox = word.TextOrientation switch
@@ -82,7 +78,7 @@ namespace Caly.Core.Utilities
         }
 
         #region Bounding box - Same as PdfWord
-        private static PdfRectangle GetBoundingBoxH(PdfRectangle[] letters)
+        private static PdfRectangle GetBoundingBoxH(ReadOnlySpan<PdfRectangle> rects)
         {
             var blX = double.MaxValue;
             var trX = double.MinValue;
@@ -91,36 +87,36 @@ namespace Caly.Core.Utilities
             var blY = double.MinValue;
             var trY = double.MaxValue;
 
-            for (var i = 0; i < letters.Length; i++)
+            for (var i = 0; i < rects.Length; ++i)
             {
-                var letter = letters[i];
+                var rect = rects[i];
 
-                if (letter.BottomLeft.X < blX)
+                if (rect.BottomLeft.X < blX)
                 {
-                    blX = letter.BottomLeft.X;
+                    blX = rect.BottomLeft.X;
                 }
 
-                if (letter.BottomLeft.Y > blY)
+                if (rect.BottomLeft.Y > blY)
                 {
-                    blY = letter.BottomLeft.Y;
+                    blY = rect.BottomLeft.Y;
                 }
 
-                var right = letter.BottomLeft.X + letter.Width;
+                var right = rect.BottomLeft.X + rect.Width;
                 if (right > trX)
                 {
                     trX = right;
                 }
 
-                if (letter.TopLeft.Y < trY)
+                if (rect.TopLeft.Y < trY)
                 {
-                    trY = letter.TopLeft.Y;
+                    trY = rect.TopLeft.Y;
                 }
             }
 
             return new PdfRectangle(blX, blY, trX, trY);
         }
 
-        private static PdfRectangle GetBoundingBox180(PdfRectangle[] letters)
+        private static PdfRectangle GetBoundingBox180(ReadOnlySpan<PdfRectangle> rects)
         {
             var blX = double.MinValue;
             var trX = double.MaxValue;
@@ -129,36 +125,36 @@ namespace Caly.Core.Utilities
             var blY = double.MaxValue;
             var trY = double.MinValue;
 
-            for (var i = 0; i < letters.Length; i++)
+            for (var i = 0; i < rects.Length; ++i)
             {
-                var letter = letters[i];
+                var rect = rects[i];
 
-                if (letter.BottomLeft.X > blX)
+                if (rect.BottomLeft.X > blX)
                 {
-                    blX = letter.BottomLeft.X;
+                    blX = rect.BottomLeft.X;
                 }
 
-                if (letter.BottomLeft.Y < blY)
+                if (rect.BottomLeft.Y < blY)
                 {
-                    blY = letter.BottomLeft.Y;
+                    blY = rect.BottomLeft.Y;
                 }
 
-                var right = letter.BottomLeft.X - letter.Width;
+                var right = rect.BottomLeft.X - rect.Width;
                 if (right < trX)
                 {
                     trX = right;
                 }
 
-                if (letter.TopRight.Y > trY)
+                if (rect.TopRight.Y > trY)
                 {
-                    trY = letter.TopRight.Y;
+                    trY = rect.TopRight.Y;
                 }
             }
 
             return new PdfRectangle(blX, blY, trX, trY);
         }
 
-        private static PdfRectangle GetBoundingBox90(PdfRectangle[] letters)
+        private static PdfRectangle GetBoundingBox90(ReadOnlySpan<PdfRectangle> rects)
         {
             var b = double.MaxValue; // x
             var t = double.MinValue; // x
@@ -167,29 +163,29 @@ namespace Caly.Core.Utilities
             var r = double.MinValue; // y
             var l = double.MaxValue; // y
 
-            for (var i = 0; i < letters.Length; i++)
+            for (var i = 0; i < rects.Length; ++i)
             {
-                var letter = letters[i];
+                var rect = rects[i];
 
-                if (letter.BottomLeft.X < b)
+                if (rect.BottomLeft.X < b)
                 {
-                    b = letter.BottomLeft.X;
+                    b = rect.BottomLeft.X;
                 }
 
-                if (letter.BottomRight.Y > r)
+                if (rect.BottomRight.Y > r)
                 {
-                    r = letter.BottomRight.Y;
+                    r = rect.BottomRight.Y;
                 }
 
-                var right = letter.BottomLeft.X + letter.Height;
+                var right = rect.BottomLeft.X + rect.Height;
                 if (right > t)
                 {
                     t = right;
                 }
 
-                if (letter.BottomLeft.Y < l)
+                if (rect.BottomLeft.Y < l)
                 {
-                    l = letter.BottomLeft.Y;
+                    l = rect.BottomLeft.Y;
                 }
             }
 
@@ -197,7 +193,7 @@ namespace Caly.Core.Utilities
                                     new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
-        private static PdfRectangle GetBoundingBox270(PdfRectangle[] letters)
+        private static PdfRectangle GetBoundingBox270(ReadOnlySpan<PdfRectangle> rects)
         {
             var t = double.MaxValue;
             var b = double.MinValue;
@@ -206,29 +202,29 @@ namespace Caly.Core.Utilities
             var l = double.MinValue; // y
             var r = double.MaxValue; // y
 
-            for (var i = 0; i < letters.Length; i++)
+            for (var i = 0; i < rects.Length; ++i)
             {
-                var letter = letters[i];
+                var rect = rects[i];
 
-                if (letter.BottomLeft.X > b)
+                if (rect.BottomLeft.X > b)
                 {
-                    b = letter.BottomLeft.X;
+                    b = rect.BottomLeft.X;
                 }
 
-                if (letter.BottomLeft.Y > l)
+                if (rect.BottomLeft.Y > l)
                 {
-                    l = letter.BottomLeft.Y;
+                    l = rect.BottomLeft.Y;
                 }
 
-                var right = letter.BottomLeft.X - letter.Height;
+                var right = rect.BottomLeft.X - rect.Height;
                 if (right < t)
                 {
                     t = right;
                 }
 
-                if (letter.BottomRight.Y < r)
+                if (rect.BottomRight.Y < r)
                 {
-                    r = letter.BottomRight.Y;
+                    r = rect.BottomRight.Y;
                 }
             }
 
@@ -236,22 +232,34 @@ namespace Caly.Core.Utilities
                                     new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
-        private static PdfRectangle GetBoundingBoxOther(PdfRectangle[] letters)
+        private static PdfRectangle GetBoundingBoxOther(ReadOnlySpan<PdfRectangle> rects)
         {
-            var baseLinePoints = letters.SelectMany(r => new[]
-            {
-                r.BottomLeft,
-                r.BottomRight,
-            }).ToList();
+            Span<PdfPoint> baseLinePoints = rects.Length * 2 <= 256
+                ? stackalloc PdfPoint[rects.Length * 2]
+                : new PdfPoint[rects.Length * 2];
 
-            // Fitting a line through the base lines points
+            // Fitting a line through the baselines points
             // to find the orientation (slope)
-            double x0 = baseLinePoints.Average(p => p.X);
-            double y0 = baseLinePoints.Average(p => p.Y);
+            double x0 = 0;
+            double y0 = 0;
+
+            for (int i = 0; i < rects.Length; ++i)
+            {
+                var r = rects[i];
+                baseLinePoints[2 * i] = r.BottomLeft;
+                baseLinePoints[2 * i + 1] = r.BottomRight;
+
+                x0 += r.BottomLeft.X + r.BottomRight.X;
+                y0 += r.BottomLeft.Y + r.BottomRight.Y;
+            }
+
+            x0 /= baseLinePoints.Length;
+            y0 /= baseLinePoints.Length;
+
             double sumProduct = 0;
             double sumDiffSquaredX = 0;
 
-            for (int i = 0; i < baseLinePoints.Count; i++)
+            for (int i = 0; i < baseLinePoints.Length; ++i)
             {
                 var point = baseLinePoints[i];
                 var x_diff = point.X - x0;
@@ -275,20 +283,30 @@ namespace Caly.Core.Utilities
                 cos, -sin, 0,
                 sin, cos, 0,
                 0, 0, 1);
+            
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
 
-            var transformedPoints = letters.SelectMany(r => new[]
+            void UpdateMinMax(PdfPoint point)
             {
-                r.BottomLeft,
-                r.BottomRight,
-                r.TopLeft,
-                r.TopRight
-            }).Distinct().Select(p => inverseRotation.Transform(p));
+                if (point.X < minX) minX = point.X;
+                if (point.Y < minY) minY = point.Y;
+                if (point.X > maxX) maxX = point.X;
+                if (point.Y > maxY) maxY = point.Y;
+            }
+
+            foreach (var r in rects)
+            {
+                UpdateMinMax(inverseRotation.Transform(r.BottomLeft));
+                UpdateMinMax(inverseRotation.Transform(r.BottomRight));
+                UpdateMinMax(inverseRotation.Transform(r.TopLeft));
+                UpdateMinMax(inverseRotation.Transform(r.TopRight));
+            }
 
             // Inverse Y axis - (0, 0) is top left
-            var aabb = new PdfRectangle(transformedPoints.Min(p => p.X),
-                                        transformedPoints.Max(p => p.Y),
-                                        transformedPoints.Max(p => p.X),
-                                        transformedPoints.Min(p => p.Y));
+            var aabb = new PdfRectangle(minX, maxY, maxX, minY);
 
             // Rotate back the AABB to obtain to oriented bounding box (OBB)
             var rotateBack = new TransformationMatrix(
@@ -304,12 +322,12 @@ namespace Caly.Core.Utilities
 
             // Find the orientation of the OBB, using the baseline angle
             // Assumes word order is correct
-            var firstLetter = letters[0];
-            var lastLetter = letters[letters.Length - 1];
+            var firstRect = rects[0];
+            var lastRect = rects[rects.Length - 1];
 
             var baseLineAngle = Math.Atan2(
-                lastLetter.BottomRight.Y - firstLetter.BottomLeft.Y,
-                lastLetter.BottomRight.X - firstLetter.BottomLeft.X) * 180 / Math.PI;
+                lastRect.BottomRight.Y - firstRect.BottomLeft.Y,
+                lastRect.BottomRight.X - firstRect.BottomLeft.X) * 180 / Math.PI;
 
             double deltaAngle = Math.Abs(Distances.BoundAngle180(obb.Rotation - baseLineAngle));
             double deltaAngle1 = Math.Abs(Distances.BoundAngle180(obb1.Rotation - baseLineAngle));
