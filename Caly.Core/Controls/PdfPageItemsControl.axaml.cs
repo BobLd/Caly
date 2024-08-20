@@ -16,7 +16,7 @@ using Caly.Core.ViewModels;
 namespace Caly.Core.Controls;
 
 [TemplatePart("PART_ScrollViewer", typeof(ScrollViewer))]
-[TemplatePart("PART_LayoutTransformControl", typeof(CalyLayoutTransformControl))]
+[TemplatePart("PART_LayoutTransformControl", typeof(LayoutTransformControl))]
 public class PdfPageItemsControl : ItemsControl
 {
     private const double _zoomFactor = 1.1;
@@ -38,8 +38,8 @@ public class PdfPageItemsControl : ItemsControl
     /// <summary>
     /// Defines the <see cref="LayoutTransformControl"/> property.
     /// </summary>
-    public static readonly DirectProperty<PdfPageItemsControl, CalyLayoutTransformControl?> LayoutTransformControlProperty =
-        AvaloniaProperty.RegisterDirect<PdfPageItemsControl, CalyLayoutTransformControl?>(nameof(LayoutTransformControl), o => o.LayoutTransformControl);
+    public static readonly DirectProperty<PdfPageItemsControl, LayoutTransformControl?> LayoutTransformControlProperty =
+        AvaloniaProperty.RegisterDirect<PdfPageItemsControl, LayoutTransformControl?>(nameof(LayoutTransformControl), o => o.LayoutTransformControl);
 
     /// <summary>
     /// Defines the <see cref="PageCount"/> property.
@@ -67,7 +67,7 @@ public class PdfPageItemsControl : ItemsControl
     public static readonly StyledProperty<double> ZoomLevelProperty = AvaloniaProperty.Register<PdfPageItemsControl, double>(nameof(ZoomLevel), 1, defaultBindingMode: BindingMode.TwoWay);
 
     private ScrollViewer? _scroll;
-    private CalyLayoutTransformControl? _layoutTransformControl;
+    private LayoutTransformControl? _layoutTransformControl;
 
     static PdfPageItemsControl()
     {
@@ -88,7 +88,7 @@ public class PdfPageItemsControl : ItemsControl
     /// <summary>
     /// Gets the scroll information for the <see cref="ListBox"/>.
     /// </summary>
-    public CalyLayoutTransformControl? LayoutTransformControl
+    public LayoutTransformControl? LayoutTransformControl
     {
         get => _layoutTransformControl;
         private set => SetAndRaise(LayoutTransformControlProperty, ref _layoutTransformControl, value);
@@ -316,7 +316,7 @@ public class PdfPageItemsControl : ItemsControl
         base.OnApplyTemplate(e);
 
         Scroll = e.NameScope.FindFromNameScope<ScrollViewer>("PART_ScrollViewer");
-        LayoutTransformControl = e.NameScope.FindFromNameScope<CalyLayoutTransformControl>("PART_LayoutTransformControl");
+        LayoutTransformControl = e.NameScope.FindFromNameScope<LayoutTransformControl>("PART_LayoutTransformControl");
 
         Scroll.AddHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
         Scroll.AddHandler(SizeChangedEvent, (_, _) => SetPagesVisibility(), RoutingStrategies.Direct);

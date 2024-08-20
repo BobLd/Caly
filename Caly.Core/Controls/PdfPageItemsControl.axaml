@@ -39,7 +39,7 @@
                                 <KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
 							</ScrollViewer.KeyBindings>
 
-							<controls:CalyLayoutTransformControl Name="PART_LayoutTransformControl"
+							<LayoutTransformControl Name="PART_LayoutTransformControl"
 																 HorizontalAlignment="Center"
 																 VerticalAlignment="Center"
 																 ClipToBounds="True">
@@ -49,7 +49,7 @@
 												VerticalAlignment="Stretch"
 												ItemsPanel="{TemplateBinding ItemsPanel}"/>
 
-							</controls:CalyLayoutTransformControl>
+							</LayoutTransformControl>
 						</ScrollViewer>
 
 					</Grid>
