@@ -25,7 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Caly.Desktop
 {
-    class Program
+    internal class Program
     {
         private const string _appName = "Caly Pdf Reader";
 

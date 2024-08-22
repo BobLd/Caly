@@ -55,7 +55,7 @@ namespace Caly.Core.Utilities
 
             if (length == 1)
             {
-                return GetGeometry(word.LettersBoundingBoxes[0], true);
+                return GetGeometry(word.LettersBoundingBoxes[startIndex], true);
             }
 
             Span<PdfRectangle> rects = length <= 128 ? stackalloc PdfRectangle[length] : new PdfRectangle[length];
