@@ -176,6 +176,11 @@ namespace Caly.Pdf.TextLayer
         {
             var state = ResourceStore.GetExtendedGraphicsStateDictionary(stateName);
 
+            if (state is null)
+            {
+                return;
+            }
+
             // Only do text related ngs
 
             if (state.TryGet(NameToken.Font, PdfScanner, out ArrayToken? fontArray) && fontArray.Length == 2
