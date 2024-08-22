@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Caly.Core.Services.Interfaces;
 
 namespace Caly.Core.Services
@@ -36,6 +37,8 @@ namespace Caly.Core.Services
 
         public async Task<IStorageFile?> OpenPdfFileAsync()
         {
+            Debug.ThrowNotOnUiThread();
+
             TopLevel? top = TopLevel.GetTopLevel(_target);
             if (top is null)
             {
@@ -66,10 +69,18 @@ namespace Caly.Core.Services
             });
         }
 
-        public Task<IStorageFile?> TryGetFileFromPathAsync(string path)
+        public async Task<IStorageFile?> TryGetFileFromPathAsync(string path)
         {
             TopLevel? top = TopLevel.GetTopLevel(_target);
-            return top is null ? Task.FromResult<IStorageFile?>(null) : top.StorageProvider.TryGetFileFromPathAsync(path);
+
+            if (top is not null)
+            {
+                // UIThread needed for Avalonia.FreeDesktop.DBusSystemDialog
+                return await Dispatcher.UIThread.InvokeAsync(() => top.StorageProvider.TryGetFileFromPathAsync(path));
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Could not get TopLevel in FilesService.TryGetFileFromPathAsync (path: '{path}').");
+            return null;
         }
     }
 }
