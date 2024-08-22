@@ -6,7 +6,7 @@ Caly Pdf Reader is a cross-platform pdf document reader application written in C
 > The development is currently in alpha.
 
 ## Preview
-![image](https://github.com/BobLd/Caly/assets/38405645/b8a191fd-fd9f-49f3-823e-cc6acb0f2429)
+![caly preview](https://github.com/user-attachments/assets/79fba976-6534-4f9c-bdfc-6dd2d316f383)
 
 ## Goal and Roadmap
 The aim is to develop a C# cross-platform open source pdf reader/viewer application. Below is a table of the current progress:
