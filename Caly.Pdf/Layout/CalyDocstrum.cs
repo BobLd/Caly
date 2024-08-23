@@ -2,7 +2,6 @@
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
-using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 
 namespace Caly.Pdf.Layout
 {
@@ -624,25 +623,25 @@ namespace Caly.Pdf.Layout
         /// <summary>
         /// Docstrum bounding boxes page segmenter options.
         /// </summary>
-        public class CalyDocstrumOptions // : IPageSegmenterOptions
+        public sealed class CalyDocstrumOptions // : IPageSegmenterOptions
         {
             /// <summary>
             /// <inheritdoc/>
             /// Default value is -1.
             /// </summary>
-            public int MaxDegreeOfParallelism { get; set; } = -1;
+            public int MaxDegreeOfParallelism { get; init; } = -1;
 
             /// <summary>
             /// Precision when testing equalities.
             /// <para>Default value is 1e-3.</para>
             /// </summary>
-            public double Epsilon { get; set; } = 1e-3;
+            public double Epsilon { get; init; } = 1e-3;
 
             /// <summary>
             /// Angle bounds for words to be considered as neighbours on the same line.
             /// <para>Default value is -30 ≤ θ ≤ 30.</para>
             /// </summary>
-            public AngleBounds WithinLineBounds { get; set; } = new AngleBounds(-30, 30);
+            public AngleBounds WithinLineBounds { get; init; } = new AngleBounds(-30, 30);
 
             /// <summary>
             /// Multiplier that gives the maximum euclidean distance between
@@ -650,19 +649,19 @@ namespace Caly.Pdf.Layout
             /// distance found by the analysis.
             /// <para>Default value is 3.</para>
             /// </summary>
-            public double WithinLineMultiplier { get; set; } = 3.0;
+            public double WithinLineMultiplier { get; init; } = 3.0;
 
             /// <summary>
             /// The bin size used when building the within-line distances distribution.
             /// <para>Default value is 10.</para>
             /// </summary>
-            public int WithinLineBinSize { get; set; } = 10;
+            public int WithinLineBinSize { get; init; } = 10;
 
             /// <summary>
             /// Angle bounds for words to be considered as neighbours on separate lines.
             /// <para>Default value is 45 ≤ θ ≤ 135.</para>
             /// </summary>
-            public AngleBounds BetweenLineBounds { get; set; } = new AngleBounds(45, 135);
+            public AngleBounds BetweenLineBounds { get; init; } = new AngleBounds(45, 135);
 
             /// <summary>
             /// Multiplier that gives the maximum perpendicular distance between
@@ -670,20 +669,20 @@ namespace Caly.Pdf.Layout
             /// distance found by the analysis.
             /// <para>Default value is 1.3.</para>
             /// </summary>
-            public double BetweenLineMultiplier { get; set; } = 1.3;
+            public double BetweenLineMultiplier { get; init; } = 1.3;
 
             /// <summary>
             /// The bin size used when building the between-line distances distribution.
             /// <para>Default value is 10.</para>
             /// </summary>
-            public int BetweenLineBinSize { get; set; } = 10;
+            public int BetweenLineBinSize { get; init; } = 10;
 
             /// <summary>
             /// The angular difference bounds between two lines to be considered in the same block.
             /// This defines if two lines are parallel enough.
             /// <para>Default value is -30 ≤ θ ≤ 30.</para>
             /// </summary>
-            public AngleBounds AngularDifferenceBounds { get; set; } = new AngleBounds(-30, 30);
+            public AngleBounds AngularDifferenceBounds { get; init; } = new AngleBounds(-30, 30);
         }
     }
 }

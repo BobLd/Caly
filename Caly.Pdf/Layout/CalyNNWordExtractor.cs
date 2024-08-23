@@ -136,20 +136,20 @@ namespace Caly.Pdf.Layout
         /// <summary>
         /// Nearest neighbour word extractor options.
         /// </summary>
-        public class CalyNNWordExtractorOptions
+        public sealed class CalyNNWordExtractorOptions
         {
             /// <summary>
             /// <inheritdoc/>
             /// Default value is -1.
             /// </summary>
-            public int MaxDegreeOfParallelism { get; set; } = -1;
+            public int MaxDegreeOfParallelism { get; init; } = -1;
 
             /// <summary>
             /// The maximum distance between two letters (start and end base line points) within the same word, as a function of the two letters.
             /// <para>If the distance between the two letters is greater than this maximum, they will belong to different words.</para>
             /// <para>Default value is 20% of the Max(Width, PointSize) of both letters. If <see cref="TextOrientation"/> is Other, this distance is doubled.</para>
             /// </summary>
-            public Func<PdfLetter, PdfLetter, double> MaximumDistance { get; set; } = (l1, l2) =>
+            public Func<PdfLetter, PdfLetter, double> MaximumDistance { get; init; } = (l1, l2) =>
             {
                 double maxDist = Math.Max(Math.Max(Math.Max(
                     Math.Abs(l1.BoundingBox.Width),
@@ -167,27 +167,27 @@ namespace Caly.Pdf.Layout
             /// The default distance measure used between two letters (start and end base line points).
             /// <para>Default value is the Euclidean distance.</para>
             /// </summary>
-            public Func<PdfPoint, PdfPoint, double> DistanceMeasure { get; set; } = Distances.Euclidean;
+            public Func<PdfPoint, PdfPoint, double> DistanceMeasure { get; init; } = Distances.Euclidean;
 
             /// <summary>
             /// The distance measure used between two letters (start and end base line points) with axis aligned <see cref="TextOrientation"/>.
             /// <para>Only used if <see cref="GroupByOrientation"/> is set to <c>true</c>.</para>
             /// <para>Default value is the Manhattan distance.</para>
             /// </summary>
-            public Func<PdfPoint, PdfPoint, double> DistanceMeasureAA { get; set; } = Distances.Manhattan;
+            public Func<PdfPoint, PdfPoint, double> DistanceMeasureAA { get; init; } = Distances.Manhattan;
 
             /// <summary>
             /// Function used to filter out connection between letters, e.g. check if the letters have the same color.
             /// If the function returns <c>false</c>, letters will belong to different words.
             /// <para>Default value checks whether the neighbour is a white space or not. If it is the case, it returns <c>false</c>.</para>
             /// </summary>
-            public Func<PdfLetter, PdfLetter, bool> Filter { get; set; } = (_, l2) => !l2.Value.Span.IsWhiteSpace();
+            public Func<PdfLetter, PdfLetter, bool> Filter { get; init; } = (_, l2) => !l2.Value.Span.IsWhiteSpace();
 
             /// <summary>
             /// Function used prior searching for the nearest neighbour. If return false, no search will be done.
             /// <para>Default value checks whether the current letter is a white space or not. If it is the case, it returns false and no search is done.</para>
             /// </summary>
-            public Func<PdfLetter, bool> FilterPivot { get; set; } = l => !l.Value.Span.IsWhiteSpace();
+            public Func<PdfLetter, bool> FilterPivot { get; init; } = l => !l.Value.Span.IsWhiteSpace();
 
             /// <summary>
             /// If <c>true</c>, letters will be grouped by <see cref="TextOrientation"/> before processing.
@@ -195,7 +195,7 @@ namespace Caly.Pdf.Layout
             /// <para>If <c>false</c>, <see cref="DistanceMeasure"/> will be used for all letters, and <see cref="DistanceMeasureAA"/> won't be used.</para>
             /// <para>Default value is true.</para>
             /// </summary>
-            public bool GroupByOrientation { get; set; } = true;
+            public bool GroupByOrientation { get; init; } = true;
         }
     }
 }
