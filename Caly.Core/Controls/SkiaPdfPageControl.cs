@@ -32,20 +32,21 @@ namespace Caly.Core.Controls
     {
         private sealed class SkiaDrawOperation : ICustomDrawOperation
         {
-            private readonly SKPaint? _picture;
+            private readonly SKPaint? _paint;
 
             private readonly SKRect _visibleArea;
 
-            public SkiaDrawOperation(Rect bounds, Rect visibleArea, SKPaint? picture)
+            public SkiaDrawOperation(Rect bounds, SKRect visibleArea, SKPaint? paint)
             {
-                _picture = picture;
-                _visibleArea = visibleArea.ToSKRect();
+                _paint = paint;
+                _visibleArea = visibleArea;
                 Bounds = bounds;
             }
 
             public void Dispose()
             {
-                // No op
+                _paint?.Shader?.Dispose();
+                _paint?.Dispose();
             }
 
             public Rect Bounds { get; }
@@ -59,19 +60,16 @@ namespace Caly.Core.Controls
             /// </summary>
             public void Render(ImmediateDrawingContext context)
             {
-                // See https://github.com/AvaloniaUI/Avalonia/commit/f3f26eb113ceec63e310115d34a8f02fe8e86b51
-                // What does that do?
-
                 Debug.ThrowOnUiThread();
 
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-                if (!context.TryGetFeature(out ISkiaSharpApiLeaseFeature leaseFeature))
+                if (_paint is null || !context.TryGetFeature(out ISkiaSharpApiLeaseFeature leaseFeature))
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
                 {
                     return;
                 }
 
-                using (var lease = leaseFeature.Lease())
+                using (ISkiaSharpApiLease lease = leaseFeature.Lease())
                 {
                     var canvas = lease?.SkCanvas;
                     if (canvas is null)
@@ -81,11 +79,13 @@ namespace Caly.Core.Controls
 
                     canvas.Save();
                     canvas.ClipRect(_visibleArea);
-                    canvas.DrawPaint(_picture);
+                    canvas.DrawPaint(_paint);
                     canvas.Restore();
                 }
             }
         }
+
+        private const SKShaderTileMode TileMode = SKShaderTileMode.Clamp;
 
         /// <summary>
         /// Defines the <see cref="Picture"/> property.
@@ -153,11 +153,9 @@ namespace Caly.Core.Controls
 
             SKMatrix translate = SKMatrix.CreateTranslation((float)VisibleArea.Value.Left, (float)VisibleArea.Value.Top);
             SKRect tile = VisibleArea.Value.ToSKRect();
-            var tileMode = SKShaderTileMode.Clamp;
-            // TODO - Do we need to dispose shader and paint?
 
-            SKPaint paint = new SKPaint() { Shader = picture.Item.ToShader(tileMode, tileMode, translate, tile) };
-            context.Custom(new SkiaDrawOperation(viewPort, VisibleArea.Value, paint));
+            SKPaint paint = new SKPaint() { Shader = picture.Item.ToShader(TileMode, TileMode, translate, tile) };
+            context.Custom(new SkiaDrawOperation(viewPort, tile, paint));
 
             base.Render(context);
         }
