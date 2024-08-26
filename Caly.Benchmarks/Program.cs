@@ -21,7 +21,7 @@ namespace Caly.Benchmarks
     {
         static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<DuplicateOverlappingTextBenchmarks>();
+            var summary = BenchmarkRunner.Run<HighestOneBitBenchmark>();
             Console.ReadKey();
         }
     }
