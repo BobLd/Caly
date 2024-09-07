@@ -16,6 +16,7 @@
 using System.Runtime.InteropServices;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Annotations;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Filters;
@@ -31,25 +32,39 @@ using UglyToad.PdfPig.Tokens;
 
 namespace Caly.Pdf.TextLayer
 {
-    public sealed class TextLayerNoDupStreamProcessor : BaseStreamProcessor<PageTextLayerContent>
+    public sealed partial class TextLayerNoDupStreamProcessor : BaseStreamProcessor<PageTextLayerContent>
     {
         /// <summary>
         /// Stores each letter as it is encountered in the content stream.
         /// </summary>
-        private readonly List<PdfLetter> letters = new();
+        private readonly List<PdfLetter> _letters = new();
 
         private readonly double _pageWidth;
         private readonly double _pageHeight;
 
-        public TextLayerNoDupStreamProcessor(int pageNumber, IResourceStore resourceStore, IPdfTokenScanner pdfScanner,
-            IPageContentParser pageContentParser, ILookupFilterProvider filterProvider, CropBox cropBox,
-            UserSpaceUnit userSpaceUnit, PageRotationDegrees rotation, TransformationMatrix initialMatrix,
-            double pageWidth, double pageHeight, ParsingOptions parsingOptions)
+        private readonly AnnotationProvider _annotationProvider;
+
+        public TextLayerNoDupStreamProcessor(int pageNumber,
+            IResourceStore resourceStore,
+            IPdfTokenScanner pdfScanner,
+            IPageContentParser pageContentParser,
+            ILookupFilterProvider filterProvider,
+            CropBox cropBox,
+            UserSpaceUnit userSpaceUnit,
+            PageRotationDegrees rotation,
+            TransformationMatrix initialMatrix,
+            double pageWidth,
+            double pageHeight,
+            ParsingOptions parsingOptions,
+            AnnotationProvider annotationProvider)
             : base(pageNumber, resourceStore, pdfScanner, pageContentParser, filterProvider, cropBox, userSpaceUnit,
                 rotation, initialMatrix, parsingOptions)
         {
             _pageWidth = pageWidth;
             _pageHeight = pageHeight;
+
+            _annotationProvider = annotationProvider;
+            _annotations = new Lazy<Annotation[]>(() => _annotationProvider.GetAnnotations().ToArray());
 
             var gs = GraphicsStack.Pop();
             System.Diagnostics.Debug.Assert(GraphicsStack.Count == 0);
@@ -70,9 +85,12 @@ namespace Caly.Pdf.TextLayer
 
             ProcessOperations(operations);
 
+            DrawAnnotations();
+
             return new PageTextLayerContent()
             {
-                Letters = letters
+                Letters = _letters,
+                Annotations = _pdfAnnotations
             };
         }
 
@@ -99,17 +117,17 @@ namespace Caly.Pdf.TextLayer
             in TransformationMatrix transformationMatrix,
             CharacterBoundingBox characterBoundingBox)
         {
-            if (currentOffset > 0 && letters.Count > 0 && Diacritics.IsInCombiningDiacriticRange(unicode))
+            if (currentOffset > 0 && _letters.Count > 0 && Diacritics.IsInCombiningDiacriticRange(unicode))
             {
                 // GHOSTSCRIPT-698363-0.pdf
-                var attachTo = letters[^1];
+                var attachTo = _letters[^1];
 
                 if (attachTo.TextSequence == TextSequence
                     && MemoryMarshal.TryGetString(attachTo.Value, out string? text, out _, out _)
                     && Diacritics.TryCombineDiacriticWithPreviousLetter(unicode, text, out var newLetter))
                 {
                     // TODO: union of bounding boxes.
-                    letters[^1] = new PdfLetter(newLetter.AsMemory(), attachTo.BoundingBox, attachTo.PointSize, attachTo.TextSequence);
+                    _letters[^1] = new PdfLetter(newLetter.AsMemory(), attachTo.BoundingBox, attachTo.PointSize, attachTo.TextSequence);
                     return;
                 }
             }
@@ -136,7 +154,7 @@ namespace Caly.Pdf.TextLayer
             double minY = transformedPdfBounds.BottomLeft.Y - tolerance;
             double maxY = transformedPdfBounds.BottomLeft.Y + tolerance;
 
-            var duplicates = letters.Where(l => minX <= l.BoundingBox.BottomLeft.X &&
+            var duplicates = _letters.Where(l => minX <= l.BoundingBox.BottomLeft.X &&
                                                 maxX >= l.BoundingBox.BottomLeft.X &&
                                                 minY <= l.BoundingBox.BottomLeft.Y &&
                                                 maxY >= l.BoundingBox.BottomLeft.Y); // do other checks?
@@ -153,7 +171,7 @@ namespace Caly.Pdf.TextLayer
                 pointSize,
                 TextSequence);
 
-            letters.Add(letter);
+            _letters.Add(letter);
         }
 
         #region  BaseStreamProcessor overrides

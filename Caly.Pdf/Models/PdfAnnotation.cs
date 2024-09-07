@@ -13,12 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using UglyToad.PdfPig.Actions;
+using UglyToad.PdfPig.Core;
+
 namespace Caly.Pdf.Models
 {
-    public sealed record PageTextLayerContent
+    public sealed class PdfAnnotation
     {
-        public required IReadOnlyList<PdfLetter> Letters { get; init; }
+        /// <summary>
+        /// The rectangle completely containing the block.
+        /// </summary>
+        public required PdfRectangle BoundingBox { get; init; }
 
-        public required IReadOnlyList<PdfAnnotation> Annotations { get; init; }
+        public required PdfAction Action { get; init; }
     }
 }

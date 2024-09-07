@@ -113,7 +113,7 @@ namespace Caly.Pdf
                 block.WordEndIndex = wordIndex - 1;
             }
 
-            return new PdfTextLayer(pdfBlocks);
+            return new PdfTextLayer(pdfBlocks, page.Annotations);
         }
 
         private static PdfPoint InverseYAxis(PdfPoint point, double height)

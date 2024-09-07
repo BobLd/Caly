@@ -14,15 +14,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System.Collections;
+using UglyToad.PdfPig.Core;
+using UglyToad.PdfPig.Geometry;
 
 namespace Caly.Pdf.Models
 {
     public sealed record PdfTextLayer : IReadOnlyList<PdfWord>
     {
-        internal static readonly PdfTextLayer Empty = new(Array.Empty<PdfTextBlock>());
+        internal static readonly PdfTextLayer Empty = new(Array.Empty<PdfTextBlock>(), Array.Empty<PdfAnnotation>());
 
-        public PdfTextLayer(IReadOnlyList<PdfTextBlock>? textBlocks)
+        public PdfTextLayer(IReadOnlyList<PdfTextBlock> textBlocks, IReadOnlyList<PdfAnnotation> annotations)
         {
+            Annotations = annotations;
             TextBlocks = textBlocks;
             if (textBlocks?.Count > 0)
             {
@@ -34,7 +37,26 @@ namespace Caly.Pdf.Models
         /// <summary>
         /// The text lines contained in the block.
         /// </summary>
-        public IReadOnlyList<PdfTextBlock>? TextBlocks { get; }
+        public IReadOnlyList<PdfTextBlock> TextBlocks { get; }
+
+        public IReadOnlyList<PdfAnnotation> Annotations { get; }
+
+        public PdfAnnotation? FindAnnotationOver(double x, double y)
+        {
+            if (Annotations is null || Annotations.Count == 0) return null;
+
+            var point = new PdfPoint(x, y);
+
+            foreach (PdfAnnotation annotation in Annotations)
+            {
+                if (annotation.BoundingBox.Contains(point, true))
+                {
+                    return annotation;
+                }
+            }
+
+            return null;
+        }
 
         public PdfWord? FindWordOver(double x, double y)
         {

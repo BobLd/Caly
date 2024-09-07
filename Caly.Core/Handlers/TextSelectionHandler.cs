@@ -30,6 +30,7 @@ using Caly.Core.Models;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
+using UglyToad.PdfPig.Actions;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
 
@@ -312,6 +313,13 @@ namespace Caly.Core.Handlers
         /// </summary>
         private static void HandleMouseMoveOver(PdfPageTextLayerControl control, Point loc)
         {
+            PdfAnnotation? annotation = control.PdfTextLayer!.FindAnnotationOver(loc.X, loc.Y);
+            if (annotation is not null)
+            {
+                control.SetHandCursor();
+                return;
+            }
+
             PdfWord? word = control.PdfTextLayer!.FindWordOver(loc.X, loc.Y);
             if (word is not null)
             {
@@ -455,6 +463,43 @@ namespace Caly.Core.Handlers
                 if (!_isSelecting)
                 {
                     var point = pointerPoint.Position;
+
+                    // Annotation
+                    PdfAnnotation? annotation = control.PdfTextLayer.FindAnnotationOver(point.X, point.Y);
+
+                    if (annotation is not null)
+                    {
+                        switch (annotation.Action.Type)
+                        {
+                            case ActionType.URI:
+                                string? uri = ((UriAction)annotation.Action)?.Uri;
+                                if (!string.IsNullOrEmpty(uri))
+                                {
+                                    CalyExtensions.OpenBrowser(uri);
+                                    return;
+                                }
+                                break;
+
+                            case ActionType.GoTo:
+                            case ActionType.GoToE:
+                            case ActionType.GoToR:
+                                var goToAction = (AbstractGoToAction)annotation.Action;
+                                var dest = goToAction?.Destination;
+                                if (dest is not null)
+                                {
+                                    var documentControl = control.FindAncestorOfType<PdfDocumentControl>();
+                                    documentControl?.GoToPage(dest.PageNumber);
+                                    return;
+                                }
+                                else
+                                {
+                                    // Log error
+                                }
+                                break;
+                        }
+                    }
+
+                    // Words
                     PdfWord? word = control.PdfTextLayer.FindWordOver(point.X, point.Y);
 
                     if (word is not null)
@@ -553,6 +598,19 @@ namespace Caly.Core.Handlers
 
         public void RenderPage(PdfPageTextLayerControl control, DrawingContext context)
         {
+#if DEBUG
+            if (control.PdfTextLayer?.Annotations is not null)
+            {
+                var purpleBrush = new SolidColorBrush(Colors.Purple, 0.4);
+                var purplePen = new Pen(purpleBrush, 0.5);
+
+                foreach (var annotation in control.PdfTextLayer.Annotations)
+                {
+                    context.DrawGeometry(purpleBrush, purplePen, PdfWordHelpers.GetGeometry(annotation.BoundingBox, true));
+                }
+            }
+#endif
+
             if (control.PdfTextLayer?.TextBlocks is null)
             {
                 return;

@@ -72,7 +72,8 @@ namespace Caly.Pdf.TextLayer
 
             return new PageTextLayerContent()
             {
-                Letters = letters
+                Letters = letters,
+                Annotations = []
             };
         }
 
