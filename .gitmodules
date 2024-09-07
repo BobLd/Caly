@@ -1,9 +1,12 @@
 [submodule "external/PdfPig"]
 	path = external/PdfPig
 	url = https://github.com/BobLd/PdfPig.git
+	branch = develop-caly
 [submodule "external/Tabalonia"]
 	path = external/Tabalonia
 	url = https://github.com/BobLd/Tabalonia.git
+	branch = develop-caly
 [submodule "external/PdfPig.Rendering.Skia"]
 	path = external/PdfPig.Rendering.Skia
 	url = https://github.com/BobLd/PdfPig.Rendering.Skia.git
+	branch = develop-caly

@@ -39,6 +39,9 @@ Caly Pdf Reader uses submodules, you will need to run the following after clonin
 git submodule update --init --recursive
 ```
 
+> [!IMPORTANT]
+> If the submodule branches appear as 'detached', you can re-link each of them to the `develop-caly` branches.
+
 Caly Pdf Reader is a net8.0 application with Native AOT (ahead of time compilation) enabled. To publish the application, run the following (example for Windows):
 ```
 dotnet publish -r win-x64 -c Release -f net8.0
