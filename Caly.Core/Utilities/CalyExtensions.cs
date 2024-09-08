@@ -130,6 +130,18 @@ namespace Caly.Core.Utilities
             }
         }
 
+        /// <summary>
+        /// The Euclidean distance is the "ordinary" straight-line distance between two points.
+        /// </summary>
+        /// <param name="point1">The first point.</param>
+        /// <param name="point2">The second point.</param>
+        public static double Euclidean(this Point point1, Point point2)
+        {
+            double dx = point1.X - point2.X;
+            double dy = point1.Y - point2.Y;
+            return Math.Sqrt(dx * dx + dy * dy);
+        }
+
         /*
         /// <summary>
         /// Transforms the rectangle by a matrix. Only uses doubles (and not floats contrary to Avalonia's) in order to not lose precision.

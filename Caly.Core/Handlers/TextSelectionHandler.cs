@@ -57,6 +57,8 @@ namespace Caly.Core.Handlers
         /// </summary>
         private bool _isMultipleClickSelection;
 
+        private Point? _startPointerPressed;
+
         public PdfTextSelection Selection { get; }
 
         public TextSelectionHandler(int numberOfPages)
@@ -196,7 +198,7 @@ namespace Caly.Core.Handlers
             var pointerPoint = e.GetCurrentPoint(control);
             var loc = pointerPoint.Position;
 
-            if (pointerPoint.Properties.IsLeftButtonPressed)
+            if (pointerPoint.Properties.IsLeftButtonPressed && _startPointerPressed.HasValue && _startPointerPressed.Value.Euclidean(loc) > 1.0)
             {
                 HandleMouseMoveSelection(control, e, loc);
             }
@@ -417,6 +419,7 @@ namespace Caly.Core.Handlers
 
             if (pointerPoint.Properties.IsLeftButtonPressed)
             {
+                _startPointerPressed = point;
                 PdfWord? word = control.PdfTextLayer.FindWordOver(point.X, point.Y);
 
                 if (word is not null && Selection.IsWordSelected(control.PageNumber!.Value, word))
@@ -451,6 +454,8 @@ namespace Caly.Core.Handlers
             {
                 return;
             }
+
+            _startPointerPressed = null;
 
             var pointerPoint = e.GetCurrentPoint(control);
 
