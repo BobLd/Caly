@@ -16,6 +16,7 @@
 using Caly.Pdf.Models;
 using Caly.Pdf.TextLayer;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Annotations;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Filters;
@@ -46,10 +47,16 @@ namespace Caly.Pdf.PageFactories
             // Special case where cropbox is outside mediabox: use cropbox instead of intersection
             var effectiveCropBox = mediaBox.Bounds.Intersect(cropBox.Bounds) ?? cropBox.Bounds;
 
+            var annotationProvider = new AnnotationProvider(PdfScanner,
+                dictionary,
+                initialMatrix,
+                namedDestinations,
+                ParsingOptions.Logger);
+
             var context = new TextLayerStreamProcessor(pageNumber, ResourceStore, PdfScanner, PageContentParser,
                 FilterProvider, cropBox, userSpaceUnit, rotation, initialMatrix,
                 effectiveCropBox.Width, effectiveCropBox.Height,
-                ParsingOptions);
+                ParsingOptions, annotationProvider);
 
             return context.Process(pageNumber, operations);
         }

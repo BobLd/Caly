@@ -96,7 +96,7 @@ namespace Caly.Core.Services
                     _document = PdfDocument.Open(_fileStream, pdfParsingOptions);
                     _document.AddPageFactory<PdfPageInformation, PageInformationFactory>();
                     _document.AddPageFactory<SKPicture, SkiaPageFactory>();
-                    _document.AddPageFactory<PageTextLayerContent, TextLayerNoDupFactory>();
+                    _document.AddPageFactory<PageTextLayerContent, TextLayerFactory>();
 
                     NumberOfPages = _document.NumberOfPages;
                     return NumberOfPages;

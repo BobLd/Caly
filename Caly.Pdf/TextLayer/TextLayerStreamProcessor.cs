@@ -16,12 +16,12 @@
 using System.Runtime.InteropServices;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Annotations;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Filters;
 using UglyToad.PdfPig.Geometry;
 using UglyToad.PdfPig.Graphics;
-using UglyToad.PdfPig.Graphics.Colors;
 using UglyToad.PdfPig.Graphics.Core;
 using UglyToad.PdfPig.Graphics.Operations;
 using UglyToad.PdfPig.Parser;
@@ -31,25 +31,39 @@ using UglyToad.PdfPig.Tokens;
 
 namespace Caly.Pdf.TextLayer
 {
-    public sealed class TextLayerStreamProcessor : BaseStreamProcessor<PageTextLayerContent>
+    public sealed partial class TextLayerStreamProcessor : BaseStreamProcessor<PageTextLayerContent>
     {
         /// <summary>
         /// Stores each letter as it is encountered in the content stream.
         /// </summary>
-        private readonly List<PdfLetter> letters = new();
+        private readonly List<PdfLetter> _letters = new();
 
         private readonly double _pageWidth;
         private readonly double _pageHeight;
 
-        public TextLayerStreamProcessor(int pageNumber, IResourceStore resourceStore, IPdfTokenScanner pdfScanner,
-            IPageContentParser pageContentParser, ILookupFilterProvider filterProvider, CropBox cropBox,
-            UserSpaceUnit userSpaceUnit, PageRotationDegrees rotation, TransformationMatrix initialMatrix,
-            double pageWidth, double pageHeight, ParsingOptions parsingOptions)
+        private readonly AnnotationProvider _annotationProvider;
+
+        public TextLayerStreamProcessor(int pageNumber,
+            IResourceStore resourceStore,
+            IPdfTokenScanner pdfScanner,
+            IPageContentParser pageContentParser,
+            ILookupFilterProvider filterProvider,
+            CropBox cropBox,
+            UserSpaceUnit userSpaceUnit,
+            PageRotationDegrees rotation,
+            TransformationMatrix initialMatrix,
+            double pageWidth,
+            double pageHeight,
+            ParsingOptions parsingOptions,
+            AnnotationProvider annotationProvider)
             : base(pageNumber, resourceStore, pdfScanner, pageContentParser, filterProvider, cropBox, userSpaceUnit,
                 rotation, initialMatrix, parsingOptions)
         {
             _pageWidth = pageWidth;
             _pageHeight = pageHeight;
+
+            _annotationProvider = annotationProvider;
+            _annotations = new Lazy<Annotation[]>(() => _annotationProvider.GetAnnotations().ToArray());
 
             var gs = GraphicsStack.Pop();
             System.Diagnostics.Debug.Assert(GraphicsStack.Count == 0);
@@ -70,10 +84,12 @@ namespace Caly.Pdf.TextLayer
 
             ProcessOperations(operations);
 
+            DrawAnnotations();
+
             return new PageTextLayerContent()
             {
-                Letters = letters,
-                Annotations = []
+                Letters = _letters,
+                Annotations = _pdfAnnotations
             };
         }
 
@@ -87,9 +103,7 @@ namespace Caly.Pdf.TextLayer
         }
 
         public override void RenderGlyph(IFont font,
-            IColor strokingColor,
-            IColor nonStrokingColor,
-            TextRenderingMode textRenderingMode,
+            CurrentGraphicsState currentState,
             double fontSize,
             double pointSize,
             int code,
@@ -100,46 +114,61 @@ namespace Caly.Pdf.TextLayer
             in TransformationMatrix transformationMatrix,
             CharacterBoundingBox characterBoundingBox)
         {
-            PdfLetter? letter = null;
-            if (currentOffset > 0 && letters.Count > 0 && Diacritics.IsInCombiningDiacriticRange(unicode))
+            if (currentOffset > 0 && _letters.Count > 0 && Diacritics.IsInCombiningDiacriticRange(unicode))
             {
                 // GHOSTSCRIPT-698363-0.pdf
-                var attachTo = letters[^1];
+                var attachTo = _letters[^1];
 
                 if (attachTo.TextSequence == TextSequence
                     && MemoryMarshal.TryGetString(attachTo.Value, out string? text, out _, out _)
                     && Diacritics.TryCombineDiacriticWithPreviousLetter(unicode, text, out var newLetter))
                 {
                     // TODO: union of bounding boxes.
-                    letters.Remove(attachTo);
-                    letter = new PdfLetter(newLetter.AsMemory(), attachTo.BoundingBox, attachTo.PointSize, attachTo.TextSequence);
+                    _letters[^1] = new PdfLetter(newLetter.AsMemory(), attachTo.BoundingBox, attachTo.PointSize, attachTo.TextSequence);
+                    return;
                 }
             }
 
             // If we did not create a letter for a combined diacritic, create one here.
-            if (letter is null)
-            {
-                /* 9.2.2 Basics of showing text
-                 * A font defines the glyphs at one standard size. This standard is arranged so that the nominal height of tightly
-                 * spaced lines of text is 1 unit. In the default user coordinate system, this means the standard glyph size is 1
-                 * unit in user space, or 1 ⁄ 72 inch. Starting with PDF 1.6, the size of this unit may be specified as greater than
-                 * 1 ⁄ 72 inch by means of the UserUnit entry of the page dictionary.
-                 */
+            /* 9.2.2 Basics of showing text
+             * A font defines the glyphs at one standard size. This standard is arranged so that the nominal height of tightly
+             * spaced lines of text is 1 unit. In the default user coordinate system, this means the standard glyph size is 1
+             * unit in user space, or 1 ⁄ 72 inch. Starting with PDF 1.6, the size of this unit may be specified as greater than
+             * 1 ⁄ 72 inch by means of the UserUnit entry of the page dictionary.
+             */
 
-                var transformedPdfBounds = InverseYAxis(PerformantRectangleTransformer
+            var transformedPdfBounds = InverseYAxis(PerformantRectangleTransformer
                     .Transform(renderingMatrix,
                         textMatrix,
                         transformationMatrix,
                         new PdfRectangle(0, 0, characterBoundingBox.Width, UserSpaceUnit.PointMultiples)),
-                        _pageHeight);
+                _pageHeight);
 
-                letter = new PdfLetter(unicode.AsMemory(),
-                    transformedPdfBounds,
-                    pointSize,
-                    TextSequence);
+            // Check overlap
+            double tolerance = transformedPdfBounds.Width / (unicode.Length == 0 ? 1 : unicode.Length) / 3.0;
+            double minX = transformedPdfBounds.BottomLeft.X - tolerance;
+            double maxX = transformedPdfBounds.BottomLeft.X + tolerance;
+            double minY = transformedPdfBounds.BottomLeft.Y - tolerance;
+            double maxY = transformedPdfBounds.BottomLeft.Y + tolerance;
+
+            var duplicates = _letters.Where(l => minX <= l.BoundingBox.BottomLeft.X &&
+                                                maxX >= l.BoundingBox.BottomLeft.X &&
+                                                minY <= l.BoundingBox.BottomLeft.Y &&
+                                                maxY >= l.BoundingBox.BottomLeft.Y); // do other checks?
+
+            var duplicatesOverlapping = duplicates.FirstOrDefault(l => l.Value.Span.SequenceEqual(unicode.AsSpan()));
+
+            if (duplicatesOverlapping is not null)
+            {
+                return;
             }
 
-            letters.Add(letter);
+            var letter = new PdfLetter(unicode.AsMemory(),
+                transformedPdfBounds,
+                pointSize,
+                TextSequence);
+
+            _letters.Add(letter);
         }
 
         #region  BaseStreamProcessor overrides

@@ -22,7 +22,7 @@ using UglyToad.PdfPig.Tokens;
 
 namespace Caly.Pdf.TextLayer
 {
-    public partial class TextLayerNoDupStreamProcessor
+    public partial class TextLayerStreamProcessor
     {
         /// <summary>
         /// Raw page annotations.
