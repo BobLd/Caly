@@ -50,6 +50,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Caly.Tests", "Caly.Tests\Ca
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UglyToad.PdfPig.Rendering.Skia.Tests", "external\PdfPig.Rendering.Skia\UglyToad.PdfPig.Rendering.Skia.Tests\UglyToad.PdfPig.Rendering.Skia.Tests.csproj", "{67FC56B9-3AE2-4048-A9EC-F8391196CF9F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenJpegDotNet", "OpenJpegDotNet", "{3B4ABF64-EF00-463A-8103-A523A77B9EA9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenJpegDotNet", "external\OpenJpegDotNet\src\OpenJpegDotNet\OpenJpegDotNet.csproj", "{58C6B4BC-9342-49F8-BC0E-F5D4FB6BCAB2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,6 +132,10 @@ Global
 		{67FC56B9-3AE2-4048-A9EC-F8391196CF9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67FC56B9-3AE2-4048-A9EC-F8391196CF9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67FC56B9-3AE2-4048-A9EC-F8391196CF9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58C6B4BC-9342-49F8-BC0E-F5D4FB6BCAB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58C6B4BC-9342-49F8-BC0E-F5D4FB6BCAB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58C6B4BC-9342-49F8-BC0E-F5D4FB6BCAB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58C6B4BC-9342-49F8-BC0E-F5D4FB6BCAB2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -146,6 +154,8 @@ Global
 		{853A1CDC-9AB5-479A-AE18-BB744957D540} = {729644E9-1B3D-4BE2-90F4-D31B9A431DF6}
 		{E5D37628-7B7C-4DFB-8550-ADC3A354A5F1} = {853A1CDC-9AB5-479A-AE18-BB744957D540}
 		{67FC56B9-3AE2-4048-A9EC-F8391196CF9F} = {853A1CDC-9AB5-479A-AE18-BB744957D540}
+		{3B4ABF64-EF00-463A-8103-A523A77B9EA9} = {729644E9-1B3D-4BE2-90F4-D31B9A431DF6}
+		{58C6B4BC-9342-49F8-BC0E-F5D4FB6BCAB2} = {3B4ABF64-EF00-463A-8103-A523A77B9EA9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4266927-3627-47FF-B829-F45BBA8830F9}
