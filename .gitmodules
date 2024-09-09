@@ -10,3 +10,6 @@
 	path = external/PdfPig.Rendering.Skia
 	url = https://github.com/BobLd/PdfPig.Rendering.Skia.git
 	branch = develop-caly
+[submodule "external/OpenJpegDotNet"]
+	path = external/OpenJpegDotNet
+	url = https://github.com/BobLd/OpenJpegDotNet.git
