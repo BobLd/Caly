@@ -168,7 +168,7 @@
 												</PathIcon>
 											</TabItem.Header>
 
-											<Panel>
+											<Panel>												
 												<TextBlock IsVisible="{Binding !SearchResults.Count}">No results found</TextBlock>
 
 												<TreeView IsVisible="{Binding !!SearchResults.Count}"
@@ -192,6 +192,15 @@
 														</TreeDataTemplate>
 													</TreeView.ItemTemplate>
 												</TreeView>
+
+												<ProgressBar Padding="0,0,0,0"
+															 IsVisible="{Binding !BuildingIndexDone}"
+															 MinWidth="10"
+															 Minimum="0"
+															 Maximum="100"
+															 Value="{Binding BuildIndexProgress}"
+															 VerticalAlignment="Bottom"
+															 HorizontalAlignment="Stretch"/>
 											</Panel>
 
 										</TabItem>

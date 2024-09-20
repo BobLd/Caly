@@ -74,7 +74,7 @@ namespace Caly.Core.Services
                 ).Build();
         }
 
-        public async Task BuildPdfDocumentIndex(PdfDocumentViewModel pdfDocument, CancellationToken token)
+        public async Task BuildPdfDocumentIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
 
@@ -91,12 +91,14 @@ namespace Caly.Core.Services
                 }
 
                 await _index.AddAsync(pdfDocument.Pages[i], token);
+                progress.Report(i + 1);
 
                 System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer is not null);
                 //System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer!.Count == _index.Metadata.GetDocumentMetadata(i).DocumentStatistics.TotalTokenCount); // Can't do that with batch
             }
 
             await _index.CommitBatchChangeAsync(token);
+            progress.Report(pdfDocument.PageCount);
         }
 
         public async Task<IEnumerable<TextSearchResultViewModel>> Search(PdfDocumentViewModel pdfDocument, string text, CancellationToken token)

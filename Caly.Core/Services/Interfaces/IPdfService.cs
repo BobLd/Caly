@@ -49,7 +49,8 @@ namespace Caly.Core.Services.Interfaces
 
         Task<ObservableCollection<PdfBookmarkNode>?> GetPdfBookmark(CancellationToken cancellationToken);
 
-        Task BuildIndex(PdfDocumentViewModel pdfDocument, CancellationToken cancellationToken);
+        Task BuildIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken cancellationToken);
+
         Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken cancellationToken);
     }
 }

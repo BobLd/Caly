@@ -56,6 +56,12 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private TextSearchResultViewModel? _selectedTextSearchResult;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BuildingIndexDone))]
+        private int _buildIndexProgress;
+
+        public bool BuildingIndexDone => BuildIndexProgress == 100;
+
         private readonly ChannelWriter<PdfPageViewModel>? _channelWriter;
         private readonly ChannelReader<PdfPageViewModel>? _channelReader;
 
@@ -247,7 +253,12 @@ namespace Caly.Core.ViewModels
         private async Task BuildSearchIndex()
         {
             _cts.Token.ThrowIfCancellationRequested();
-            await Task.Run(() => _pdfService.BuildIndex(this, _cts.Token), _cts.Token);
+            var progress = new Progress<int>(done => 
+            {
+                BuildIndexProgress = (int)Math.Ceiling((done / (double)PageCount) * 100);
+            });
+
+            await Task.Run(() => _pdfService.BuildIndex(this, progress, _cts.Token), _cts.Token);
         }
 
         [RelayCommand]

@@ -280,11 +280,11 @@ namespace Caly.Core.Services
             }
         }
 
-        public async Task BuildIndex(PdfDocumentViewModel pdfDocument, CancellationToken cancellationToken)
+        public async Task BuildIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken cancellationToken)
         {
             Debug.ThrowOnUiThread();
 
-            await _textSearchService.BuildPdfDocumentIndex(pdfDocument, cancellationToken);
+            await _textSearchService.BuildPdfDocumentIndex(pdfDocument, progress, cancellationToken);
         }
 
         public Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken cancellationToken)
