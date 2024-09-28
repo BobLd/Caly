@@ -18,7 +18,6 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 
 namespace Caly.Core.Controls
 {
@@ -62,7 +61,7 @@ namespace Caly.Core.Controls
         /// <summary>
         /// Defines the <see cref="Thumbnail"/> property.
         /// </summary>
-        public static readonly StyledProperty<Bitmap?> ThumbnailProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, Bitmap?>(nameof(Thumbnail));
+        public static readonly StyledProperty<IImage?> ThumbnailProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, IImage?>(nameof(Thumbnail));
 
         public Rect? VisibleArea
         {
@@ -102,7 +101,7 @@ namespace Caly.Core.Controls
             set => SetValue(UnloadThumbnailCommandProperty, value);
         }
 
-        public Bitmap? Thumbnail
+        public IImage? Thumbnail
         {
             get => GetValue(ThumbnailProperty);
             set => SetValue(ThumbnailProperty, value);
@@ -130,10 +129,12 @@ namespace Caly.Core.Controls
 
             try
             {
-                // TODO - Bitmap is not the correct object
-                // We should use a similar approach to SKPicture
+                // Bitmap might not be null here but already disposed.
+                // We use Dispatcher.UIThread.Invoke(() => t?.Dispose(), DispatcherPriority.Loaded);
+                // in the PdfPageViewModel to avoid this issue
+
                 var thumbnail = Thumbnail;
-                if (thumbnail is not null)
+                if (thumbnail is not null && Bounds.Width > 0 && Bounds.Height > 0)
                 {
                     context.DrawImage(thumbnail, Bounds);
                 }

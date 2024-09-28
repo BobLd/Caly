@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
@@ -309,7 +310,12 @@ namespace Caly.Core.ViewModels
 
                     var t = Thumbnail;
                     Thumbnail = null;
-                    t?.Dispose();
+                    // We try to make sure the view's Thumbnail property is null before disposing it:
+                    Dispatcher.UIThread.Invoke(() =>
+                    {
+                        t?.Dispose();
+                        System.Diagnostics.Debug.WriteLine($"Disposed thumbnail for page {PageNumber}.");
+                    }, DispatcherPriority.Loaded);
                 }
                 catch (Exception e)
                 {

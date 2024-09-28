@@ -14,18 +14,10 @@
         <Setter Property="Template">
             <ControlTemplate x:DataType="viewModels:PdfPageViewModel">
                 <Grid>
-                    <Border BorderBrush="{StaticResource  CalendarDatePickerBorderBrush}"
+                    <Border BorderBrush="{StaticResource CalendarDatePickerBorderBrush}"
                             BorderThickness="2"
                             IsEnabled="{Binding IsThumbnailRendering}"
                             IsVisible="{Binding IsThumbnailRendering}">
-						<!--
-                        <ProgressBar Width="50"
-                                     IsIndeterminate="{Binding IsThumbnailRendering}"
-                                     IsEnabled="{Binding IsThumbnailRendering}"
-                                     IsVisible="{Binding IsThumbnailRendering}"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center"/>
-                        -->
                     </Border>
                 </Grid>
             </ControlTemplate>
