@@ -126,7 +126,7 @@ public class PdfPageItemsControl : ItemsControl
         get => GetValue(ZoomLevelProperty);
         set => SetValue(ZoomLevelProperty, value);
     }
-
+    
     /// <summary>
     /// Get the page control for the page number.
     /// </summary>
@@ -345,6 +345,11 @@ public class PdfPageItemsControl : ItemsControl
         {
             LayoutUpdated -= ExecuteScrollWhenLayoutUpdated;
             EnsureScrollBars();
+
+            // Ensure the pages visibility is set when OnApplyTemplate()
+            // is not called, i.e. when a new document is opened but the
+            // page has exactly the same dimension of the visible page
+            SetPagesVisibility();
         }
 
         LayoutUpdated += ExecuteScrollWhenLayoutUpdated;
