@@ -93,9 +93,6 @@
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center"/>
 
-							<!-- Document text search -->
-							<TextBox Width="120" Watermark="Search..." Text="{Binding TextSearch}"/>
-
 						</StackPanel>
 
 					</DockPanel>
@@ -160,7 +157,7 @@
 											</TreeView>
 										</TabItem>
 
-										<!-- Search results tab -->
+										<!-- Search tab -->
 										<TabItem>
 											<TabItem.Header>
 												<PathIcon Data="{StaticResource document_search_regular}">
@@ -168,7 +165,7 @@
 												</PathIcon>
 											</TabItem.Header>
 
-											<Panel>
+											<StackPanel Orientation="Vertical">
 												<Panel.Styles>
 													<Style Selector="TextBlock.indexed">
 														<Setter Property="Text" Value="No result found" />
@@ -177,7 +174,19 @@
 														<Setter Property="Text" Value="Searching..." />
 													</Style>
 												</Panel.Styles>
-												
+
+                                                <TextBox Watermark="Search..."
+                                                         Text="{Binding TextSearch}"/>
+
+                                                <ProgressBar Padding="0,0,0,0"
+                                                             IsVisible="{Binding !BuildingIndexDone}"
+                                                             MinWidth="10"
+                                                             Minimum="0"
+                                                             Maximum="100"
+                                                             Value="{Binding BuildIndexProgress}"
+                                                             VerticalAlignment="Bottom"
+                                                             HorizontalAlignment="Stretch"/>
+
 												<TextBlock IsVisible="{Binding !SearchResults.Count}" 
 														   Classes.indexed="{Binding BuildingIndexDone}"
 														   Classes.indexing="{Binding !BuildingIndexDone}" />
@@ -204,15 +213,7 @@
 													</TreeView.ItemTemplate>
 												</TreeView>
 
-												<ProgressBar Padding="0,0,0,0"
-															 IsVisible="{Binding !BuildingIndexDone}"
-															 MinWidth="10"
-															 Minimum="0"
-															 Maximum="100"
-															 Value="{Binding BuildIndexProgress}"
-															 VerticalAlignment="Bottom"
-															 HorizontalAlignment="Stretch"/>
-											</Panel>
+											</StackPanel>
 
 										</TabItem>
 									</TabControl>
