@@ -168,8 +168,19 @@
 												</PathIcon>
 											</TabItem.Header>
 
-											<Panel>												
-												<TextBlock IsVisible="{Binding !SearchResults.Count}">No results found</TextBlock>
+											<Panel>
+												<Panel.Styles>
+													<Style Selector="TextBlock.indexed">
+														<Setter Property="Text" Value="No result found" />
+													</Style>
+													<Style Selector="TextBlock.indexing">
+														<Setter Property="Text" Value="Searching..." />
+													</Style>
+												</Panel.Styles>
+												
+												<TextBlock IsVisible="{Binding !SearchResults.Count}" 
+														   Classes.indexed="{Binding BuildingIndexDone}"
+														   Classes.indexing="{Binding !BuildingIndexDone}" />
 
 												<TreeView IsVisible="{Binding !!SearchResults.Count}"
 														  ItemsSource="{Binding SearchResults}"
@@ -185,7 +196,7 @@
 																		   Margin="5,0">
 																	<TextBlock Text="{Binding PageNumber}"/>
 																	<Run Text="/"/>
-																	<TextBlock Text="{Binding WordIndex}" />
+																	<TextBlock Text="{Binding WordIndex}"/>
 																</TextBlock>
 
 															</Border>
