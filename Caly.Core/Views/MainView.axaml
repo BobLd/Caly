@@ -114,7 +114,8 @@
 
 									<TabControl TabStripPlacement="Left"
                                                 Padding="12,0,0,0"
-                                                SelectedIndex="{Binding SelectedTabIndex}">
+                                                SelectedIndex="{Binding SelectedTabIndex}"
+                                                SelectionChanged="SelectingItemsControl_OnSelectionChanged">
 
 										<!-- Thumbnails tab -->
 										<TabItem IsSelected="True">
@@ -175,7 +176,8 @@
 													</Style>
 												</Panel.Styles>
 
-                                                <TextBox Watermark="Search..."
+                                                <TextBox Name="PART_TextBoxSearch"
+                                                         Watermark="Search..."
                                                          Text="{Binding TextSearch}"/>
 
                                                 <ProgressBar Padding="0,0,0,0"
