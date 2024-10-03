@@ -57,10 +57,10 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private TextSearchResultViewModel? _selectedTextSearchResult;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(BuildingIndexDone))]
+        [NotifyPropertyChangedFor(nameof(BuildingIndex))]
         private int _buildIndexProgress;
 
-        public bool BuildingIndexDone => BuildIndexProgress == 100;
+        public bool BuildingIndex => BuildIndexProgress != 0 && BuildIndexProgress != 100;
 
         private readonly ChannelWriter<PdfPageViewModel>? _channelWriter;
         private readonly ChannelReader<PdfPageViewModel>? _channelReader;

@@ -199,16 +199,28 @@ namespace Caly.Core.Views
 
         private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
-            if (sender is not TabControl tabControl || tabControl.SelectedIndex != 2)
+            if (e.Source is not TabControl tabControl ||
+                tabControl.SelectedIndex != 2 ||
+                tabControl.Name != "PART_TabControlNavigation")
             {
                 return;
             }
 
             // Search tab
-            var searchTextBox = tabControl.FindDescendantOfType<TextBox>();
-            if (searchTextBox?.Name is not null && searchTextBox.Name.Equals("PART_TextBoxSearch"))
+            TextBox? searchTextBox = tabControl.FindDescendantOfType<TextBox>();
+
+            if (searchTextBox?.Name is not null &&
+                searchTextBox.Name.Equals("PART_TextBoxSearch"))
             {
                 searchTextBox.Focus();
+            }
+        }
+
+        private void PART_TextBoxSearch_OnKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (sender is TextBox textBox && e.Key == Key.Escape)
+            {
+                textBox.Clear();
             }
         }
     }
