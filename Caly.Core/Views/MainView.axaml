@@ -178,7 +178,14 @@
 
                                                 <TextBox Name="PART_TextBoxSearch"
                                                          Watermark="Search..."
-                                                         Text="{Binding TextSearch}"/>
+                                                         Text="{Binding TextSearch}">
+													<TextBox.InnerRightContent>
+                                                        <Viewbox Width="8" Height="8">
+                                                            <!--<PathIcon RenderTransform="scaley(-1)" Data="M203 213c53 0 96 43 96 96s-43 96 -96 96s-96 -43 -96 -96s43 -96 96 -96zM331 213l106 -106l-32 -32l-106 106v17l-6 6c-24 -21 -56 -33 -90 -33c-77 0 -139 61 -139 138s62 139 139 139s138 -62 138 -139c0 -34 -12 -66 -33 -90l6 -6h17z" />-->
+                                                            <PathIcon Data="M13.46,12L19,17.54V19H17.54L12,13.46L6.46,19H5V17.54L10.54,12L5,6.46V5H6.46L12,10.54L17.54,5H19V6.46L13.46,12Z"/>
+                                                        </Viewbox>
+                                                    </TextBox.InnerRightContent>
+                                                </TextBox>
 
                                                 <ProgressBar Padding="0,0,0,0"
                                                              IsVisible="{Binding !BuildingIndexDone}"
