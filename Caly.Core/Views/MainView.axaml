@@ -115,8 +115,7 @@
 									<TabControl Name="PART_TabControlNavigation"
                                                 TabStripPlacement="Left"
                                                 Padding="12,0,0,0"
-                                                SelectedIndex="{Binding SelectedTabIndex}"
-                                                SelectionChanged="SelectingItemsControl_OnSelectionChanged">
+                                                SelectedIndex="{Binding SelectedTabIndex}">
 
 										<!-- Thumbnails tab -->
 										<TabItem IsSelected="True">
@@ -167,63 +166,7 @@
 												</PathIcon>
 											</TabItem.Header>
 
-											<DockPanel>
-												<Panel.Styles>
-													<Style Selector="TextBlock.indexed">
-														<Setter Property="Text" Value="No result found" />
-													</Style>
-													<Style Selector="TextBlock.indexing">
-														<Setter Property="Text" Value="Searching..." />
-													</Style>
-												</Panel.Styles>
-
-                                                <TextBox DockPanel.Dock="Top"
-                                                         Name="PART_TextBoxSearch"
-                                                         Watermark="Search..."
-                                                         Text="{Binding TextSearch}"
-                                                         KeyDown="PART_TextBoxSearch_OnKeyDown"/>
-
-                                                <ProgressBar DockPanel.Dock="Top"
-                                                             Padding="0,0,0,0"
-                                                             IsVisible="{Binding BuildingIndex}"
-                                                             MinWidth="10"
-                                                             Minimum="0"
-                                                             Maximum="100"
-                                                             Value="{Binding BuildIndexProgress}"
-                                                             VerticalAlignment="Bottom"
-                                                             HorizontalAlignment="Stretch"/>
-
-                                                <TextBlock DockPanel.Dock="Top"
-                                                           IsVisible="{Binding BuildingIndex}"
-                                                           Text="Indexing..." />
-
-												<TextBlock IsVisible="{Binding !SearchResults.Count}" 
-														   Classes.indexed="{Binding !BuildingIndex}"
-														   Classes.indexing="{Binding BuildingIndex}" />
-
-												<TreeView DockPanel.Dock="Bottom"
-                                                      IsVisible="{Binding !!SearchResults.Count}"
-													  ItemsSource="{Binding SearchResults}"
-													  SelectedItem="{Binding SelectedTextSearchResult, Mode=OneWayToSource}">
-												<TreeView.ItemTemplate>
-													<TreeDataTemplate ItemsSource="{Binding Nodes}">
-														<Border HorizontalAlignment="Left"
-																BorderBrush="Gray" BorderThickness="1"
-																CornerRadius="5" Padding="15 3">
-
-															<TextBlock VerticalAlignment="Center"
-																	   HorizontalAlignment="Center"
-																	   Margin="5,0">
-																<TextBlock Text="{Binding PageNumber}"/>
-																<Run Text="/"/>
-																<TextBlock Text="{Binding WordIndex}"/>
-															</TextBlock>
-
-														</Border>
-													</TreeDataTemplate>
-												</TreeView.ItemTemplate>
-											</TreeView>
-											</DockPanel>
+											<controls:SearchPanelControl/>
 
 										</TabItem>
 									</TabControl>

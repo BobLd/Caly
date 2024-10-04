@@ -194,34 +194,6 @@ namespace Caly.Core.Views
             _originalPaneLength = 0;
             e.Handled = true;
         }
-
         #endregion
-
-        private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
-        {
-            if (e.Source is not TabControl tabControl ||
-                tabControl.SelectedIndex != 2 ||
-                tabControl.Name != "PART_TabControlNavigation")
-            {
-                return;
-            }
-
-            // Search tab
-            TextBox? searchTextBox = tabControl.FindDescendantOfType<TextBox>();
-
-            if (searchTextBox?.Name is not null &&
-                searchTextBox.Name.Equals("PART_TextBoxSearch"))
-            {
-                searchTextBox.Focus();
-            }
-        }
-
-        private void PART_TextBoxSearch_OnKeyDown(object? sender, KeyEventArgs e)
-        {
-            if (sender is TextBox textBox && e.Key == Key.Escape)
-            {
-                textBox.Clear();
-            }
-        }
     }
 }
