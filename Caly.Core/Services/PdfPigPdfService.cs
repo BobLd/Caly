@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -23,8 +24,22 @@ namespace Caly.Core.Services
     /// <summary>
     /// One instance per document.
     /// </summary>
-    internal sealed class PdfPigPdfService : IPdfService
+    internal sealed partial class PdfPigPdfService : IPdfService
     {
+        private enum RenderRequestTypes
+        {
+            Picture = 0,
+            Thumbnail = 1,
+            Information = 2,
+            TextLayer = 3
+        }
+
+        private sealed record RenderRequest(PdfPageViewModel Page, RenderRequestTypes Type, CancellationToken Token)
+        {
+        }
+
+        private readonly BlockingCollection<RenderRequest> _pendingRenderRequests = new(new ConcurrentStack<RenderRequest>());
+
         private readonly IDialogService _dialogService;
         private readonly ITextSearchService _textSearchService;
 
@@ -41,6 +56,10 @@ namespace Caly.Core.Services
 
         public int NumberOfPages { get; private set; }
 
+        private readonly CancellationTokenSource _mainCts = new();
+
+        private readonly Task _renderingLoopTask;
+
         public PdfPigPdfService(IDialogService dialogService, ITextSearchService textSearchService)
         {
             if (dialogService is null)
@@ -50,6 +69,53 @@ namespace Caly.Core.Services
 
             _dialogService = dialogService;
             _textSearchService = textSearchService;
+
+            _renderingLoopTask = Task.Run(RenderingLoop, _mainCts.Token);
+        }
+
+        private async Task RenderingLoop()
+        {
+            Debug.ThrowOnUiThread();
+
+            // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
+            while (!_pendingRenderRequests.IsCompleted)
+            {
+                // Blocks if dataItems.Count == 0.
+                // IOE means that Take() was called on a completed collection.
+                // Some other thread can call CompleteAdding after we pass the
+                // IsCompleted check but before we call Take.
+                // In this example, we can simply catch the exception since the
+                // loop will break on the next iteration.
+                try
+                {
+                    RenderRequest renderRequest = _pendingRenderRequests.Take(_mainCts.Token);
+                    switch (renderRequest.Type)
+                    {
+                        case RenderRequestTypes.Picture:
+                            await ProcessPictureRequest(renderRequest);
+                            break;
+
+                        case RenderRequestTypes.Thumbnail:
+                            await ProcessThumbnailRequest(renderRequest);
+                            break;
+
+                        case RenderRequestTypes.TextLayer:
+                            await ProcessTextLayerRequest(renderRequest);
+                            break;
+
+                        default:
+                            throw new NotImplementedException(renderRequest.Type.ToString());
+                    }
+
+                }
+                catch (OperationCanceledException) { }
+                catch (InvalidOperationException) { }
+            }
+        }
+
+        private async Task ProcessTextLayerRequest(RenderRequest renderRequest)
+        {
+            await SetPageTextLayer(renderRequest.Page, renderRequest.Token);
         }
 
         public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken cancellationToken)
@@ -138,7 +204,23 @@ namespace Caly.Core.Services
             }
         }
 
-        public async Task<PdfPageInformation?> GetPageInformationAsync(int pageNumber, CancellationToken cancellationToken)
+        public async Task SetPageTextLayer(PdfPageViewModel page, CancellationToken token)
+        {
+            page.PdfTextLayer ??= await GetTextLayerAsync(page.PageNumber, token);
+            if (page.PdfTextLayer is not null)
+            {
+                // We ensure the correct selection is set now that we have the text layer
+                page.TextSelectionHandler.Selection.SelectWordsInRange(page);
+            }
+        }
+
+        public void AskPageTextLayer(PdfPageViewModel page, CancellationToken token)
+        {
+            _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.TextLayer, token), token);
+        }
+
+        public async Task<PdfPageInformation?> GetPageInformationAsync(int pageNumber,
+            CancellationToken cancellationToken)
         {
             Debug.ThrowOnUiThread();
 
@@ -168,40 +250,7 @@ namespace Caly.Core.Services
             }
         }
 
-        public async Task<IRef<SKPicture>?> GetRenderPageAsync(int pageNumber, CancellationToken cancellationToken)
-        {
-            Debug.ThrowOnUiThread();
-
-            SKPicture? pic;
-            try
-            {
-                if (cancellationToken.IsCancellationRequested || isDiposed())
-                {
-                    return null;
-                }
-
-                await _semaphore.WaitAsync(CancellationToken.None);
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                pic = _document!.GetPage<SKPicture>(pageNumber);
-            }
-            catch (OperationCanceledException)
-            {
-                return null;
-            }
-            finally
-            {
-                if (_semaphore.CurrentCount == 0 && !isDiposed())
-                {
-                    _semaphore.Release();
-                }
-            }
-
-            return pic is null ? null : RefCountable.Create(pic);
-        }
-
-        public async Task<PdfTextLayer?> GetTextLayerAsync(int pageNumber, CancellationToken cancellationToken)
+        private async Task<PdfTextLayer?> GetTextLayerAsync(int pageNumber, CancellationToken cancellationToken)
         {
             Debug.ThrowOnUiThread();
 
@@ -335,7 +384,10 @@ namespace Caly.Core.Services
 
             Interlocked.Increment(ref _isDisposed);
 
-            System.Diagnostics.Debug.WriteLine($"Disposing document for {FileName}");
+            System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document for {FileName}");
+
+            _pendingRenderRequests.CompleteAdding();
+
             _semaphore.Dispose();
 
             _textSearchService.Dispose();
@@ -351,6 +403,12 @@ namespace Caly.Core.Services
                 _document.Dispose();
                 _document = null;
             }
+
+            _pendingRenderRequests.Dispose();
+
+            GC.KeepAlive(_renderingLoopTask);
+
+            System.Diagnostics.Debug.Assert(_renderingLoopTask.IsCanceled || _renderingLoopTask.IsCompleted || _renderingLoopTask.IsCompletedSuccessfully);
         }
 
         public async ValueTask DisposeAsync()
@@ -360,8 +418,11 @@ namespace Caly.Core.Services
             try
             {
                 Interlocked.Increment(ref _isDisposed);
+                
+                System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document async for {FileName}");
 
-                System.Diagnostics.Debug.WriteLine($"Disposing document async for {FileName}");
+                _pendingRenderRequests.CompleteAdding();
+
                 _semaphore.Dispose();
 
                 _textSearchService.Dispose();
@@ -377,10 +438,12 @@ namespace Caly.Core.Services
                     _document.Dispose();
                     _document = null;
                 }
+
+                _pendingRenderRequests.Dispose();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ERROR DisposeAsync for {FileName}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[INFO] ERROR DisposeAsync for {FileName}: {ex.Message}");
             }
         }
     }

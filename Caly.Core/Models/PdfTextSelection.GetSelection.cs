@@ -79,7 +79,7 @@ namespace Caly.Core.Models
             if (selectedWords is null)
             {
                 // We need to load the layer
-                await page.LoadInteractiveLayer(token);
+                await page.SetPageTextLayer(token);
                 selectedWords = GetPageSelectedWords(pageNumber);
 
                 System.Diagnostics.Debug.WriteLine($"GetPageSelectionAsAsync: loaded page interactive layer {pageNumber}.");

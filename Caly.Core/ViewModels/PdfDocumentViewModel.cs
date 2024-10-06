@@ -191,6 +191,16 @@ namespace Caly.Core.ViewModels
                 });
         }
 
+        public void ClearAllThumbnails()
+        {
+            _pdfService.ClearAllThumbnail();
+        }
+
+        public void ClearAllPagePictures()
+        {
+            _pdfService.ClearAllPagePictures();
+        }
+
         /// <summary>
         /// Dispose objects.
         /// </summary>

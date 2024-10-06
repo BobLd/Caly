@@ -14,18 +14,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
 using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using SkiaSharp;
 
 namespace Caly.Core.ViewModels
@@ -124,238 +121,77 @@ namespace Caly.Core.ViewModels
             SelectionChangedFlag = !SelectionChangedFlag;
         }
 
-        [RelayCommand]
-        private async Task LoadPagePicture()
+        public void LoadPage()
         {
-            await Task.Run(async () =>
+            if (_cts is null)
             {
-                if (_cts is null)
-                {
-                    return;
-                }
+                return;
+            }
 
-                await _mutex.WaitAsync();
-
-                try
-                {
-                    await LoadPagePictureInternal();
-
-                    if (PdfPicture is not null)
-                    {
-                        float? w = PdfPicture?.Item?.CullRect.Width;
-                        float? h = PdfPicture?.Item?.CullRect.Height;
-                        if (w.HasValue && h.HasValue)
-                        {
-                            Width = w.Value;
-                            Height = h.Value;
-                        }
-
-                        await LoadInteractiveLayer(_cts.Token);
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    DisposePictureSafely();
-                }
-                catch (Exception e)
-                {
-                    DisposePictureSafely();
-                    Exception = new ExceptionViewModel(e);
-                }
-                finally
-                {
-                    _mutex.Release();
-                }
-            });
+            try
+            {
+                LoadPagePicture();
+                LoadInteractiveLayer(_cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                DisposePicture();
+            }
+            catch (Exception e)
+            {
+                DisposePicture();
+                Exception = new ExceptionViewModel(e);
+            }
         }
 
-        private async Task LoadPagePictureInternal()
+        private void LoadPagePicture()
         {
             if (PdfPicture?.Item is not null)
             {
                 return;
             }
-
-            _cts.Token.ThrowIfCancellationRequested();
-
-            PdfPicture = await _pdfService.GetRenderPageAsync(PageNumber, _cts.Token);
+            
+            _pdfService.AskPagePicture(this, _cts.Token);
         }
 
-        [RelayCommand]
-        private async Task UnloadPagePicture()
+        public void UnloadPagePicture()
         {
-            await Task.Run(async () =>
-            {
-                if (_cts is null)
-                {
-                    return;
-                }
-
-                await _mutex.WaitAsync();
-                try
-                {
-                    if (_cts.IsCancellationRequested)
-                    {
-                        return; // already cancelled
-                    }
-
-                    await _cts.CancelAsync();
-                    DisposePictureSafely();
-                }
-                catch (Exception e)
-                {
-                    Exception = new ExceptionViewModel(e);
-                }
-                finally
-                {
-                    _cts.Dispose();
-                    _cts = new CancellationTokenSource();
-                    _mutex.Release();
-                }
-            });
+            DisposePicture();
         }
 
-        private void DisposePictureSafely()
+        private void DisposePicture()
         {
-            var tempPicture = PdfPicture;
-            PdfPicture = null;
-            tempPicture?.Dispose();
-            System.Diagnostics.Debug.Assert((tempPicture?.RefCount ?? 0) == 0);
+            _pdfService.AskRemovePagePicture(this);
         }
 
-        [RelayCommand]
-        private async Task LoadThumbnail()
+        public void LoadThumbnail()
         {
-            await Task.Run(async () =>
-            {
-                if (_cts is null)
-                {
-                    return;
-                }
-
-                await _mutex.WaitAsync();
-                try
-                {
-                    if (Thumbnail is not null)
-                    {
-                        return;
-                    }
-
-                    if (PdfPicture is null)
-                    {
-                        await LoadPagePictureInternal();
-                        if (PdfPicture is null)
-                        {
-                            return;
-                        }
-                    }
-
-                    int tWidth = (int)(ThumbnailWidth / 1.5);
-                    int tHeight = (int)(ThumbnailHeight / 1.5);
-
-                    SKMatrix scale = SKMatrix.CreateScale(tWidth / (float)Width, tHeight / (float)Height);
-
-                    using (SKBitmap bitmap = new SKBitmap(tWidth, tHeight))
-                    using (SKCanvas canvas = new SKCanvas(bitmap))
-                    {
-                        canvas.Clear(SKColors.White);
-                        canvas.DrawPicture(PdfPicture!.Item, ref scale);
-
-                        using (SKData d = bitmap.Encode(SKEncodedImageFormat.Jpeg, 100))
-                        await using (Stream stream = d.AsStream())
-                        {
-                            Thumbnail = Bitmap.DecodeToWidth(stream, ThumbnailWidth,
-                                BitmapInterpolationMode.LowQuality);
-                        }
-                    }
-
-                    if (!IsPageVisible)
-                    {
-                        DisposePictureSafely();
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    //DisposePictureSafely();
-                }
-                catch (Exception e)
-                {
-                    //DisposePictureSafely();
-                    Exception = new ExceptionViewModel(e);
-                }
-                finally
-                {
-                    _mutex.Release();
-                }
-            });
+            _pdfService.AskPageThumbnail(this, _cts.Token);
         }
 
-        [RelayCommand]
-        private async Task UnloadThumbnail()
+        public void UnloadThumbnail()
         {
-            await Task.Run(async () =>
-            {
-                if (_cts is null)
-                {
-                    return;
-                }
-
-                await _mutex.WaitAsync();
-                try
-                {
-                    if (_cts.IsCancellationRequested)
-                    {
-                        return; // already cancelled
-                    }
-
-                    var t = Thumbnail;
-                    Thumbnail = null;
-                    // We try to make sure the view's Thumbnail property is null before disposing it:
-                    Dispatcher.UIThread.Invoke(() =>
-                    {
-                        t?.Dispose();
-                        System.Diagnostics.Debug.WriteLine($"Disposed thumbnail for page {PageNumber}.");
-                    }, DispatcherPriority.Loaded);
-                }
-                catch (Exception e)
-                {
-                    Exception = new ExceptionViewModel(e);
-                }
-                finally
-                {
-                    _mutex.Release();
-                }
-            });
+            _pdfService.AskRemoveThumbnail(this);
         }
 
-        public async Task LoadInteractiveLayer(CancellationToken cancellationToken)
+        public void LoadInteractiveLayer(CancellationToken cancellationToken)
         {
-            try
-            {
-                PdfTextLayer ??= await _pdfService.GetTextLayerAsync(PageNumber, cancellationToken);
-                if (PdfTextLayer is not null)
-                {
-                    // We ensure the correct selection is set now that we have the text layer
-                    TextSelectionHandler.Selection.SelectWordsInRange(this);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // No op
-            }
-            catch (Exception ex)
-            {
-                Exception = new ExceptionViewModel(ex);
-            }
+            _pdfService.AskPageTextLayer(this, cancellationToken);
         }
 
-        public async ValueTask DisposeAsync()
+        public async Task SetPageTextLayer(CancellationToken token)
         {
-            await UnloadThumbnail();
-            await UnloadPagePicture();
+            await _pdfService.SetPageTextLayer(this, token);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            UnloadThumbnail();
+            UnloadPagePicture();
             _cts?.Dispose();
             _cts = null;
             _mutex.Dispose(); // TODO - Check if right place
+            return ValueTask.CompletedTask;
         }
     }
 }

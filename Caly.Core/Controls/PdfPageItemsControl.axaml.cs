@@ -168,7 +168,7 @@ public class PdfPageItemsControl : ItemsControl
 
         cp.PropertyChanged += _onContainerPropertyChanged;
         vm.VisibleArea = null;
-        vm.IsPagePrepared = true;
+        vm.LoadPage();
     }
 
     protected override void ClearContainerForItemOverride(Control container)
@@ -198,7 +198,7 @@ public class PdfPageItemsControl : ItemsControl
         if (e.Property == ContentPresenter.ContentProperty && e.OldValue is PdfPageViewModel vm)
         {
             vm.VisibleArea = null;
-            vm.IsPagePrepared = false;
+            vm.UnloadPagePicture();
         }
     }
 
@@ -765,6 +765,15 @@ public class PdfPageItemsControl : ItemsControl
             _isSettingPageVisibility = false;
 
             ScrollIntoView(currentPage);
+        }
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == DataContextProperty && change.OldValue is PdfDocumentViewModel oldVm)
+        {
+            oldVm.ClearAllPagePictures();
         }
     }
 }
