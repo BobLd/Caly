@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Caly.Core.Utilities;
@@ -42,8 +41,10 @@ namespace Caly.Core.Services
 
             try
             {
-                if (_pictureTokens.TryRemove(renderRequest.Page.PageNumber, out _))
+                if (_pictureTokens.TryRemove(renderRequest.Page.PageNumber, out var cts))
                 {
+                    cts.Dispose();
+
                     if (renderRequest.Page.PdfPicture is not null)
                     {
                         System.Diagnostics.Debug.WriteLine($"[RENDER] [PICTURE] No need process {renderRequest.Page.PageNumber}");

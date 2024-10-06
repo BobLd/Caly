@@ -43,8 +43,10 @@ namespace Caly.Core.Services
 
             try
             {
-                if (_thumbnailTokens.TryRemove(renderRequest.Page.PageNumber, out _))
+                if (_thumbnailTokens.TryRemove(renderRequest.Page.PageNumber, out var cts))
                 {
+                    cts.Dispose();
+
                     if (renderRequest.Page.Thumbnail is not null)
                     {
                         System.Diagnostics.Debug.WriteLine($"[RENDER] [THUMBNAIL] No need process {renderRequest.Page.PageNumber}");
