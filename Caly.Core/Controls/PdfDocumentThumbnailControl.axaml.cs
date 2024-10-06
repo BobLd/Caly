@@ -13,8 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
@@ -30,25 +32,63 @@ namespace Caly.Core.Controls
         {
             base.OnApplyTemplate(e);
             _listBox = e.NameScope.FindFromNameScope<ListBox>("PART_ListBox");
-            _listBox.ContainerPrepared += _listBox_ContainerPrepared; // TODO - Unsubscribe
+            _listBox.ContainerPrepared += _listBox_ContainerPrepared;
             _listBox.ContainerClearing += _listBox_ContainerClearing;
         }
 
-        private async void _listBox_ContainerClearing(object? sender, ContainerClearingEventArgs e)
+        private void _listBox_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Container.DataContext is PdfPageViewModel vm)
+            if (e.Property == DataContextProperty && e.OldValue is PdfDocumentViewModel oldVm)
             {
-                System.Diagnostics.Debug.WriteLine($"_listBox_ContainerClearing: {vm.PageNumber}.");
-                await vm.UnloadThumbnailCommand.ExecuteAsync(null);
-                // Seems like there's a bug in ListBox when scrolling up/down via arrows. some visible containers are cleared (whereas they should not)
+                oldVm.ClearAllThumbnails();
+            }
+        }
+        
+        private void _listBox_ContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+        {
+            if (e.Container is not ListBoxItem container || e.Container.DataContext is not PdfPageViewModel vm)
+            {
+                return;
+            }
+
+            container.PropertyChanged += Container_PropertyChanged;
+            vm.LoadThumbnail();
+        }
+
+        private void Container_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Property == ContentPresenter.ContentProperty && e.OldValue is PdfPageViewModel oldVm)
+            {
+                if (_listBox?.ItemsPanelRoot is VirtualizingStackPanel panel)
+                {
+                    int startPage = panel.FirstRealizedIndex + 1;
+                    int endPage = panel.LastRealizedIndex + 1;
+
+                    if (startPage == 0 || endPage == 0 || oldVm.PageNumber <= startPage || oldVm.PageNumber >= endPage)
+                    {
+                        oldVm.UnloadThumbnail();
+                    }
+                }
             }
         }
 
-        private async void _listBox_ContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+        private void _listBox_ContainerClearing(object? sender, ContainerClearingEventArgs e)
         {
-            if (e.Container.DataContext is PdfPageViewModel vm)
+            if (e.Container is not ListBoxItem container)
             {
-                await vm.LoadThumbnailCommand.ExecuteAsync(null);
+                return;
+            }
+
+            container.PropertyChanged -= Container_PropertyChanged;
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnDetachedFromVisualTree(e);
+            if (_listBox is not null)
+            {
+                _listBox.ContainerPrepared -= _listBox_ContainerPrepared;
+                _listBox.ContainerClearing -= _listBox_ContainerClearing;
             }
         }
     }

@@ -14,9 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls.Primitives;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 
 namespace Caly.Core.Controls
@@ -49,16 +49,6 @@ namespace Caly.Core.Controls
         public static readonly StyledProperty<double> PageHeightProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, double>(nameof(PageHeight));
 
         /// <summary>
-        /// Defines the <see cref="LoadThumbnailCommand"/> property.
-        /// </summary>
-        public static readonly StyledProperty<ICommand?> LoadThumbnailCommandProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, ICommand?>(nameof(LoadThumbnailCommand));
-
-        /// <summary>
-        /// Defines the <see cref="UnloadThumbnailCommand"/> property.
-        /// </summary>
-        public static readonly StyledProperty<ICommand?> UnloadThumbnailCommandProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, ICommand?>(nameof(UnloadThumbnailCommand));
-
-        /// <summary>
         /// Defines the <see cref="Thumbnail"/> property.
         /// </summary>
         public static readonly StyledProperty<IImage?> ThumbnailProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, IImage?>(nameof(Thumbnail));
@@ -79,26 +69,6 @@ namespace Caly.Core.Controls
         {
             get => GetValue(PageHeightProperty);
             set => SetValue(PageHeightProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets an <see cref="ICommand"/> to be invoked when the page picture needs to be loaded.
-        /// <para>This is when the page becomes 'visible'.</para>
-        /// </summary>
-        public ICommand? LoadThumbnailCommand
-        {
-            get => GetValue(LoadThumbnailCommandProperty);
-            set => SetValue(LoadThumbnailCommandProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets an <see cref="ICommand"/> to be invoked when the page picture needs to be unloaded.
-        /// <para>This is when the page becomes 'invisible'.</para>
-        /// </summary>
-        public ICommand? UnloadThumbnailCommand
-        {
-            get => GetValue(UnloadThumbnailCommandProperty);
-            set => SetValue(UnloadThumbnailCommandProperty, value);
         }
 
         public IImage? Thumbnail
@@ -150,6 +120,15 @@ namespace Caly.Core.Controls
                 context.DrawRectangle(_areaBrush.ToImmutable(),
                     _areaPen.ToImmutable(),
                     VisibleArea.Value.TransformToAABB(_scale));
+            }
+        }
+
+        protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+        {
+            base.OnDetachedFromLogicalTree(e);
+            if (Thumbnail is IDisposable disposable)
+            {
+                disposable.Dispose();
             }
         }
 

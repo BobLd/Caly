@@ -20,10 +20,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using Caly.Core.Models;
-using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Caly.Pdf.Models;
-using SkiaSharp;
 
 namespace Caly.Core.Services.Interfaces
 {
@@ -43,14 +41,28 @@ namespace Caly.Core.Services.Interfaces
 
         Task<PdfPageInformation?> GetPageInformationAsync(int pageNumber, CancellationToken cancellationToken);
 
-        Task<IRef<SKPicture>?> GetRenderPageAsync(int pageNumber, CancellationToken cancellationToken);
-
-        Task<PdfTextLayer?> GetTextLayerAsync(int pageNumber, CancellationToken cancellationToken);
-
         Task<ObservableCollection<PdfBookmarkNode>?> GetPdfBookmark(CancellationToken cancellationToken);
 
         Task BuildIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken cancellationToken);
 
         Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken cancellationToken);
+        
+        void AskPagePicture(PdfPageViewModel page, CancellationToken token);
+
+        void AskRemovePagePicture(PdfPageViewModel page);
+
+        void ClearAllPagePictures();
+
+
+        void AskPageThumbnail(PdfPageViewModel page, CancellationToken token);
+
+        void AskRemoveThumbnail(PdfPageViewModel page);
+
+        void ClearAllThumbnail();
+
+
+        void AskPageTextLayer(PdfPageViewModel page, CancellationToken token);
+
+        Task SetPageTextLayer(PdfPageViewModel page, CancellationToken token);
     }
 }

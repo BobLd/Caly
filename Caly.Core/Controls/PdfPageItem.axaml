@@ -13,15 +13,12 @@
 
 	<Style Selector="controls|PdfPageItem" x:DataType="viewModels:PdfPageViewModel">
         <Setter Property="Exception" Value="{Binding Exception}"/>
-		<Setter Property="LoadPagePictureCommand" Value="{Binding LoadPagePictureCommand}"/>
-		<Setter Property="UnloadPagePictureCommand" Value="{Binding UnloadPagePictureCommand}"/>
 		<Setter Property="Width" Value="{Binding Width}"/>
 		<Setter Property="Height" Value="{Binding Height}"/>
 		<Setter Property="Picture" Value="{Binding PdfPicture}"/>
 		<Setter Property="VisibleArea" Value="{Binding VisibleArea}"/>
 		<Setter Property="IsPageRendering" Value="{Binding IsPageRendering}"/>
 		<Setter Property="IsPageVisible" Value="{Binding IsPageVisible}"/>
-		<Setter Property="IsPagePrepared" Value="{Binding IsPagePrepared}"/>
         <Setter Property="Margin" Value="0,0,0,5"></Setter>
 
 		<Setter Property="Template">
