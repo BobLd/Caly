@@ -142,6 +142,7 @@ namespace Caly.Core.ViewModels
         [RelayCommand]
         private void ActivateSearchTextTab()
         {
+            IsPaneOpen = true;
             getCurrentPdfDocument()?.ActivateSearchTextTabCommand.Execute(null);
         }
 
