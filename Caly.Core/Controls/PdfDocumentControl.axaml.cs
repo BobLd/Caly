@@ -29,7 +29,7 @@ using Caly.Core.ViewModels;
 namespace Caly.Core.Controls
 {
     [TemplatePart("PART_PdfPageItemsControl", typeof(PdfPageItemsControl))]
-    public class PdfDocumentControl : CalyTemplatedControl
+    public sealed class PdfDocumentControl : CalyTemplatedControl
     {
         private PdfPageItemsControl? _pdfPageItemsControl;
 

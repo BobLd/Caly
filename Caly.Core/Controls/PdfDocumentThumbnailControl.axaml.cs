@@ -24,7 +24,7 @@ using Caly.Core.ViewModels;
 namespace Caly.Core.Controls
 {
     [TemplatePart("PART_ListBox", typeof(ListBox))]
-    public class PdfDocumentThumbnailControl : TemplatedControl
+    public sealed class PdfDocumentThumbnailControl : TemplatedControl
     {
         private ListBox? _listBox;
 

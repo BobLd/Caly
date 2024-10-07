@@ -21,7 +21,7 @@ using Avalonia.Media;
 
 namespace Caly.Core.Controls
 {
-    public class PdfPageThumbnailControl : TemplatedControl
+    public sealed class PdfPageThumbnailControl : TemplatedControl
     {
         /*
          * See PDF Reference 1.7 - C.2 Architectural limits

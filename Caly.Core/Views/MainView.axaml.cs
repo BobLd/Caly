@@ -51,7 +51,7 @@ namespace Caly.Core.Views
             }
         }
 
-        private async void Drop(object? sender, DragEventArgs e)
+        private static async void Drop(object? sender, DragEventArgs e)
         {
             try
             {

@@ -17,7 +17,7 @@ namespace Caly.Core.Controls;
 
 [TemplatePart("PART_ScrollViewer", typeof(ScrollViewer))]
 [TemplatePart("PART_LayoutTransformControl", typeof(LayoutTransformControl))]
-public class PdfPageItemsControl : ItemsControl
+public sealed class PdfPageItemsControl : ItemsControl
 {
     private const double _zoomFactor = 1.1;
 

@@ -17,7 +17,7 @@ using Avalonia.Controls;
 
 namespace Caly.Core.Views
 {
-    public partial class MessageWindow : Window
+    public sealed partial class MessageWindow : Window
     {
         public MessageWindow()
         {

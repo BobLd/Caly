@@ -26,7 +26,7 @@ using SkiaSharp;
 namespace Caly.Core.Controls
 {
     [TemplatePart("PART_PdfPageTextLayerControl", typeof(PdfPageTextLayerControl))]
-    public class PdfPageItem : ContentControl
+    public sealed class PdfPageItem : ContentControl
     {
         /// <summary>
         /// Defines the <see cref="IsPageRendering"/> property.

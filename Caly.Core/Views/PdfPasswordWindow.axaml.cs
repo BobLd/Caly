@@ -19,7 +19,7 @@ using Avalonia.Interactivity;
 
 namespace Caly.Core.Views
 {
-    public partial class PdfPasswordWindow : Window
+    public sealed partial class PdfPasswordWindow : Window
     {
         public PdfPasswordWindow()
         {

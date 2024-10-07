@@ -8,8 +8,8 @@
              x:DataType="viewModels:PdfDocumentViewModel"
              Focusable="True">
 
-	<DockPanel Focusable="True">
-		<Panel.Styles>
+    <DockPanel Focusable="True">
+        <Panel.Styles>
 			<Style Selector="TextBlock.indexed">
 				<Setter Property="Text" Value="No result found" />
 			</Style>
@@ -19,7 +19,7 @@
 		</Panel.Styles>
 
 		<TextBox DockPanel.Dock="Top"
-				 Name="PART_TextBoxSearch"
+				 Name="TextBoxSearch"
 				 Focusable="True"
 				 Watermark="Search..."
 				 Text="{Binding TextSearch}"
