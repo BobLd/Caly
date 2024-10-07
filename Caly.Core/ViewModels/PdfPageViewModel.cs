@@ -29,7 +29,6 @@ namespace Caly.Core.ViewModels
 {
     public sealed partial class PdfPageViewModel : ViewModelBase, IAsyncDisposable
     {
-        private readonly SemaphoreSlim _mutex = new SemaphoreSlim(1);
         private readonly IPdfService _pdfService;
 
         private CancellationTokenSource? _cts = new();
@@ -190,7 +189,6 @@ namespace Caly.Core.ViewModels
             UnloadPagePicture();
             _cts?.Dispose();
             _cts = null;
-            _mutex.Dispose(); // TODO - Check if right place
             return ValueTask.CompletedTask;
         }
     }
