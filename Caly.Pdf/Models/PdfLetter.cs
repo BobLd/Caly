@@ -99,13 +99,13 @@ namespace Caly.Pdf.Models
         private TextOrientation GetTextOrientationRot()
         {
             double rotation = BoundingBox.Rotation;
-            int rotationInt = (int)Math.Round(rotation, MidpointRounding.AwayFromZero);
 
-            if (Math.Abs(rotation - rotationInt) >= 10e-5)
+            if (Math.Abs(rotation % 90) >= 10e-5)
             {
                 return TextOrientation.Other;
             }
 
+            int rotationInt = (int)Math.Round(rotation, MidpointRounding.AwayFromZero);
             switch (rotationInt)
             {
                 case 0:
