@@ -66,7 +66,7 @@ namespace Caly.Core.Handlers
             Selection = new PdfTextSelection(numberOfPages);
         }
 
-        private void ClearSelection(PdfPageTextLayerControl currentTextLayer)
+        public void ClearSelection(PdfPageTextLayerControl currentTextLayer)
         {
             Debug.ThrowNotOnUiThread();
 

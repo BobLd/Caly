@@ -31,7 +31,7 @@ namespace Caly.Core.Handlers.Interfaces
         void OnPointerPressed(PointerPressedEventArgs e);
 
         void OnPointerReleased(PointerReleasedEventArgs e);
-
+        
         /// <summary>
         /// Clear current results and set the new ones.
         /// </summary>
@@ -51,5 +51,7 @@ namespace Caly.Core.Handlers.Interfaces
         /// TODO - Should not be in selection handler.
         /// </summary>
         void RenderPage(PdfPageTextLayerControl control, DrawingContext context);
+
+        void ClearSelection(PdfPageTextLayerControl currentTextLayer);
     }
 }
