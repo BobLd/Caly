@@ -33,7 +33,7 @@ namespace Caly.Core.ViewModels
         private async Task LoadBookmarks()
         {
             _cts.Token.ThrowIfCancellationRequested();
-            Bookmarks = await Task.Run(() => _pdfService.GetPdfBookmark(_cts.Token));
+            await Task.Run(() => _pdfService.SetPdfBookmark(this, _cts.Token));
         }
     }
 }

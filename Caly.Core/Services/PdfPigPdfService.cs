@@ -118,7 +118,7 @@ namespace Caly.Core.Services
             await SetPageTextLayer(renderRequest.Page, renderRequest.Token);
         }
 
-        public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken cancellationToken)
+        public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
 
@@ -142,7 +142,7 @@ namespace Caly.Core.Services
                 _fileStream = new MemoryStream();
                 await using (var fs = await storageFile.OpenReadAsync())
                 {
-                    await fs.CopyToAsync(_fileStream, cancellationToken);
+                    await fs.CopyToAsync(_fileStream, token);
                     _fileStream.Position = 0;
                 }
 
@@ -166,7 +166,7 @@ namespace Caly.Core.Services
 
                     NumberOfPages = _document.NumberOfPages;
                     return NumberOfPages;
-                }, cancellationToken);
+                }, token);
             }
             catch (PdfDocumentEncryptedException)
             {
@@ -188,7 +188,7 @@ namespace Caly.Core.Services
                         continue;
                     }
 
-                    var pageCount = await OpenDocument(storageFile, pw, cancellationToken);
+                    var pageCount = await OpenDocument(storageFile, pw, token);
                     if (pageCount > 0)
                     {
                         // Password OK and document opened
@@ -219,27 +219,31 @@ namespace Caly.Core.Services
             _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.TextLayer, token), token);
         }
 
-        public async Task<PdfPageInformation?> GetPageInformationAsync(int pageNumber,
-            CancellationToken cancellationToken)
+        public async Task SetPageInformationAsync(PdfPageViewModel page, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
 
             try
             {
-                if (cancellationToken.IsCancellationRequested || isDiposed())
+                if (token.IsCancellationRequested || isDiposed())
                 {
-                    return null;
+                    return;
                 }
 
                 await _semaphore.WaitAsync(CancellationToken.None);
 
-                cancellationToken.ThrowIfCancellationRequested();
+                token.ThrowIfCancellationRequested();
 
-                return _document!.GetPage<PdfPageInformation>(pageNumber);
+                var info = _document!.GetPage<PdfPageInformation>(page.PageNumber);
+
+                if (!token.IsCancellationRequested)
+                {
+                    page.Width = info.Width;
+                    page.Height = info.Height;
+                }
             }
             catch (OperationCanceledException)
             {
-                return null;
             }
             finally
             {
@@ -283,42 +287,40 @@ namespace Caly.Core.Services
             }
         }
 
-        public async Task<ObservableCollection<PdfBookmarkNode>?> GetPdfBookmark(CancellationToken cancellationToken)
+        public async Task SetPdfBookmark(PdfDocumentViewModel pdfDocument, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
 
             try
             {
-                if (cancellationToken.IsCancellationRequested || isDiposed())
+                if (token.IsCancellationRequested || isDiposed())
                 {
-                    return null;
+                    return;
                 }
 
                 await _semaphore.WaitAsync(CancellationToken.None);
 
-                cancellationToken.ThrowIfCancellationRequested();
+                token.ThrowIfCancellationRequested();
 
                 if (!_document!.TryGetBookmarks(out var bookmarks) || bookmarks.Roots.Count == 0)
                 {
-                    return null;
+                    return;
                 }
 
                 var children = new ObservableCollection<PdfBookmarkNode>();
                 foreach (BookmarkNode node in bookmarks.Roots)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var n = BuildPdfBookmarkNode(node, cancellationToken);
+                    var n = BuildPdfBookmarkNode(node, token);
                     if (n is not null)
                     {
                         children.Add(n);
                     }
                 }
 
-                return children;
+                pdfDocument.Bookmarks = children;
             }
             catch (OperationCanceledException)
             {
-                return null;
             }
             finally
             {
@@ -329,18 +331,18 @@ namespace Caly.Core.Services
             }
         }
 
-        public async Task BuildIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken cancellationToken)
+        public async Task BuildIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
 
-            await _textSearchService.BuildPdfDocumentIndex(pdfDocument, progress, cancellationToken);
+            await _textSearchService.BuildPdfDocumentIndex(pdfDocument, progress, token);
         }
 
-        public Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken cancellationToken)
+        public Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
 
-            return _textSearchService.Search(pdfDocument, query, cancellationToken);
+            return _textSearchService.Search(pdfDocument, query, token);
         }
 
         private static PdfBookmarkNode? BuildPdfBookmarkNode(BookmarkNode node, CancellationToken cancellationToken)
