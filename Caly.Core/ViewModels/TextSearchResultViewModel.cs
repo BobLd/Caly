@@ -14,11 +14,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Caly.Core.ViewModels
 {
+    [DebuggerDisplay("Page {PageNumber} Word index: {WordIndex} ({Score}), Children {Nodes?.Count}")]
     public sealed partial class TextSearchResultViewModel : ViewModelBase
     {
         [ObservableProperty] private int _pageNumber;

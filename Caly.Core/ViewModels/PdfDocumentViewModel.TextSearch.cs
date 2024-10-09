@@ -45,12 +45,12 @@ namespace Caly.Core.ViewModels
 
         // https://stackoverflow.com/questions/18999827/a-pattern-for-self-cancelling-and-restarting-task
         [RelayCommand]
-        private async Task SearchText(CancellationToken token) // TODO - To finish cancel/restart
+        private async Task SearchText(CancellationToken token)
         {
             try
             {
                 var previousCts = _pendingSearchTaskCts;
-                var newCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                var newCts = CancellationTokenSource.CreateLinkedTokenSource(token, _cts.Token);
                 _pendingSearchTaskCts = newCts;
 
                 if (previousCts is not null)
@@ -58,7 +58,19 @@ namespace Caly.Core.ViewModels
                     // cancel the previous session and wait for its termination
                     System.Diagnostics.Debug.WriteLine("cancel the previous session and wait for its termination");
                     await previousCts.CancelAsync();
-                    try { await _pendingSearchTask; } catch { /* Ignore */ }
+                    try
+                    {
+                        await _pendingSearchTask;
+                    }
+                    catch (OperationCanceledException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine(e);
+                        throw;
+                    }
+                    catch
+                    {
+                         /* Ignore */
+                    }
                 }
 
                 newCts.Token.ThrowIfCancellationRequested();
@@ -94,7 +106,7 @@ namespace Caly.Core.ViewModels
                         token.ThrowIfCancellationRequested();
                         indexBuildTaskComplete = indexBuildTask.IsCompleted;
                         var searchResults = await _pdfService.SearchText(this, TextSearch, token);
-
+                        
                         foreach (var result in searchResults.OrderBy(r => r.PageNumber))
                         {
                             token.ThrowIfCancellationRequested();
@@ -134,6 +146,10 @@ namespace Caly.Core.ViewModels
                 {
                     await searchTask;
                 }
+            }
+            catch (OperationCanceledException)
+            {
+
             }
             catch (QueryParserException qpe)
             {

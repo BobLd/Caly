@@ -65,6 +65,7 @@ namespace Caly.Core.Services
 
                                 if (textLayer is null)
                                 {
+                                    ct.ThrowIfCancellationRequested();
                                     throw new NullReferenceException("Cannot index search on a null PdfTextLayer.");
                                 }
 
@@ -94,8 +95,9 @@ namespace Caly.Core.Services
                 progress.Report(i + 1);
 
                 System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer is not null);
-                //System.Diagnostics.Debug.Assert(pdfDocument.Pages[i].PdfTextLayer!.Count == _index.Metadata.GetDocumentMetadata(i).DocumentStatistics.TotalTokenCount); // Can't do that with batch
             }
+
+            token.ThrowIfCancellationRequested();
 
             await _index.CommitBatchChangeAsync(token);
             progress.Report(pdfDocument.PageCount);
@@ -105,34 +107,58 @@ namespace Caly.Core.Services
         {
             Debug.ThrowOnUiThread();
 
+            token.ThrowIfCancellationRequested();
+
             if (string.IsNullOrEmpty(text))
             {
                 return [];
             }
 
-            var results = _index.Search(text);
+            return await Task.Run(() =>
+            {
+                var results = _index.Search(text);
 
-            return results.Select(r =>
-                new TextSearchResultViewModel()
+                token.ThrowIfCancellationRequested();
+
+                return results.Select(r => ToViewModel(pdfDocument, r, token));
+            }, token);
+        }
+
+        private static TextSearchResultViewModel ToViewModel(PdfDocumentViewModel pdfDocument, SearchResult<int> result,
+            CancellationToken token)
+        {
+            var children = new ObservableCollection<TextSearchResultViewModel>();
+
+            foreach (var m in result.FieldMatches)
+            {
+                token.ThrowIfCancellationRequested();
+
+                foreach (TokenLocation l in m.Locations)
                 {
-                    PageNumber = r.Key,
-                    Nodes = new ObservableCollection<TextSearchResultViewModel>(r.FieldMatches.SelectMany(m => m
-                        .Locations
-                        .Select(l =>
-                            new TextSearchResultViewModel()
-                            {
-                                PageNumber = r.Key,
-                                WordIndex = l.TokenIndex,
-                                Score = m.Score,
-                                Word = pdfDocument.Pages[r.Key - 1].PdfTextLayer?[l.TokenIndex]
-                            }
-                        )))
-                });
+                    token.ThrowIfCancellationRequested();
+
+                    var vm = new TextSearchResultViewModel()
+                    {
+                        PageNumber = result.Key,
+                        WordIndex = l.TokenIndex,
+                        Score = m.Score,
+                        Word = pdfDocument.Pages[result.Key - 1].PdfTextLayer?[l.TokenIndex]
+                    };
+                    children.Add(vm);
+                }
+            }
+
+            return new TextSearchResultViewModel()
+            {
+                PageNumber = result.Key,
+                Nodes = children
+            };
         }
 
         public void Dispose()
         {
             _index.Dispose();
+            System.Diagnostics.Debug.WriteLine("Text search service disposed");
         }
     }
 }

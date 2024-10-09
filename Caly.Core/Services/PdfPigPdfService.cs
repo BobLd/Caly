@@ -408,7 +408,10 @@ namespace Caly.Core.Services
 
             GC.KeepAlive(_renderingLoopTask);
 
-            System.Diagnostics.Debug.Assert(_renderingLoopTask.IsCanceled || _renderingLoopTask.IsCompleted || _renderingLoopTask.IsCompletedSuccessfully);
+            System.Diagnostics.Debug.Assert(_renderingLoopTask.IsCanceled ||
+                                            _renderingLoopTask.IsCompleted ||
+                                            _renderingLoopTask.IsCompletedSuccessfully ||
+                                            _renderingLoopTask.IsFaulted);
         }
 
         public async ValueTask DisposeAsync()
@@ -440,6 +443,15 @@ namespace Caly.Core.Services
                 }
 
                 _pendingRenderRequests.Dispose();
+
+                GC.KeepAlive(_renderingLoopTask);
+
+                await _renderingLoopTask;
+                
+                System.Diagnostics.Debug.Assert(_renderingLoopTask.IsCanceled ||
+                                                _renderingLoopTask.IsCompleted ||
+                                                _renderingLoopTask.IsCompletedSuccessfully ||
+                                                _renderingLoopTask.IsFaulted);
             }
             catch (Exception ex)
             {
