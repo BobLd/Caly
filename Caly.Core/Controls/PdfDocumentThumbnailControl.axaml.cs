@@ -31,9 +31,11 @@ namespace Caly.Core.Controls
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
             base.OnApplyTemplate(e);
+
             _listBox = e.NameScope.FindFromNameScope<ListBox>("PART_ListBox");
             _listBox.ContainerPrepared += _listBox_ContainerPrepared;
             _listBox.ContainerClearing += _listBox_ContainerClearing;
+            _listBox.PropertyChanged += _listBox_PropertyChanged;
         }
 
         private void _listBox_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -64,7 +66,8 @@ namespace Caly.Core.Controls
                     int startPage = panel.FirstRealizedIndex + 1;
                     int endPage = panel.LastRealizedIndex + 1;
 
-                    if (startPage == 0 || endPage == 0 || oldVm.PageNumber <= startPage || oldVm.PageNumber >= endPage)
+                    if (startPage == 0 || endPage == 0 ||
+                        oldVm.PageNumber <= startPage || oldVm.PageNumber >= endPage)
                     {
                         oldVm.UnloadThumbnail();
                     }
@@ -85,10 +88,12 @@ namespace Caly.Core.Controls
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             base.OnDetachedFromVisualTree(e);
+
             if (_listBox is not null)
             {
                 _listBox.ContainerPrepared -= _listBox_ContainerPrepared;
                 _listBox.ContainerClearing -= _listBox_ContainerClearing;
+                _listBox.PropertyChanged -= _listBox_PropertyChanged;
             }
         }
     }
