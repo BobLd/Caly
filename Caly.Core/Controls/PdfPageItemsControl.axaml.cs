@@ -25,8 +25,10 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media.Transformation;
+using Avalonia.VisualTree;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
+using Tabalonia.Controls;
 
 namespace Caly.Core.Controls;
 
@@ -38,6 +40,7 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private bool _isSettingPageVisibility = false;
     private bool _isZooming = false;
+    private bool _isTabDragging = false;
 
     /// <summary>
     /// The default value for the <see cref="ItemsControl.ItemsPanel"/> property.
@@ -83,6 +86,7 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private ScrollViewer? _scroll;
     private LayoutTransformControl? _layoutTransformControl;
+    private TabsControl? _tabsControl;
 
     static PdfPageItemsControl()
     {
@@ -172,34 +176,15 @@ public sealed class PdfPageItemsControl : ItemsControl
         ScrollIntoView(pageNumber - 1);
     }
 
-    /// <summary>
-    /// Assess if the <see cref="ItemsControl"/> has any realised containers.
-    /// </summary>
-    private bool HasAnyRealised()
-    {
-        if (ItemsView.Count <= 1)
-        {
-            // 1 page or less, we assume no issue with realising the containers
-            return true;
-        }
-
-        if (ItemsPanelRoot is VirtualizingStackPanel v)
-        {
-            return v.FirstRealizedIndex != -1 && v.LastRealizedIndex != -1;
-        }
-
-        return false;
-    }
-
     protected override void PrepareContainerForItemOverride(Control container, object? item, int index)
     {
         base.PrepareContainerForItemOverride(container, item, index);
 
-        if (_isSettingPageVisibility || !HasAnyRealised() ||
+        if (_isTabDragging || _isSettingPageVisibility ||
             container is not PdfPageItem cp ||
             item is not PdfPageViewModel vm)
         {
-            System.Diagnostics.Debug.WriteLine($"Skipping LoadPage() for page {index + 1} (IsSettingPageVisibility: {_isSettingPageVisibility}, HasAnyRealised: {HasAnyRealised()})");
+            System.Diagnostics.Debug.WriteLine($"Skipping LoadPage() for page {index + 1} (IsSettingPageVisibility: {_isSettingPageVisibility}, IsTabDragging: {_isTabDragging})");
             return;
         }
 
@@ -361,12 +346,37 @@ public sealed class PdfPageItemsControl : ItemsControl
         Scroll.AddHandler(KeyDownEvent, _onKeyDownHandler);
         LayoutTransformControl.AddHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
 
+        _tabsControl = this.FindAncestorOfType<TabsControl>();
+        if (_tabsControl is not null)
+        {
+            _tabsControl.OnTabDragStarted += TabControlOnTabDragStarted;
+            _tabsControl.OnTabDragCompleted += TabControlOnTabDragCompleted;
+        }
+
         if (CalyExtensions.IsMobilePlatform())
         {
             LayoutTransformControl.GestureRecognizers.Add(new PinchGestureRecognizer());
             Gestures.AddPinchHandler(LayoutTransformControl, _onPinchChangedHandler);
             Gestures.AddPinchEndedHandler(LayoutTransformControl, _onPinchEndedHandler);
             Gestures.AddHoldingHandler(LayoutTransformControl, _onHoldingChangedHandler);
+        }
+    }
+
+    private void TabControlOnTabDragStarted(object? sender, Tabalonia.Events.DragTabDragStartedEventArgs e)
+    {
+        _isTabDragging = true;
+    }
+
+    private void TabControlOnTabDragCompleted(object? sender, Tabalonia.Events.DragTabDragCompletedEventArgs e)
+    {
+        _isTabDragging = false;
+        foreach (Control cp in this.GetRealizedContainers())
+        {
+            if (cp.DataContext is PdfPageViewModel vm)
+            {
+                cp.PropertyChanged += _onContainerPropertyChanged;
+                vm.LoadPage();
+            }
         }
     }
 
@@ -402,6 +412,12 @@ public sealed class PdfPageItemsControl : ItemsControl
         Scroll?.RemoveHandler(KeyDownEvent, _onKeyDownHandler);
         LayoutTransformControl?.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
         ItemsPanelRoot!.DataContextChanged -= ItemsPanelRoot_DataContextChanged;
+
+        if (_tabsControl is not null)
+        {
+            _tabsControl.OnTabDragStarted -= TabControlOnTabDragStarted;
+            _tabsControl.OnTabDragCompleted -= TabControlOnTabDragCompleted;
+        }
 
         if (CalyExtensions.IsMobilePlatform() && LayoutTransformControl is not null)
         {
