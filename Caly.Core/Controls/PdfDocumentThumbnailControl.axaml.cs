@@ -18,6 +18,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
+using Avalonia.LogicalTree;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 
@@ -38,6 +39,18 @@ namespace Caly.Core.Controls
             _listBox.PropertyChanged += _listBox_PropertyChanged;
         }
 
+        protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+        {
+            base.OnDetachedFromLogicalTree(e);
+
+            if (_listBox is not null)
+            {
+                _listBox.ContainerPrepared -= _listBox_ContainerPrepared;
+                _listBox.ContainerClearing -= _listBox_ContainerClearing;
+                _listBox.PropertyChanged -= _listBox_PropertyChanged;
+            }
+        }
+        
         private void _listBox_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
             if (e.Property == DataContextProperty && e.OldValue is PdfDocumentViewModel oldVm)
@@ -83,18 +96,6 @@ namespace Caly.Core.Controls
             }
 
             container.PropertyChanged -= Container_PropertyChanged;
-        }
-
-        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-        {
-            base.OnDetachedFromVisualTree(e);
-
-            if (_listBox is not null)
-            {
-                _listBox.ContainerPrepared -= _listBox_ContainerPrepared;
-                _listBox.ContainerClearing -= _listBox_ContainerClearing;
-                _listBox.PropertyChanged -= _listBox_PropertyChanged;
-            }
         }
     }
 }
