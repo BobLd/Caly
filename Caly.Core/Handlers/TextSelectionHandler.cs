@@ -66,10 +66,9 @@ namespace Caly.Core.Handlers
             Selection = new PdfTextSelection(numberOfPages);
         }
 
-        public void ClearSelection(PdfPageTextLayerControl currentTextLayer)
+        public void ClearSelection(PdfDocumentControl pdfDocumentControl)
         {
             Debug.ThrowNotOnUiThread();
-
             int start = Selection.GetStartPageIndex();
             int end = Selection.GetEndPageIndex();
 
@@ -77,21 +76,26 @@ namespace Caly.Core.Handlers
 
             Selection.ResetSelection();
 
-            if (start == -1 || end == -1)
+            if (start == -1 || end == -1 ||
+                pdfDocumentControl.DataContext is not PdfDocumentViewModel docVm)
             {
                 return;
             }
 
-            PdfDocumentControl pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>() ??
-                                                    throw new NullReferenceException($"{typeof(PdfDocumentControl)} not found.");
 
             for (int pageNumber = start; pageNumber <= end; ++pageNumber)
             {
-                if (pdfDocumentControl.GetPdfPageItem(pageNumber)?.DataContext is PdfPageViewModel vm)
-                {
-                    vm.FlagSelectionChanged();
-                }
+                docVm.Pages[pageNumber - 1].FlagSelectionChanged();
             }
+        }
+
+        public void ClearSelection(PdfPageTextLayerControl currentTextLayer)
+        {
+            Debug.ThrowNotOnUiThread();
+
+            PdfDocumentControl pdfDocumentControl = currentTextLayer.FindAncestorOfType<PdfDocumentControl>() ??
+                                                    throw new NullReferenceException($"{typeof(PdfDocumentControl)} not found.");
+            ClearSelection(pdfDocumentControl);
         }
 
         private static bool TrySwitchCapture(PdfPageTextLayerControl currentTextLayer, PointerEventArgs e)

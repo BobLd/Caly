@@ -52,6 +52,14 @@ namespace Caly.Core.Handlers.Interfaces
         /// </summary>
         void RenderPage(PdfPageTextLayerControl control, DrawingContext context);
 
+        /// <summary>
+        /// Clear the current selection.
+        /// </summary>
+        void ClearSelection(PdfDocumentControl pdfDocumentControl);
+
+        /// <summary>
+        /// Clear the current selection.
+        /// </summary>
         void ClearSelection(PdfPageTextLayerControl currentTextLayer);
     }
 }
