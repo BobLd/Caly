@@ -430,6 +430,16 @@ public sealed class PdfPageItemsControl : ItemsControl
         }
     }
 
+    private bool HasRealisedItems()
+    {
+        if (ItemsPanelRoot is VirtualizingStackPanel vsp)
+        {
+            return vsp.FirstRealizedIndex != -1 && vsp.LastRealizedIndex != -1;
+        }
+
+        return false;
+    }
+
     private void SetPagesVisibility()
     {
         if (_isSettingPageVisibility || _isTabDragging)
@@ -442,7 +452,9 @@ public sealed class PdfPageItemsControl : ItemsControl
             return;
         }
 
-        if (LayoutTransformControl is null || Scroll is null || Scroll.Viewport.IsEmpty() || ItemsView.Count == 0)
+        if (LayoutTransformControl is null || Scroll is null ||
+            Scroll.Viewport.IsEmpty() || ItemsView.Count == 0 ||
+            !HasRealisedItems())
         {
             return;
         }
