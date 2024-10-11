@@ -1,3 +1,18 @@
+// Copyright (C) 2024 BobLd
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY - without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 using System;
 using Avalonia;
 using Avalonia.Controls;
@@ -157,12 +172,34 @@ public sealed class PdfPageItemsControl : ItemsControl
         ScrollIntoView(pageNumber - 1);
     }
 
+    /// <summary>
+    /// Assess if the <see cref="ItemsControl"/> has any realised containers.
+    /// </summary>
+    private bool HasAnyRealised()
+    {
+        if (ItemsView.Count <= 1)
+        {
+            // 1 page or less, we assume no issue with realising the containers
+            return true;
+        }
+
+        if (ItemsPanelRoot is VirtualizingStackPanel v)
+        {
+            return v.FirstRealizedIndex != -1 && v.LastRealizedIndex != -1;
+        }
+
+        return false;
+    }
+
     protected override void PrepareContainerForItemOverride(Control container, object? item, int index)
     {
         base.PrepareContainerForItemOverride(container, item, index);
 
-        if (container is not PdfPageItem cp || item is not PdfPageViewModel vm)
+        if (_isSettingPageVisibility || !HasAnyRealised() ||
+            container is not PdfPageItem cp ||
+            item is not PdfPageViewModel vm)
         {
+            System.Diagnostics.Debug.WriteLine($"Skipping LoadPage() for page {index + 1} (IsSettingPageVisibility: {_isSettingPageVisibility}, HasAnyRealised: {HasAnyRealised()})");
             return;
         }
 
@@ -195,10 +232,11 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private static void _onContainerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if (e.Property == ContentPresenter.ContentProperty && e.OldValue is PdfPageViewModel vm)
+        if (e.Property == ContentPresenter.ContentProperty &&
+            e.OldValue is PdfPageViewModel vm)
         {
             vm.VisibleArea = null;
-            vm.UnloadPagePicture();
+            vm.UnloadPage();
         }
     }
 

@@ -129,11 +129,11 @@ namespace Caly.Core.ViewModels
             }
             catch (OperationCanceledException)
             {
-                DisposePicture();
+                UnloadPagePicture();
             }
             catch (Exception e)
             {
-                DisposePicture();
+                UnloadPagePicture();
                 Exception = new ExceptionViewModel(e);
             }
         }
@@ -144,16 +144,16 @@ namespace Caly.Core.ViewModels
             {
                 return;
             }
-            
             _pdfService.AskPagePicture(this, _cts.Token);
         }
 
-        public void UnloadPagePicture()
+        public void UnloadPage()
         {
-            DisposePicture();
+            UnloadPagePicture();
+            CancelLoadInteractiveLayer();
         }
 
-        private void DisposePicture()
+        private void UnloadPagePicture()
         {
             _pdfService.AskRemovePagePicture(this);
         }
@@ -173,6 +173,11 @@ namespace Caly.Core.ViewModels
             _pdfService.AskPageTextLayer(this, cancellationToken);
         }
 
+        private void CancelLoadInteractiveLayer()
+        {
+            _pdfService.AskRemovePageTextLayer(this);
+        }
+
         public async Task SetPageTextLayer(CancellationToken token)
         {
             await _pdfService.SetPageTextLayer(this, token);
@@ -181,7 +186,7 @@ namespace Caly.Core.ViewModels
         public ValueTask DisposeAsync()
         {
             UnloadThumbnail();
-            UnloadPagePicture();
+            UnloadPage();
             _cts?.Dispose();
             _cts = null;
             return ValueTask.CompletedTask;

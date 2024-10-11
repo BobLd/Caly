@@ -44,21 +44,24 @@ namespace Caly.Core.Services.Interfaces
 
         Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken token);
         
+
         void AskPagePicture(PdfPageViewModel page, CancellationToken token);
 
         void AskRemovePagePicture(PdfPageViewModel page);
 
         void ClearAllPagePictures();
 
-
+        
         void AskPageThumbnail(PdfPageViewModel page, CancellationToken token);
 
         void AskRemoveThumbnail(PdfPageViewModel page);
 
         void ClearAllThumbnail();
 
-
+        
         void AskPageTextLayer(PdfPageViewModel page, CancellationToken token);
+
+        void AskRemovePageTextLayer(PdfPageViewModel page);
 
         Task SetPageTextLayer(PdfPageViewModel page, CancellationToken token);
     }

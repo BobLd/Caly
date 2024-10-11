@@ -115,7 +115,34 @@ namespace Caly.Core.Services
 
         private async Task ProcessTextLayerRequest(RenderRequest renderRequest)
         {
-            await SetPageTextLayer(renderRequest.Page, renderRequest.Token);
+            if (renderRequest.Token.IsCancellationRequested)
+            {
+                System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] Cancelled {renderRequest.Page.PageNumber}");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] Start process {renderRequest.Page.PageNumber}");
+
+            try
+            {
+                if (_textLayerTokens.TryRemove(renderRequest.Page.PageNumber, out var cts))
+                {
+                    cts.Dispose();
+
+                    if (renderRequest.Page.PdfTextLayer is not null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] No need process {renderRequest.Page.PageNumber}");
+                        return;
+                    }
+
+                    await SetPageTextLayer(renderRequest.Page, renderRequest.Token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] End process {renderRequest.Page.PageNumber}");
         }
 
         public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken token)
@@ -214,11 +241,35 @@ namespace Caly.Core.Services
             }
         }
 
+        private readonly ConcurrentDictionary<int, CancellationTokenSource> _textLayerTokens = new();
+
         public void AskPageTextLayer(PdfPageViewModel page, CancellationToken token)
         {
-            _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.TextLayer, token), token);
+            System.Diagnostics.Debug.WriteLine($"[RENDER] AskPageTextLayer {page.PageNumber}");
+
+            var pageCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+
+            if (_textLayerTokens.TryAdd(page.PageNumber, pageCts))
+            {
+                _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.TextLayer, pageCts.Token), pageCts.Token);
+            }
+            else
+            {
+
+            }
         }
 
+        public void AskRemovePageTextLayer(PdfPageViewModel page)
+        {
+            System.Diagnostics.Debug.WriteLine($"[RENDER] AskRemovePageTextLayer {page.PageNumber}");
+
+            if (_textLayerTokens.TryRemove(page.PageNumber, out var cts))
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+        }
+        
         public async Task SetPageInformationAsync(PdfPageViewModel page, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
