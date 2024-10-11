@@ -375,9 +375,11 @@ public sealed class PdfPageItemsControl : ItemsControl
             if (cp.DataContext is PdfPageViewModel vm)
             {
                 cp.PropertyChanged += _onContainerPropertyChanged;
+                vm.VisibleArea = null;
                 vm.LoadPage();
             }
         }
+        SetPagesVisibility();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -430,7 +432,7 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private void SetPagesVisibility()
     {
-        if (_isSettingPageVisibility)
+        if (_isSettingPageVisibility || _isTabDragging)
         {
             return;
         }
