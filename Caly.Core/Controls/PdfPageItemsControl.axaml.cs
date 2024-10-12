@@ -339,11 +339,11 @@ public sealed class PdfPageItemsControl : ItemsControl
         base.OnApplyTemplate(e);
 
         Scroll = e.NameScope.FindFromNameScope<ScrollViewer>("PART_ScrollViewer");
-        LayoutTransformControl = e.NameScope.FindFromNameScope<LayoutTransformControl>("PART_LayoutTransformControl");
-
         Scroll.AddHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
         Scroll.AddHandler(SizeChangedEvent, (_, _) => SetPagesVisibility(), RoutingStrategies.Direct);
         Scroll.AddHandler(KeyDownEvent, _onKeyDownHandler);
+
+        LayoutTransformControl = e.NameScope.FindFromNameScope<LayoutTransformControl>("PART_LayoutTransformControl");
         LayoutTransformControl.AddHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
 
         _tabsControl = this.FindAncestorOfType<TabsControl>();
@@ -699,6 +699,7 @@ public sealed class PdfPageItemsControl : ItemsControl
         {
             ZoomTo(e);
             e.Handled = true;
+            e.PreventGestureRecognition();
         }
     }
 
