@@ -111,6 +111,8 @@ namespace Caly.Pdf.Models
                 return null;
             }
 
+            System.Diagnostics.Debug.Assert(Contains(x, y));
+
             var point = new PdfPoint(x, y);
             foreach (var word in Words)
             {
@@ -243,50 +245,48 @@ namespace Caly.Pdf.Models
 
         private static PdfRectangle GetBoundingBox90(IReadOnlyList<PdfWord> words)
         {
-            var b = double.MaxValue;
             var t = double.MinValue;
+            var b = double.MaxValue;
 
-            // Inverse Y axis - (0, 0) is top left
-            var r = double.MinValue;
-            var l = double.MaxValue;
+            var r = double.MaxValue;
+            var l = double.MinValue;
 
-            for (var i = 0; i < words.Count; i++)
+            for (var i = 0; i < words.Count; ++i)
             {
                 var word = words[i];
+
                 if (word.BoundingBox.BottomLeft.X < b)
                 {
                     b = word.BoundingBox.BottomLeft.X;
                 }
 
-                if (word.BoundingBox.BottomRight.Y > r)
+                if (word.BoundingBox.BottomRight.Y < r)
                 {
                     r = word.BoundingBox.BottomRight.Y;
                 }
 
-                var right = word.BoundingBox.BottomLeft.X + word.BoundingBox.Height;
+                var right = word.BoundingBox.BottomLeft.X - word.BoundingBox.Height;
                 if (right > t)
                 {
                     t = right;
                 }
 
-                if (word.BoundingBox.BottomLeft.Y < l)
+                if (word.BoundingBox.BottomLeft.Y > l)
                 {
                     l = word.BoundingBox.BottomLeft.Y;
                 }
             }
 
             return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
+                new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
         private static PdfRectangle GetBoundingBox270(IReadOnlyList<PdfWord> words)
         {
             var t = double.MaxValue;
             var b = double.MinValue;
-
-            // Inverse Y axis - (0, 0) is top left
-            var l = double.MinValue; // y
-            var r = double.MaxValue; // y
+            var l = double.MaxValue;
+            var r = double.MinValue;
 
             for (var i = 0; i < words.Count; i++)
             {
@@ -296,25 +296,25 @@ namespace Caly.Pdf.Models
                     b = word.BoundingBox.BottomLeft.X;
                 }
 
-                if (word.BoundingBox.BottomLeft.Y > l)
+                if (word.BoundingBox.BottomLeft.Y < l)
                 {
                     l = word.BoundingBox.BottomLeft.Y;
                 }
 
-                var right = word.BoundingBox.BottomLeft.X - word.BoundingBox.Height;
+                var right = word.BoundingBox.BottomLeft.X + word.BoundingBox.Height;
                 if (right < t)
                 {
                     t = right;
                 }
 
-                if (word.BoundingBox.BottomRight.Y < r)
+                if (word.BoundingBox.BottomRight.Y > r)
                 {
                     r = word.BoundingBox.BottomRight.Y;
                 }
             }
 
             return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
+                new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
         private static PdfRectangle GetBoundingBoxOther(IReadOnlyList<PdfWord> words)

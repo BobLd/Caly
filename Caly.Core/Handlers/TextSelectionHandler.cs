@@ -633,18 +633,31 @@ namespace Caly.Core.Handlers
             var greenBrush = new SolidColorBrush(Colors.Green, 0.4);
             var greenPen = new Pen(greenBrush, 0.5);
 
+            var yellowBrush = new SolidColorBrush(Colors.Yellow, 0.4);
+            var yellowPen = new Pen(yellowBrush, 0.5);
+
             PdfWord? previousWord = null;
 
             foreach (var block in control.PdfTextLayer.TextBlocks)
             {
                 context.DrawGeometry(greenBrush, greenPen, PdfWordHelpers.GetGeometry(block.BoundingBox, true));
+                context.DrawEllipse(Brushes.DarkGreen, null, new Point(block.BoundingBox.TopLeft.X, block.BoundingBox.TopLeft.Y), 2, 2);
+                context.DrawEllipse(Brushes.DarkBlue, null, new Point(block.BoundingBox.BottomLeft.X, block.BoundingBox.BottomLeft.Y), 2, 2);
+                context.DrawEllipse(Brushes.DarkRed, null, new Point(block.BoundingBox.BottomRight.X, block.BoundingBox.BottomRight.Y), 2, 2);
 
                 foreach (var line in block.TextLines)
                 {
+                    context.DrawGeometry(yellowBrush, yellowPen, PdfWordHelpers.GetGeometry(line.BoundingBox, true));
+                    context.DrawEllipse(Brushes.DarkGreen, null, new Point(line.BoundingBox.TopLeft.X, line.BoundingBox.TopLeft.Y), 1, 1);
+                    context.DrawEllipse(Brushes.DarkBlue, null, new Point(line.BoundingBox.BottomLeft.X, line.BoundingBox.BottomLeft.Y), 1, 1);
+                    context.DrawEllipse(Brushes.DarkRed, null, new Point(line.BoundingBox.BottomRight.X, line.BoundingBox.BottomRight.Y), 1, 1);
+
                     foreach (var word in line.Words)
                     {
                         context.DrawGeometry(redBrush, redPen, PdfWordHelpers.GetGeometry(word.BoundingBox));
-                        context.DrawEllipse(Brushes.Blue, null, new Point(word.BoundingBox.BottomLeft.X, word.BoundingBox.BottomLeft.Y), 0.5, 0.5);
+                        context.DrawEllipse(Brushes.DarkGreen, null, new Point(word.BoundingBox.TopLeft.X, word.BoundingBox.TopLeft.Y), 0.5, 0.5);
+                        context.DrawEllipse(Brushes.DarkBlue, null, new Point(word.BoundingBox.BottomLeft.X, word.BoundingBox.BottomLeft.Y), 0.5, 0.5);
+                        context.DrawEllipse(Brushes.DarkRed, null, new Point(word.BoundingBox.BottomRight.X, word.BoundingBox.BottomRight.Y), 0.5, 0.5);
 
                         if (previousWord is not null)
                         {

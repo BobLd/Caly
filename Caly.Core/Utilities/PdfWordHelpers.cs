@@ -156,80 +156,74 @@ namespace Caly.Core.Utilities
 
         private static PdfRectangle GetBoundingBox90(ReadOnlySpan<PdfRectangle> rects)
         {
-            var b = double.MaxValue; // x
-            var t = double.MinValue; // x
+            var b = double.MaxValue;
+            var r = double.MaxValue;
+            var t = double.MinValue;
+            var l = double.MinValue;
 
-            // Inverse Y axis - (0, 0) is top left
-            var r = double.MinValue; // y
-            var l = double.MaxValue; // y
-
-            for (var i = 0; i < rects.Length; ++i)
+            for (var i = 0; i < rects.Length; i++)
             {
                 var rect = rects[i];
-
                 if (rect.BottomLeft.X < b)
                 {
                     b = rect.BottomLeft.X;
-                }
-
-                if (rect.BottomRight.Y > r)
-                {
-                    r = rect.BottomRight.Y;
-                }
-
-                var right = rect.BottomLeft.X + rect.Height;
-                if (right > t)
-                {
-                    t = right;
-                }
-
-                if (rect.BottomLeft.Y < l)
-                {
-                    l = rect.BottomLeft.Y;
-                }
-            }
-
-            return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
-        }
-
-        private static PdfRectangle GetBoundingBox270(ReadOnlySpan<PdfRectangle> rects)
-        {
-            var t = double.MaxValue;
-            var b = double.MinValue;
-
-            // Inverse Y axis - (0, 0) is top left
-            var l = double.MinValue; // y
-            var r = double.MaxValue; // y
-
-            for (var i = 0; i < rects.Length; ++i)
-            {
-                var rect = rects[i];
-
-                if (rect.BottomLeft.X > b)
-                {
-                    b = rect.BottomLeft.X;
-                }
-
-                if (rect.BottomLeft.Y > l)
-                {
-                    l = rect.BottomLeft.Y;
-                }
-
-                var right = rect.BottomLeft.X - rect.Height;
-                if (right < t)
-                {
-                    t = right;
                 }
 
                 if (rect.BottomRight.Y < r)
                 {
                     r = rect.BottomRight.Y;
                 }
+
+                var right = rect.BottomLeft.X - rect.Height;
+                if (right > t)
+                {
+                    t = right;
+                }
+
+                if (rect.BottomLeft.Y > l)
+                {
+                    l = rect.BottomLeft.Y;
+                }
             }
 
-            return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
+            return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
+                new PdfPoint(t, l), new PdfPoint(t, r));
+        }
+
+        private static PdfRectangle GetBoundingBox270(ReadOnlySpan<PdfRectangle> rects)
+        {
+            var t = double.MaxValue;
+            var b = double.MinValue;
+            var l = double.MaxValue;
+            var r = double.MinValue;
+
+            for (var i = 0; i < rects.Length; i++)
+            {
+                var rect = rects[i];
+                if (rect.TopLeft.X > b)
+                {
+                    b = rect.TopLeft.X;
+                }
+
+                if (rect.BottomLeft.Y < l)
+                {
+                    l = rect.BottomLeft.Y;
+                }
+
+                var right = rect.BottomRight.X;
+                if (right < t)
+                {
+                    t = right;
+                }
+
+                if (rect.BottomRight.Y > r)
+                {
+                    r = rect.BottomRight.Y;
+                }
+            }
+
+            return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
+                new PdfPoint(t, l), new PdfPoint(t, r));
         }
 
         private static PdfRectangle GetBoundingBoxOther(ReadOnlySpan<PdfRectangle> rects)

@@ -47,11 +47,11 @@ namespace Caly.Pdf.Layout
 
                 case TextOrientation.Rotate90:
                     // Inverse Y axis - (0, 0) is top left
-                    return words.OrderBy(w => w.BoundingBox.BottomLeft.Y);
+                    return words.OrderByDescending(w => w.BoundingBox.BottomLeft.Y);
 
                 case TextOrientation.Rotate270:
                     // Inverse Y axis - (0, 0) is top left
-                    return words.OrderByDescending(w => w.BoundingBox.BottomLeft.Y);
+                    return words.OrderBy(w => w.BoundingBox.BottomLeft.Y);
 
                 case TextOrientation.Other:
                 default:
@@ -66,34 +66,39 @@ namespace Caly.Pdf.Layout
                     {
                         // quadrant 1, 0 < θ < π/2
                         // Inverse Y axis - (0, 0) is top left
-                        var ordered = words.OrderBy(w => w.BoundingBox.BottomLeft.X).ThenByDescending(w => w.BoundingBox.BottomLeft.Y);
+                        var ordered = words.OrderBy(w => w.BoundingBox.BottomLeft.X)
+                            .ThenByDescending(w => w.BoundingBox.BottomLeft.Y);
                         return ordered;
                     }
-                    else if (90 < avgAngle && avgAngle <= 180)
+
+                    if (90 < avgAngle && avgAngle <= 180)
                     {
                         // quadrant 2, π/2 < θ ≤ π
                         // Inverse Y axis - (0, 0) is top left
-                        var ordered = words.OrderByDescending(w => w.BoundingBox.BottomLeft.X).ThenByDescending(w => w.BoundingBox.BottomLeft.Y);
+                        var ordered = words.OrderByDescending(w => w.BoundingBox.BottomLeft.X)
+                            .ThenByDescending(w => w.BoundingBox.BottomLeft.Y);
                         return ordered;
                     }
-                    else if (-180 < avgAngle && avgAngle <= -90)
+
+                    if (-180 < avgAngle && avgAngle <= -90)
                     {
                         // quadrant 3, -π < θ < -π/2
                         // Inverse Y axis - (0, 0) is top left
-                        var ordered = words.OrderByDescending(w => w.BoundingBox.BottomLeft.X).ThenBy(w => w.BoundingBox.BottomLeft.Y);
+                        var ordered = words.OrderByDescending(w => w.BoundingBox.BottomLeft.X)
+                            .ThenBy(w => w.BoundingBox.BottomLeft.Y);
                         return ordered;
                     }
-                    else if (-90 < avgAngle && avgAngle <= 0)
+
+                    if (-90 < avgAngle && avgAngle <= 0)
                     {
                         // quadrant 4, -π/2 < θ < 0
                         // Inverse Y axis - (0, 0) is top left
-                        var ordered = words.OrderBy(w => w.BoundingBox.BottomLeft.X).ThenBy(w => w.BoundingBox.BottomLeft.Y);
+                        var ordered = words.OrderBy(w => w.BoundingBox.BottomLeft.X)
+                            .ThenBy(w => w.BoundingBox.BottomLeft.Y);
                         return ordered;
                     }
-                    else
-                    {
-                        throw new ArgumentException("OrderByReadingOrder: unknown bounding box rotation found when ordering words.", nameof(avgAngle));
-                    }
+
+                    throw new ArgumentException("OrderByReadingOrder: unknown bounding box rotation found when ordering words.", nameof(avgAngle));
             }
         }
 
@@ -133,10 +138,10 @@ namespace Caly.Pdf.Layout
                     return lines.OrderByDescending(w => w.BoundingBox.BottomLeft.Y);
 
                 case TextOrientation.Rotate90:
-                    return lines.OrderByDescending(w => w.BoundingBox.BottomLeft.X);
+                    return lines.OrderBy(w => w.BoundingBox.BottomLeft.X);
 
                 case TextOrientation.Rotate270:
-                    return lines.OrderBy(w => w.BoundingBox.BottomLeft.X);
+                    return lines.OrderByDescending(w => w.BoundingBox.BottomLeft.X);
 
                 case TextOrientation.Other:
                 default:
@@ -154,31 +159,32 @@ namespace Caly.Pdf.Layout
                         var ordered = lines.OrderBy(w => w.BoundingBox.BottomLeft.Y).ThenBy(w => w.BoundingBox.BottomLeft.X);
                         return ordered;
                     }
-                    else if (90 < avgAngle && avgAngle <= 180)
+                    
+                    if (90 < avgAngle && avgAngle <= 180)
                     {
                         // quadrant 2, π/2 < θ ≤ π
                         // Inverse Y axis - (0, 0) is top left
                         var ordered = lines.OrderByDescending(w => w.BoundingBox.BottomLeft.X).ThenByDescending(w => w.BoundingBox.BottomLeft.Y);
                         return ordered;
                     }
-                    else if (-180 < avgAngle && avgAngle <= -90)
+                    
+                    if (-180 < avgAngle && avgAngle <= -90)
                     {
                         // quadrant 3, -π < θ < -π/2
                         // Inverse Y axis - (0, 0) is top left
                         var ordered = lines.OrderByDescending(w => w.BoundingBox.BottomLeft.Y).ThenByDescending(w => w.BoundingBox.BottomLeft.X);
                         return ordered;
                     }
-                    else if (-90 < avgAngle && avgAngle <= 0)
+                    
+                    if (-90 < avgAngle && avgAngle <= 0)
                     {
                         // quadrant 4, -π/2 < θ < 0
                         // Inverse Y axis - (0, 0) is top left
                         var ordered = lines.OrderBy(w => w.BoundingBox.BottomLeft.X).ThenBy(w => w.BoundingBox.BottomLeft.Y);
                         return ordered;
                     }
-                    else
-                    {
-                        throw new ArgumentException("OrderByReadingOrder: unknown bounding box rotation found when ordering lines.", nameof(avgAngle));
-                    }
+
+                    throw new ArgumentException("OrderByReadingOrder: unknown bounding box rotation found when ordering lines.", nameof(avgAngle));
             }
         }
     }

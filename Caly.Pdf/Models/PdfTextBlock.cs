@@ -73,6 +73,8 @@ namespace Caly.Pdf.Models
                 return null;
             }
 
+            System.Diagnostics.Debug.Assert(Contains(x, y));
+
             PdfPoint point = new PdfPoint(x, y);
 
             foreach (PdfTextLine line in TextLines)
@@ -88,8 +90,19 @@ namespace Caly.Pdf.Models
 
         public PdfWord? FindWordOver(double x, double y)
         {
+            System.Diagnostics.Debug.Assert(Contains(x, y));
+
             PdfTextLine? line = FindTextLineOver(x, y);
-            return line?.FindWordOver(x, y);
+            var word = line?.FindWordOver(x, y);
+
+#if DEBUG
+            if (word is not null)
+            {
+                System.Diagnostics.Debug.Assert(BoundingBox.Contains(new PdfPoint(x,y), true));
+            }
+#endif
+
+            return word;
         }
 
         public PdfWord GetWordInPageAt(int indexInPage)
@@ -194,76 +207,74 @@ namespace Caly.Pdf.Models
 
         private static PdfRectangle GetBoundingBox90(IReadOnlyList<PdfTextLine> lines)
         {
-            double b = double.MaxValue;
-            double t = double.MinValue;
+            var b = double.MaxValue;
+            var r = double.MaxValue;
+            var t = double.MinValue;
+            var l = double.MinValue;
 
-            // Inverse Y axis - (0, 0) is top left
-            double r = double.MinValue; // y
-            double l = double.MaxValue; // y
-
-            foreach (var line in lines)
+            for (var i = 0; i < lines.Count; i++)
             {
-                if (line.BoundingBox.BottomLeft.X < b)
+                var line = lines[i];
+                if (line.BoundingBox.TopLeft.X < b)
                 {
-                    b = line.BoundingBox.BottomLeft.X;
-                }
-
-                if (line.BoundingBox.BottomRight.Y > r)
-                {
-                    r = line.BoundingBox.BottomRight.Y;
-                }
-
-                double right = line.BoundingBox.BottomLeft.X + line.BoundingBox.Height;
-                if (right > t)
-                {
-                    t = right;
-                }
-
-                if (line.BoundingBox.BottomLeft.Y < l)
-                {
-                    l = line.BoundingBox.BottomLeft.Y;
-                }
-            }
-
-            return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
-        }
-
-        private static PdfRectangle GetBoundingBox270(IReadOnlyList<PdfTextLine> lines)
-        {
-            double t = double.MaxValue;
-            double b = double.MinValue;
-
-            // Inverse Y axis - (0, 0) is top left
-            double l = double.MinValue;
-            double r = double.MaxValue;
-
-            foreach (var line in lines)
-            {
-                if (line.BoundingBox.BottomLeft.X > b)
-                {
-                    b = line.BoundingBox.BottomLeft.X;
-                }
-
-                if (line.BoundingBox.BottomLeft.Y > l)
-                {
-                    l = line.BoundingBox.BottomLeft.Y;
-                }
-
-                double right = line.BoundingBox.BottomLeft.X - line.BoundingBox.Height;
-                if (right < t)
-                {
-                    t = right;
+                    b = line.BoundingBox.TopLeft.X;
                 }
 
                 if (line.BoundingBox.BottomRight.Y < r)
                 {
                     r = line.BoundingBox.BottomRight.Y;
                 }
+
+                var right = line.BoundingBox.BottomRight.X;
+                if (right > t)
+                {
+                    t = right;
+                }
+
+                if (line.BoundingBox.BottomLeft.Y > l)
+                {
+                    l = line.BoundingBox.BottomLeft.Y;
+                }
             }
 
-            return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
+            return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
+                new PdfPoint(t, l), new PdfPoint(t, r));
+        }
+
+        private static PdfRectangle GetBoundingBox270(IReadOnlyList<PdfTextLine> lines)
+        {
+            var t = double.MaxValue;
+            var b = double.MinValue;
+            var l = double.MaxValue;
+            var r = double.MinValue;
+
+            for (var i = 0; i < lines.Count; i++)
+            {
+                var line = lines[i];
+                if (line.BoundingBox.TopLeft.X > b)
+                {
+                    b = line.BoundingBox.TopLeft.X;
+                }
+
+                if (line.BoundingBox.BottomLeft.Y < l)
+                {
+                    l = line.BoundingBox.BottomLeft.Y;
+                }
+
+                var right = line.BoundingBox.BottomRight.X;
+                if (right < t)
+                {
+                    t = right;
+                }
+
+                if (line.BoundingBox.BottomRight.Y > r)
+                {
+                    r = line.BoundingBox.BottomRight.Y;
+                }
+            }
+
+            return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
+                new PdfPoint(t, l), new PdfPoint(t, r));
         }
 
         private static PdfRectangle GetBoundingBoxOther(IReadOnlyList<PdfTextLine> lines)
@@ -282,7 +293,9 @@ namespace Caly.Pdf.Models
             });
 
             // Candidates bounding boxes
-            PdfRectangle obb = GeometryExtensions.MinimumAreaRectangle(points);
+            PdfRectangle mar = GeometryExtensions.MinimumAreaRectangle(points);
+
+            PdfRectangle obb = new PdfRectangle(mar.TopRight, mar.TopLeft, mar.BottomRight, mar.BottomLeft);
             PdfRectangle obb1 = new PdfRectangle(obb.BottomLeft, obb.TopLeft, obb.BottomRight, obb.TopRight);
             PdfRectangle obb2 = new PdfRectangle(obb.BottomRight, obb.BottomLeft, obb.TopRight, obb.TopLeft);
             PdfRectangle obb3 = new PdfRectangle(obb.TopRight, obb.BottomRight, obb.TopLeft, obb.BottomLeft);

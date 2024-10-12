@@ -245,14 +245,13 @@ namespace Caly.Pdf.Models
 
         private static PdfRectangle GetBoundingBox90(IReadOnlyList<PdfLetter> letters)
         {
-            var b = double.MaxValue; // x
-            var t = double.MinValue; // x
+            var t = double.MinValue;
+            var b = double.MaxValue;
 
-            // Inverse Y axis - (0, 0) is top left
-            var r = double.MinValue; // y
-            var l = double.MaxValue; // y
+            var r = double.MaxValue;
+            var l = double.MinValue;
 
-            for (var i = 0; i < letters.Count; i++)
+            for (var i = 0; i < letters.Count; ++i)
             {
                 var letter = letters[i];
 
@@ -261,35 +260,33 @@ namespace Caly.Pdf.Models
                     b = letter.StartBaseLine.X;
                 }
 
-                if (letter.EndBaseLine.Y > r)
+                if (letter.EndBaseLine.Y < r)
                 {
                     r = letter.EndBaseLine.Y;
                 }
 
-                var right = letter.StartBaseLine.X + letter.BoundingBox.Height;
+                var right = letter.StartBaseLine.X - letter.BoundingBox.Height;
                 if (right > t)
                 {
                     t = right;
                 }
 
-                if (letter.BoundingBox.BottomLeft.Y < l)
+                if (letter.BoundingBox.BottomLeft.Y > l)
                 {
                     l = letter.BoundingBox.BottomLeft.Y;
                 }
             }
 
             return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
+                new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
         private static PdfRectangle GetBoundingBox270(IReadOnlyList<PdfLetter> letters)
         {
             var t = double.MaxValue;
             var b = double.MinValue;
-
-            // Inverse Y axis - (0, 0) is top left
-            var l = double.MinValue; // y
-            var r = double.MaxValue; // y
+            var l = double.MaxValue;
+            var r = double.MinValue;
 
             for (var i = 0; i < letters.Count; i++)
             {
@@ -300,25 +297,25 @@ namespace Caly.Pdf.Models
                     b = letter.StartBaseLine.X;
                 }
 
-                if (letter.StartBaseLine.Y > l)
+                if (letter.StartBaseLine.Y < l)
                 {
                     l = letter.StartBaseLine.Y;
                 }
 
-                var right = letter.StartBaseLine.X - letter.BoundingBox.Height;
+                var right = letter.StartBaseLine.X + letter.BoundingBox.Height;
                 if (right < t)
                 {
                     t = right;
                 }
 
-                if (letter.BoundingBox.BottomRight.Y < r)
+                if (letter.BoundingBox.BottomRight.Y > r)
                 {
                     r = letter.BoundingBox.BottomRight.Y;
                 }
             }
 
             return new PdfRectangle(new PdfPoint(t, l), new PdfPoint(t, r),
-                                    new PdfPoint(b, l), new PdfPoint(b, r));
+                new PdfPoint(b, l), new PdfPoint(b, r));
         }
 
         private static PdfRectangle GetBoundingBoxOther(IReadOnlyList<PdfLetter> letters)

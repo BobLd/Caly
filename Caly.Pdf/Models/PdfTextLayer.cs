@@ -64,6 +64,11 @@ namespace Caly.Pdf.Models
 
             foreach (PdfTextBlock block in TextBlocks)
             {
+                if (!block.Contains(x, y))
+                {
+                    continue;
+                }
+
                 PdfWord? candidate = block.FindWordOver(x, y);
                 if (candidate is not null)
                 {
@@ -80,6 +85,11 @@ namespace Caly.Pdf.Models
 
             foreach (PdfTextBlock block in TextBlocks)
             {
+                if (!block.Contains(x, y))
+                {
+                    continue;
+                }
+
                 PdfTextLine? candidate = block.FindTextLineOver(x, y);
                 if (candidate is not null)
                 {
