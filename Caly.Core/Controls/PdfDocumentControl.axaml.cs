@@ -123,15 +123,15 @@ namespace Caly.Core.Controls
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             base.OnPointerPressed(e);
-            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
-                e.Source is PdfPageTextLayerControl ||
-                DataContext is not PdfDocumentViewModel vm ||
-                !vm.TextSelectionHandler.Selection.HasStarted())
+
+            if (TextSelectionHandler is null || 
+                !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
+                e.Source is PdfPageTextLayerControl)
             {
                 return;
             }
 
-            vm.TextSelectionHandler.ClearSelection(this);
+            TextSelectionHandler.ClearSelection(this);
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
