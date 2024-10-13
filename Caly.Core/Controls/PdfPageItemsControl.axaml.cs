@@ -25,6 +25,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media.Transformation;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
@@ -169,10 +170,14 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// <param name="pageNumber">The page number. Starts at 1.</param>
     public void GoToPage(int pageNumber)
     {
-        if (_isSettingPageVisibility || _isTabDragging || pageNumber <= 0 || pageNumber > PageCount ||  ItemsView.Count == 0)
+        if (_isSettingPageVisibility || _isTabDragging || _isTabMoving ||
+            pageNumber <= 0 || pageNumber > PageCount ||
+            ItemsView.Count == 0)
         {
             return;
         }
+
+        System.Diagnostics.Debug.Assert(!_isTabMoving);
 
         ScrollIntoView(pageNumber - 1);
     }
@@ -352,6 +357,8 @@ public sealed class PdfPageItemsControl : ItemsControl
         {
             _tabsControl.OnTabDragStarted += TabControlOnTabDragStarted;
             _tabsControl.OnTabDragCompleted += TabControlOnTabDragCompleted;
+            _tabsControl.OnMoveTabStarted += _tabsControl_OnMoveTabStarted;
+            _tabsControl.OnMoveTabCompleted += _tabsControl_OnMoveTabCompleted;
         }
 
         if (CalyExtensions.IsMobilePlatform())
@@ -361,6 +368,17 @@ public sealed class PdfPageItemsControl : ItemsControl
             Gestures.AddPinchEndedHandler(LayoutTransformControl, _onPinchEndedHandler);
             Gestures.AddHoldingHandler(LayoutTransformControl, _onHoldingChangedHandler);
         }
+    }
+
+    private bool _isTabMoving = false;
+    private void _tabsControl_OnMoveTabCompleted(object? sender, MoveTabMoveCompletedEventArgs e)
+    {
+        _isTabMoving = false;
+    }
+
+    private void _tabsControl_OnMoveTabStarted(object? sender, MoveTabMoveStartedEventArgs e)
+    {
+        _isTabMoving = true;
     }
 
     private void TabControlOnTabDragStarted(object? sender, Tabalonia.Events.DragTabDragStartedEventArgs e)
@@ -382,12 +400,18 @@ public sealed class PdfPageItemsControl : ItemsControl
         }
         SetPagesVisibility(sender, e);
     }
-
+    
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
         EnsureScrollBars();
         ItemsPanelRoot!.DataContextChanged += ItemsPanelRoot_DataContextChanged;
+        this.DataContextChanged += PdfPageItemsControl_DataContextChanged;
+    }
+
+    private void PdfPageItemsControl_DataContextChanged(object? sender, EventArgs e)
+    {
+        
     }
 
     private void ItemsPanelRoot_DataContextChanged(object? sender, EventArgs e)
@@ -590,7 +614,7 @@ public sealed class PdfPageItemsControl : ItemsControl
             backwardIndex--;
         }
 
-        if (e is DragTabDragCompletedEventArgs)
+        if (e is DragTabDragCompletedEventArgs || _isTabMoving)
         {
             // We do not update the selected page from visibility
             // when the trigger was a tab switch / move
@@ -603,6 +627,9 @@ public sealed class PdfPageItemsControl : ItemsControl
         {
             try
             {
+                System.Diagnostics.Debug.Assert(!_isTabDragging);
+                System.Diagnostics.Debug.Assert(!_isTabMoving);
+
                 _isSettingPageVisibility = true;
                 SetCurrentValue(SelectedPageIndexProperty, indexMaxOverlap);
             }
@@ -845,12 +872,31 @@ public sealed class PdfPageItemsControl : ItemsControl
         }
     }
 
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        return base.ArrangeOverride(finalSize);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == DataContextProperty && change.OldValue is PdfDocumentViewModel oldVm)
+        if (change.Property == DataContextProperty)
         {
-            oldVm.ClearAllPagePictures();
+            if (change.OldValue is PdfDocumentViewModel oldVm)
+            {
+                oldVm.ClearAllPagePictures();
+            }
+        }
+        else if (change.Property == SelectedPageIndexProperty)
+        {
+            if (_isTabMoving)
+            {
+
+            }
+            else
+            {
+                
+            }
         }
     }
 }

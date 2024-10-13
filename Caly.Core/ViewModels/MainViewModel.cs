@@ -55,10 +55,18 @@ namespace Caly.Core.ViewModels
                         {
                             foreach (var newDoc in e.NewItems.OfType<PdfDocumentViewModel>())
                             {
+                                newDoc.IsRemoved = false;
                                 await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask);
                             }
 
                             SelectedDocumentIndex = PdfDocuments.Count - 1;
+                        }
+                        else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems?.Count > 0)
+                        {
+                            foreach (var newDoc in e.OldItems.OfType<PdfDocumentViewModel>())
+                            {
+                                newDoc.IsRemoved = true;
+                            }
                         }
                     }
                     catch (OperationCanceledException)

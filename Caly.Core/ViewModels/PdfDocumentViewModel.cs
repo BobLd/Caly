@@ -42,7 +42,33 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private int _selectedTabIndex;
 
-        [ObservableProperty] private int? _selectedPageIndex = 1;
+        //[ObservableProperty]
+        private int? _selectedPageIndex = 1;
+
+        public bool IsRemoved { get; set; }
+
+        public int? SelectedPageIndex
+        {
+            get
+            {
+                return _selectedPageIndex;
+            }
+
+            set
+            {
+                if (value is null)
+                {
+                    return;
+                }
+
+                if (IsRemoved)
+                {
+                    return;
+                }
+
+                SetProperty(ref _selectedPageIndex, value);
+            }
+        }
 
         [ObservableProperty] private int _pageCount;
 
