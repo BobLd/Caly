@@ -68,7 +68,7 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// <summary>
     /// Defines the <see cref="SelectedPageIndex"/> property. Starts at 1.
     /// </summary>
-    public static readonly StyledProperty<int?> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfPageItemsControl, int?>(nameof(SelectedPageIndex), 1, defaultBindingMode: BindingMode.TwoWay);
+    public static readonly StyledProperty<int?> SelectedPageIndexProperty = AvaloniaProperty.Register<PdfPageItemsControl, int?>(nameof(SelectedPageIndex), defaultBindingMode: BindingMode.TwoWay);
 
     /// <summary>
     /// Defines the <see cref="MinZoomLevel"/> property.
