@@ -41,6 +41,13 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
 
+#if DEBUG
+        partial void OnSelectedDocumentIndexChanged(int oldValue, int newValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"Selected Document Index changed from {oldValue} to {newValue}.");
+        }
+#endif
+
         public MainViewModel()
         {
             // TODO - Dispose to unsubscribe
@@ -55,10 +62,21 @@ namespace Caly.Core.ViewModels
                         {
                             foreach (var newDoc in e.NewItems.OfType<PdfDocumentViewModel>())
                             {
+                                newDoc.IsRemoved = false;
                                 await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask);
                             }
 
-                            SelectedDocumentIndex = PdfDocuments.Count - 1;
+                            SelectedDocumentIndex = PdfDocuments.Count - 1; // e.NewStartingIndex; // 
+                        }
+                        else
+                        {
+                            if (e.Action == NotifyCollectionChangedAction.Add && e.OldItems?.Count > 0)
+                            {
+                                foreach (var oldDoc in e.OldItems.OfType<PdfDocumentViewModel>())
+                                {
+                                    oldDoc.IsRemoved = true;
+                                }
+                            }
                         }
                     }
                     catch (OperationCanceledException)

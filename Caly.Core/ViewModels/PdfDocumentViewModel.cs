@@ -42,7 +42,31 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private int _selectedTabIndex;
 
-        [ObservableProperty] private int? _selectedPageIndex = 1;
+        //[ObservableProperty] 
+        private int? _selectedPageIndex = 1;
+
+        public int? SelectedPageIndex
+        {
+            get
+            {
+                return _selectedPageIndex;
+            }
+
+            set
+            {
+                if (IsRemoved)
+                {
+
+                }
+
+                if (value is null)
+                {
+
+                }
+
+                SetProperty(ref _selectedPageIndex, value);
+            }
+        }
 
         [ObservableProperty] private int _pageCount;
 
@@ -69,6 +93,8 @@ namespace Caly.Core.ViewModels
         public Task LoadPagesTask => _loadPagesTask.Value;
 
         private readonly Lazy<Task> _buildSearchIndex;
+
+        internal bool IsRemoved { get; set; }
 
         internal string? LocalPath { get; private set; }
 
