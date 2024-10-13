@@ -41,6 +41,13 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
 
+#if DEBUG
+        partial void OnSelectedDocumentIndexChanged(int oldValue, int newValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"Selected Document Index changed from {oldValue} to {newValue}.");
+        }
+#endif
+
         public MainViewModel()
         {
             // TODO - Dispose to unsubscribe
@@ -49,6 +56,7 @@ namespace Caly.Core.ViewModels
                 .ObserveOn(Scheduler.Default)
                 .Subscribe(async e =>
                 {
+                    // NB: Tabalonia uses a Remove + Add when moving tabs
                     try
                     {
                         if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems?.Count > 0)
@@ -58,7 +66,7 @@ namespace Caly.Core.ViewModels
                                 await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask);
                             }
 
-                            SelectedDocumentIndex = PdfDocuments.Count - 1;
+                            SelectedDocumentIndex = e.NewStartingIndex;
                         }
                     }
                     catch (OperationCanceledException)
@@ -73,7 +81,7 @@ namespace Caly.Core.ViewModels
                 });
         }
 
-        private PdfDocumentViewModel? getCurrentPdfDocument()
+        private PdfDocumentViewModel? GetCurrentPdfDocument()
         {
             try
             {
@@ -123,7 +131,7 @@ namespace Caly.Core.ViewModels
         [RelayCommand]
         private async Task CloseDocument(CancellationToken token)
         {
-            PdfDocumentViewModel? vm = getCurrentPdfDocument();
+            PdfDocumentViewModel? vm = GetCurrentPdfDocument();
             if (vm is null)
             {
                 return;
@@ -143,13 +151,13 @@ namespace Caly.Core.ViewModels
         private void ActivateSearchTextTab()
         {
             IsPaneOpen = true;
-            getCurrentPdfDocument()?.ActivateSearchTextTabCommand.Execute(null);
+            GetCurrentPdfDocument()?.ActivateSearchTextTabCommand.Execute(null);
         }
 
         [RelayCommand]
         private Task CopyText(CancellationToken token)
         {
-            PdfDocumentViewModel? vm = getCurrentPdfDocument();
+            PdfDocumentViewModel? vm = GetCurrentPdfDocument();
             return vm is null ? Task.CompletedTask : vm.CopyTextCommand.ExecuteAsync(null);
         }
     }
