@@ -169,7 +169,7 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// <param name="pageNumber">The page number. Starts at 1.</param>
     public void GoToPage(int pageNumber)
     {
-        if (_isSettingPageVisibility || pageNumber <= 0 || pageNumber > PageCount ||  ItemsView.Count == 0)
+        if (_isSettingPageVisibility || _isTabDragging || pageNumber <= 0 || pageNumber > PageCount ||  ItemsView.Count == 0)
         {
             return;
         }
@@ -392,7 +392,7 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private void ItemsPanelRoot_DataContextChanged(object? sender, EventArgs e)
     {
-        void ExecuteScrollWhenLayoutUpdated(object? s, EventArgs e)
+        void ExecuteScrollWhenLayoutUpdated(object? s, EventArgs ea)
         {
             LayoutUpdated -= ExecuteScrollWhenLayoutUpdated;
             EnsureScrollBars();
@@ -400,7 +400,7 @@ public sealed class PdfPageItemsControl : ItemsControl
             // Ensure the pages visibility is set when OnApplyTemplate()
             // is not called, i.e. when a new document is opened but the
             // page has exactly the same dimension of the visible page
-            SetPagesVisibility(s, e);
+            SetPagesVisibility(s, ea);
         }
 
         LayoutUpdated += ExecuteScrollWhenLayoutUpdated;
