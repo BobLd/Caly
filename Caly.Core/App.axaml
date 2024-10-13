@@ -9,6 +9,7 @@
 	<Application.Resources>
 		<converters:NumericUpDownPdfPageConverter x:Key="numericUpDownPdfPageConverter"/>
 		<converters:ZeroPageIndexConverter x:Key="zeroPageIndexConverter"/>
+		<x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
 	</Application.Resources>
 
 	<Application.Styles>
