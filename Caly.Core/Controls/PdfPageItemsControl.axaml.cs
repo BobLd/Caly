@@ -29,6 +29,7 @@ using Avalonia.VisualTree;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Tabalonia.Controls;
+using Tabalonia.Events;
 
 namespace Caly.Core.Controls;
 
@@ -339,8 +340,8 @@ public sealed class PdfPageItemsControl : ItemsControl
         base.OnApplyTemplate(e);
 
         Scroll = e.NameScope.FindFromNameScope<ScrollViewer>("PART_ScrollViewer");
-        Scroll.AddHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
-        Scroll.AddHandler(SizeChangedEvent, (_, _) => SetPagesVisibility(), RoutingStrategies.Direct);
+        Scroll.AddHandler(ScrollViewer.ScrollChangedEvent, SetPagesVisibility);
+        Scroll.AddHandler(SizeChangedEvent, SetPagesVisibility, RoutingStrategies.Direct);
         Scroll.AddHandler(KeyDownEvent, _onKeyDownHandler);
 
         LayoutTransformControl = e.NameScope.FindFromNameScope<LayoutTransformControl>("PART_LayoutTransformControl");
@@ -379,7 +380,7 @@ public sealed class PdfPageItemsControl : ItemsControl
                 vm.LoadPage();
             }
         }
-        SetPagesVisibility();
+        SetPagesVisibility(sender, e);
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -391,7 +392,7 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private void ItemsPanelRoot_DataContextChanged(object? sender, EventArgs e)
     {
-        void ExecuteScrollWhenLayoutUpdated(object? sender, EventArgs e)
+        void ExecuteScrollWhenLayoutUpdated(object? s, EventArgs e)
         {
             LayoutUpdated -= ExecuteScrollWhenLayoutUpdated;
             EnsureScrollBars();
@@ -399,7 +400,7 @@ public sealed class PdfPageItemsControl : ItemsControl
             // Ensure the pages visibility is set when OnApplyTemplate()
             // is not called, i.e. when a new document is opened but the
             // page has exactly the same dimension of the visible page
-            SetPagesVisibility();
+            SetPagesVisibility(s, e);
         }
 
         LayoutUpdated += ExecuteScrollWhenLayoutUpdated;
@@ -409,8 +410,8 @@ public sealed class PdfPageItemsControl : ItemsControl
     {
         base.OnDetachedFromLogicalTree(e);
 
-        Scroll?.RemoveHandler(ScrollViewer.ScrollChangedEvent, (_, _) => SetPagesVisibility());
-        Scroll?.RemoveHandler(SizeChangedEvent, (_, _) => SetPagesVisibility());
+        Scroll?.RemoveHandler(ScrollViewer.ScrollChangedEvent, SetPagesVisibility);
+        Scroll?.RemoveHandler(SizeChangedEvent, SetPagesVisibility);
         Scroll?.RemoveHandler(KeyDownEvent, _onKeyDownHandler);
         LayoutTransformControl?.RemoveHandler(PointerWheelChangedEvent, _onPointerWheelChangedHandler);
         ItemsPanelRoot!.DataContextChanged -= ItemsPanelRoot_DataContextChanged;
@@ -440,7 +441,7 @@ public sealed class PdfPageItemsControl : ItemsControl
         return false;
     }
 
-    private void SetPagesVisibility()
+    private void SetPagesVisibility(object? sender, EventArgs e)
     {
         if (_isSettingPageVisibility || _isTabDragging)
         {
@@ -589,8 +590,15 @@ public sealed class PdfPageItemsControl : ItemsControl
             backwardIndex--;
         }
 
-        indexMaxOverlap++; // Switch to base 1 indexing
+        if (e is DragTabDragCompletedEventArgs)
+        {
+            // We do not update the selected page from visibility
+            // when the trigger was a tab switch / move
+            return;
+        }
 
+        indexMaxOverlap++; // Switch to base 1 indexing
+        
         if (indexMaxOverlap != -1 && SelectedPageIndex != indexMaxOverlap)
         {
             try
