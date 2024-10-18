@@ -1,50 +1,70 @@
-# Caly Pdf Reader
-## About
-Caly Pdf Reader is a cross-platform pdf document reader application written in C# (net8.0 with AOT), only using [Avalonia](https://github.com/AvaloniaUI/Avalonia) & [SkiaSharp](https://github.com/mono/SkiaSharp) + [PdfPig](https://github.com/UglyToad/PdfPig) for the UI / pdf rendering part. It is released under GPL-3.0 license.
+## Caly Pdf Reader: A Fast, Cross-Platform Pdf Reader
+
+**Caly Pdf Reader** is a free, cross-platform and open-source Pdf reader built with performance and efficiency in mind. Written in C# (net8.0 with AOT), it's designed to be lightweight, fast, and consume minimal memory.
 
 > [!IMPORTANT]
 > The development is currently in alpha.
 
-## Preview
 ![caly preview](https://github.com/user-attachments/assets/79fba976-6534-4f9c-bdfc-6dd2d316f383)
 
-## Goal and Roadmap
-The aim is to develop a C# cross-platform open source pdf reader/viewer application. Below is a table of the current progress:
+### Cross-Platform Compatibility
 
-| Task | Priority | Progress | Comment | TODO |
-| ---- | -------- | -------- | ------- | ---- |
-| View pdf document | High | Done | | Performance to improve |
-| Open many documents with tab system | High | Done | Use [Tabalonia](https://github.com/egorozh/Tabalonia) | Bugs to fix - see https://github.com/BobLd/Caly/issues/11 |
-| Navigate and zoom document (go to page, zoom in/out, etc.) | High | Done | | Performance to improve |
-| Text selection | High | Done | | Improve rendering by merging words into lines |
-| Copy text selection to clipboard | High | Done | | |
-| Search text | High | Done | | Improve word matching |
-| Printing | High | Work in Progress | See [branch](https://github.com/BobLd/Caly/tree/printing). Way more complicated than expected without using `System.Drawing`. See https://github.com/Zelenov/SharpIpp https://github.com/dotnet/maui/issues/9931 https://devblogs.microsoft.com/xamarin/native-printing-with-android/ | |
-| Run JavaScript embedded in a PDF | Won't do | Not started | Use [Jint](https://github.com/sebastienros/jint) | |
-| UI / UX | Low | Work in Progress | How the app feels | Need better colors, icons, transitions, etc. |
-| OCR | Low | Not started | Use [RapidOCR](https://github.com/RapidAI/RapidOCR) onnx models, see [RapidOcrNet](https://github.com/BobLd/RapidOcrNet) | |
-| Table extraction | Low | Not started  | Use [tabula-sharp](https://github.com/BobLd/tabula-sharp) or [camelot-sharp](https://github.com/BobLd/camelot-sharp) | |
+Caly Pdf Reader leverages the power of [Avalonia UI](https://github.com/AvaloniaUI/Avalonia), [SkiaSharp](https://github.com/mono/SkiaSharp) and [PdfPig](https://github.com/UglyToad/PdfPig) to run seamlessly on Windows, macOS, and Linux.
 
-## Windows, Linux, MacOS and mobile compatible
 As of now, only the Windows, Linux and Android versions have been tested. Android version runs, but is not optimised for the platfotm. Better mobile support is planned, including iOS.
 
-## Contributions are welcome
-Feel free to contribute to the project! You can also help Caly Pdf Reader by contributing to:
-- https://github.com/UglyToad/PdfPig
-- https://github.com/BobLd/PdfPig.Rendering.Skia
+## Key Features
 
-## Clone and build
-Caly Pdf Reader uses submodules, you will need to run the following after cloning it:
+* **Tabbed Interface:** Effortlessly manage multiple Pdf documents in separate tabs.
+* **Lightning-Fast Navigation:** Navigate through pages with smooth performance.
+* **Text Selection and Copy/Paste:** Select, copy, and paste text from Pdfs to the clipboard.
+* **Powerful Search:** Quickly locate specific text within documents using the built-in search function.
+* **Thumbnail View:** Get a visual overview of all pages with the intuitive thumbnail sidebar.
+* **Bookmark Support:** Navigate through bookmarks for quick access to important sections.
+* **Zoom In/Out:** Zoom in/out of the document.
+* **Minimalist UI:** Enjoy a clean and distraction-free reading experience.
+
+## Usage
+
+1. Open the application and click on the "+" (New Tab) button to open a new Pdf document. You can also drag and drop your document or set Caly Pdf Reader as your default reader application.
+2. Select a Pdf file to open using the file dialog.
+3. The document will be displayed in the tab, and you can navigate through the pages using the navigation buttons.
+4. To select text in the document, click and drag the mouse over the text.
+5. To copy the selected text, use `Ctrl+C` (right-click menu to come).
+6. To search for text in the document, click on the "Search" button in the left menu and enter the text to search for. You can also use `Ctrl+F`.
+7. To view page thumbnails, click on the "Thumbnails" button in the left menu.
+8. To navigate through bookmarks, click on the "Bookmarks" button in the left menu.
+9. To zoom in and out of your document, either use the scroll wheel while pressing Ctrl, or use the "Zoom" buttons in the top menu.
+## Why Caly Pdf Reader?
+
+* **Open Source:** The source code is freely available on GitHub, allowing for community contributions and customization.
+* **Cross-Platform:** Run Caly Pdf Reader on your preferred operating system.
+* **Lightweight & Fast:** Designed for optimal performance and minimal resource consumption.
+* **Active Development:** We are constantly working on improving Caly Pdf Reader with new features and bug fixes.
+
+## Getting Started
+
+Caly Pdf Reader uses submodules, you will need to run the following command after cloning it:
 ```
 git submodule update --init --recursive
 ```
 
 > [!IMPORTANT]
-> If the submodule branches appear as 'detached', you can re-link each of them to the `develop-caly` branches.
+> If the submodule branches appear as 'detached', you can re-link each of them to their respective `develop-caly` branches.
 
 Caly Pdf Reader is a net8.0 application with Native AOT (ahead of time compilation) enabled. To publish the application, run the following (example for Windows):
 ```
 dotnet publish -r win-x64 -c Release -f net8.0
 ```
 
+## Contributing
 
+We welcome contributions from the community! If you find a bug, have a feature request, or want to contribute code, please feel free to do it!
+
+You can also help Caly Pdf Reader by contributing to:
+- https://github.com/UglyToad/PdfPig
+- https://github.com/BobLd/PdfPig.Rendering.Skia
+
+## License
+
+Caly Pdf Reader is licensed under the [GPL-3.0 License](https://github.com/BobLd/Caly?tab=GPL-3.0-1-ov-file#readme).
