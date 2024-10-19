@@ -34,6 +34,7 @@ namespace Caly.Core.Controls
         private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
 
         private IDisposable? _pointerMovedDisposable;
+        private IDisposable? _pointerWheelChangedDisposable;
         private IDisposable? _pointerPressedDisposable;
         private IDisposable? _pointerReleasedDisposable;
 
@@ -130,12 +131,17 @@ namespace Caly.Core.Controls
             {
                 // If the textSelectionHandler was already attached, we unsubscribe
                 _pointerMovedDisposable?.Dispose();
+                _pointerWheelChangedDisposable?.Dispose();
                 _pointerPressedDisposable?.Dispose();
                 _pointerReleasedDisposable?.Dispose();
-
+                
                 if (TextSelectionHandler is not null)
                 {
                     _pointerMovedDisposable = this.GetObservable(PointerMovedEvent)
+                        .DistinctUntilChanged()
+                        .Subscribe(TextSelectionHandler!.OnPointerMoved);
+
+                    _pointerWheelChangedDisposable = this.GetObservable(PointerWheelChangedEvent)
                         .DistinctUntilChanged()
                         .Subscribe(TextSelectionHandler!.OnPointerMoved);
 
@@ -155,6 +161,7 @@ namespace Caly.Core.Controls
             base.OnDetachedFromVisualTree(e);
 
             _pointerMovedDisposable?.Dispose();
+            _pointerWheelChangedDisposable?.Dispose();
             _pointerPressedDisposable?.Dispose();
             _pointerReleasedDisposable?.Dispose();
         }
