@@ -124,14 +124,14 @@ namespace Caly.Core.Controls
         {
             base.OnPointerPressed(e);
 
-            if (TextSelectionHandler is null || 
-                !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed ||
-                e.Source is PdfPageTextLayerControl)
-            {
-                return;
-            }
+            var pointer = e.GetCurrentPoint(this);
 
-            TextSelectionHandler.ClearSelection(this);
+            if (TextSelectionHandler is not null &&
+                pointer.Properties.IsLeftButtonPressed &&
+                e.Source is not PdfPageTextLayerControl)
+            {
+                TextSelectionHandler.ClearSelection(this);
+            }
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

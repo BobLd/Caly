@@ -16,7 +16,13 @@
 		<Setter Property="SelectedBookmark" Value="{Binding SelectedBookmark, Mode=OneWay}"/>
         <Setter Property="SelectedTextSearchResult" Value="{Binding SelectedTextSearchResult, Mode=OneWay}"/>
 		<Setter Property="UseLayoutRounding" Value="True"/>
-
+		
+        <Setter Property="ContextMenu">
+            <ContextMenu>
+                <MenuItem Header="Copy" Command="{Binding CopyTextCommand}"/>
+            </ContextMenu>
+        </Setter>
+		
 		<Setter Property="Template">
 			<ControlTemplate>
 
