@@ -19,7 +19,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Threading;
@@ -322,8 +325,20 @@ namespace Caly.Core.Handlers
             PdfAnnotation? annotation = control.PdfTextLayer!.FindAnnotationOver(loc.X, loc.Y);
             if (annotation is not null)
             {
-                control.SetHandCursor();
-                return;
+                if (!string.IsNullOrEmpty(annotation.Content))
+                {
+                    ShowAnnotation(control, annotation);
+                }
+
+                if (annotation.IsInteractive)
+                {
+                    control.SetHandCursor();
+                    return;
+                }
+            }
+            else
+            {
+                HideAnnotation(control);
             }
 
             PdfWord? word = control.PdfTextLayer!.FindWordOver(loc.X, loc.Y);
@@ -476,7 +491,7 @@ namespace Caly.Core.Handlers
                     // Annotation
                     PdfAnnotation? annotation = control.PdfTextLayer.FindAnnotationOver(point.X, point.Y);
 
-                    if (annotation is not null)
+                    if (annotation?.Action is not null)
                     {
                         switch (annotation.Action.Type)
                         {
@@ -594,6 +609,52 @@ namespace Caly.Core.Handlers
 
                     Dispatcher.UIThread.Post(documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged);
                 }
+            }
+        }
+
+        private static void ShowAnnotation(PdfPageTextLayerControl control, PdfAnnotation annotation)
+        {
+            System.Diagnostics.Debug.WriteLine($"Annotation: [{annotation.Date}] '{annotation.Content}'");
+
+            if (FlyoutBase.GetAttachedFlyout(control) is Flyout attachedFlyout)
+            {
+                // TODO - Should we use MVVM instead?
+
+                var contentText = new Avalonia.Controls.TextBlock()
+                {
+                    Text = annotation.Content
+                };
+
+                if (!string.IsNullOrEmpty(annotation.Date))
+                {
+                    attachedFlyout.Content = new StackPanel()
+                    {
+                        Orientation = Orientation.Vertical,
+                        Children =
+                        {
+                            new Avalonia.Controls.TextBlock()
+                            {
+                                Text = annotation.Date
+                            },
+                            contentText
+                        }
+                    };
+                }
+                else
+                {
+                    attachedFlyout.Content = contentText;
+                }
+                
+                attachedFlyout.ShowAt(control, true);
+            }
+        }
+
+        private static void HideAnnotation(PdfPageTextLayerControl control)
+        {
+            if (FlyoutBase.GetAttachedFlyout(control) is Flyout attachedFlyout)
+            {
+                attachedFlyout.Hide();
+                attachedFlyout.Content = null;
             }
         }
 

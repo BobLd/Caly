@@ -25,6 +25,12 @@ namespace Caly.Pdf.Models
         /// </summary>
         public required PdfRectangle BoundingBox { get; init; }
 
-        public required PdfAction Action { get; init; }
+        public PdfAction? Action { get; init; }
+
+        public bool IsInteractive { get; init; }
+
+        public string? Content { get; init; }
+
+        public string? Date { get; init; }
     }
 }

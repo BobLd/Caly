@@ -39,15 +39,20 @@ namespace Caly.Pdf.TextLayer
             return annotation.Type == AnnotationType.Link;
         }
 
+        private static bool IsNoZoom(Annotation annotation)
+        {
+            return annotation.Flags.HasFlag(AnnotationFlags.NoZoom);
+        }
+
+        private static bool IsNoRotate(Annotation annotation)
+        {
+            return annotation.Flags.HasFlag(AnnotationFlags.NoRotate);
+        }
+
         private void DrawAnnotations()
         {
-            foreach (Annotation annotation in _annotations.Value.Where(IsInteractive))
+            foreach (Annotation annotation in _annotations.Value)
             {
-                if (annotation.Action is null)
-                {
-                    continue;
-                }
-
                 PdfRectangle rect = annotation.Rectangle;
 
                 if (rect.Width > 0 && rect.Height > 0)
@@ -59,16 +64,33 @@ namespace Caly.Pdf.TextLayer
                             .Select(x => x.Double).ToArray());
                     }
 
-                    PdfRectangle? bbox = rect;
+                    PdfRectangle bbox = rect;
 
                     // https://github.com/apache/pdfbox/blob/47867f7eee275e9e54a87222b66ab14a8a3a062a/pdfbox/src/main/java/org/apache/pdfbox/contentstream/PDFStreamEngine.java#L310
                     // transformed appearance box  fixme: may be an arbitrary shape
-                    PdfRectangle transformedBox = InverseYAxis(matrix.Transform(bbox.Value).Normalise(), _pageHeight);
+                    PdfRectangle transformedBox = InverseYAxis(matrix.Transform(bbox).Normalise(), _pageHeight);
+
+                    if (transformedBox.Width <= double.MinValue || transformedBox.Height <= double.MinValue)
+                    {
+                        continue;
+                    }
+
+                    bool isInteractive = IsInteractive(annotation);
+                    bool hasAction = annotation.Action is not null;
+                    bool hasContent = !string.IsNullOrEmpty(annotation.Content);
+
+                    if (!isInteractive && !hasAction && !hasContent)
+                    {
+                        continue;
+                    }
 
                     _pdfAnnotations.Add(new PdfAnnotation()
                     {
                         BoundingBox = transformedBox,
-                        Action = annotation.Action
+                        Action = annotation.Action,
+                        Content = annotation.Content,
+                        Date = annotation.ModifiedDate,
+                        IsInteractive = isInteractive && hasAction
                     });
                 }
             }

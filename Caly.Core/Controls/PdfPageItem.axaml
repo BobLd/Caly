@@ -26,10 +26,10 @@
 				<ContentPresenter Name="PART_ContentPresenter">
 					<ContentPresenter.Content>
 						<Grid Background="White">
-							<ProgressBar Width="50"
-										 IsIndeterminate="{Binding IsPageRendering}"
-										 IsEnabled="{Binding IsPageRendering}"
-										 IsVisible="{Binding IsPageRendering}"
+                            <ProgressBar Width="50"
+                                         IsIndeterminate="{Binding IsPageRendering}"
+                                         IsEnabled="{Binding IsPageRendering}"
+                                         IsVisible="{Binding IsPageRendering}"
                                          HorizontalAlignment="Center"
                                          VerticalAlignment="Center"/>
 
@@ -44,7 +44,13 @@
                                                               TextSelectionHandler="{Binding TextSelectionHandler}"
                                                               SelectionChangedFlag="{Binding SelectionChangedFlag}"
                                                               HorizontalAlignment="Stretch"
-                                                              VerticalAlignment="Stretch"/>
+                                                              VerticalAlignment="Stretch">
+
+                                <FlyoutBase.AttachedFlyout>
+                                    <Flyout ShowMode="Standard" OverlayInputPassThroughElement="{Binding $parent}"/>
+                                </FlyoutBase.AttachedFlyout>
+
+                            </controls:PdfPageTextLayerControl>
 						</Grid>
 					</ContentPresenter.Content>
 				</ContentPresenter>
