@@ -119,6 +119,17 @@ namespace Caly.Core.Models
         /// </summary>
         public bool IsForward => !IsBackward;
 
+        /// <summary>
+        /// Has the selection started.
+        /// </summary>
+        public bool HasStarted => AnchorWord is not null;
+
+        /// <summary>
+        /// Is the selection valid.
+        /// </summary>
+        /// <returns><c>true</c> if both <see cref="AnchorWord"/> and <see cref="FocusWord"/> are defined. <c>false</c> otherwise.</returns>
+        public bool IsValid => HasStarted && FocusWord is not null;
+
         private readonly IReadOnlyList<PdfWord>?[] _selectedWords;
 
 #if DEBUG
@@ -303,7 +314,7 @@ namespace Caly.Core.Models
 #endif
 
             // TODO - handle word sub selection
-            if (!IsValid())
+            if (!IsValid)
             {
                 return false;
             }
@@ -385,28 +396,14 @@ namespace Caly.Core.Models
 
             _selectedWords[pageNumber - 1] = words;
         }
-
-        public bool HasStarted()
-        {
-            return AnchorWord is not null;
-        }
-
-        /// <summary>
-        /// Is the selection valid.
-        /// </summary>
-        /// <returns><c>true</c> if both <see cref="AnchorWord"/> and <see cref="FocusWord"/> are defined. <c>false</c> otherwise.</returns>
-        public bool IsValid()
-        {
-            return HasStarted() && FocusWord is not null;
-        }
-
+        
         /// <summary>
         /// Check if the selection direction is forward or backward.<br/>
         /// Is the selection anchor word is before the focus word.
         /// </summary>
         private void UpdateSelectionDirection()
         {
-            if (!IsValid())
+            if (!IsValid)
             {
                 return;
             }

@@ -234,7 +234,7 @@ namespace Caly.Core.Handlers
             PdfTextLine? lineBox = control.PdfTextLayer!.FindLineOver(loc.X, loc.Y);
 
             PdfWord? word = null;
-            if (Selection.HasStarted() && lineBox is null)
+            if (Selection.HasStarted && lineBox is null)
             {
                 // Try to find the closest line as we are already selecting something
                 word = FindNearestWordWhileSelecting(loc, control.PdfTextLayer);
@@ -272,7 +272,7 @@ namespace Caly.Core.Handlers
 
             int focusPageIndex = Selection.FocusPageIndex;
             Point? partialSelectLoc = allowPartialSelect ? loc : null;
-            if (!Selection.HasStarted())
+            if (!Selection.HasStarted)
             {
                 Selection.Start(control.PageNumber!.Value, word, partialSelectLoc);
             }
@@ -306,7 +306,7 @@ namespace Caly.Core.Handlers
 
             control.SetIbeamCursor();
 
-            _isSelecting = Selection.IsValid() &&
+            _isSelecting = Selection.IsValid &&
                            (Selection.AnchorWord != Selection.FocusWord || // Multiple words selected
                             (Selection.AnchorOffset != -1 && Selection.FocusOffset != -1)); // Selection within same word
         }

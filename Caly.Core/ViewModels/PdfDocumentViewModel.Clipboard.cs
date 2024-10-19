@@ -29,14 +29,14 @@ namespace Caly.Core.ViewModels
 {
     public partial class PdfDocumentViewModel
     {
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanCopyText))]
         private async Task CopyText(CancellationToken token)
         {
             try
             {
                 PdfTextSelection selection = TextSelectionHandler.Selection;
 
-                if (!selection.HasStarted())
+                if (!selection.IsValid)
                 {
                     return;
                 }
@@ -89,6 +89,11 @@ namespace Caly.Core.ViewModels
                 System.Diagnostics.Debug.Write(e.ToString());
                 Exception = new ExceptionViewModel(e);
             }
+        }
+
+        private bool CanCopyText()
+        {
+            return TextSelectionHandler.Selection.IsValid;
         }
     }
 }

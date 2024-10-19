@@ -30,11 +30,11 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 2. Select a Pdf file to open using the file dialog.
 3. The document will be displayed in the tab, and you can navigate through the pages using the navigation buttons.
 4. To select text in the document, click and drag the mouse over the text.
-5. To copy the selected text, use `Ctrl+C` (right-click menu to come).
+5. To copy the selected text, right-click and select "Copy" or use `Ctrl+C`.
 6. To search for text in the document, click on the "Search" button in the left menu and enter the text to search for. You can also use `Ctrl+F`.
 7. To view page thumbnails, click on the "Thumbnails" button in the left menu.
 8. To navigate through bookmarks, click on the "Bookmarks" button in the left menu.
-9. To zoom in and out of your document, either use the scroll wheel while pressing Ctrl, or use the "Zoom" buttons in the top menu.
+9. To zoom in and out of your document, either use the scroll wheel while pressing `Ctrl`, or use the "Zoom" buttons in the top menu.
 ## Why Caly Pdf Reader?
 
 * **Open Source:** The source code is freely available on GitHub, allowing for community contributions and customization.

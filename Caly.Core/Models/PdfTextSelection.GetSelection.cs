@@ -26,7 +26,7 @@ namespace Caly.Core.Models
     {
         public IEnumerable<int> GetSelectedPagesIndexes()
         {
-            if (!IsValid())
+            if (!IsValid)
             {
                 yield break;
             }
