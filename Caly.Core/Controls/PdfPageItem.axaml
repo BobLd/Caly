@@ -47,7 +47,10 @@
                                                               VerticalAlignment="Stretch">
 
                                 <FlyoutBase.AttachedFlyout>
-                                    <Flyout ShowMode="Standard" OverlayInputPassThroughElement="{Binding $parent}"/>
+                                    <Flyout ShowMode="Standard"
+                                            Placement="Pointer"
+                                            HorizontalOffset="15"
+                                            OverlayInputPassThroughElement="{Binding $parent}"/>
                                 </FlyoutBase.AttachedFlyout>
 
                             </controls:PdfPageTextLayerControl>

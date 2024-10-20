@@ -616,37 +616,40 @@ namespace Caly.Core.Handlers
         {
             System.Diagnostics.Debug.WriteLine($"Annotation: [{annotation.Date}] '{annotation.Content}'");
 
-            if (FlyoutBase.GetAttachedFlyout(control) is Flyout attachedFlyout)
+            if (FlyoutBase.GetAttachedFlyout(control) is not Flyout attachedFlyout)
             {
-                // TODO - Should we use MVVM instead?
-
-                var contentText = new Avalonia.Controls.TextBlock()
-                {
-                    Text = annotation.Content
-                };
-
-                if (!string.IsNullOrEmpty(annotation.Date))
-                {
-                    attachedFlyout.Content = new StackPanel()
-                    {
-                        Orientation = Orientation.Vertical,
-                        Children =
-                        {
-                            new Avalonia.Controls.TextBlock()
-                            {
-                                Text = annotation.Date
-                            },
-                            contentText
-                        }
-                    };
-                }
-                else
-                {
-                    attachedFlyout.Content = contentText;
-                }
-                
-                attachedFlyout.ShowAt(control, true);
+                return;
             }
+
+            // TODO - Should we use MVVM instead?
+            var contentText = new Avalonia.Controls.TextBlock()
+            {
+                MaxWidth = 200,
+                TextWrapping = TextWrapping.Wrap,
+                Text = annotation.Content
+            };
+
+            if (!string.IsNullOrEmpty(annotation.Date))
+            {
+                attachedFlyout.Content = new StackPanel()
+                {
+                    Orientation = Orientation.Vertical,
+                    Children =
+                    {
+                        new Avalonia.Controls.TextBlock()
+                        {
+                            Text = annotation.Date
+                        },
+                        contentText
+                    }
+                };
+            }
+            else
+            {
+                attachedFlyout.Content = contentText;
+            }
+
+            attachedFlyout.ShowAt(control);
         }
 
         private static void HideAnnotation(PdfPageTextLayerControl control)
