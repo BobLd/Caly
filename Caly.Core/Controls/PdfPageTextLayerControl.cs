@@ -141,7 +141,7 @@ namespace Caly.Core.Controls
                         .DistinctUntilChanged()
                         .Subscribe(TextSelectionHandler!.OnPointerMoved);
 
-                    _pointerWheelChangedDisposable = this.GetObservable(PointerWheelChangedEvent)
+                    _pointerWheelChangedDisposable = this.GetObservable(PointerWheelChangedEvent, handledEventsToo: true)
                         .DistinctUntilChanged()
                         .Subscribe(TextSelectionHandler!.OnPointerMoved);
 
