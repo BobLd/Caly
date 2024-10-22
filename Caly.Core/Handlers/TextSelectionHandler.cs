@@ -205,6 +205,24 @@ namespace Caly.Core.Handlers
             var pointerPoint = e.GetCurrentPoint(control);
             var loc = pointerPoint.Position;
 
+            if (e is PointerWheelEventArgs we)
+            {
+                // TODO - Looks like there's a bug in Avalonia (TBC) where the position of the pointer
+                // is 1 step behind the actual position.
+                // We need to add back this step (1 scroll step is 50, see link below)
+                // https://github.com/AvaloniaUI/Avalonia/blob/dadc9ab69284bb228ad460f36d5442b4eee4a82a/src/Avalonia.Controls/Presenters/ScrollContentPresenter.cs#L684
+
+                // TODO - The hack does not work when zoomed
+
+                double x = Math.Max(loc.X - we.Delta.X * 50.0, 0);
+                double y = Math.Max(loc.Y - we.Delta.Y * 50.0, 0);
+
+                loc = new Point(x, y);
+
+                // TODO - We have an issue when scrolling and changing page here, similar the TrySwitchCapture
+                // not sure how we should address it
+            }
+
             if (pointerPoint.Properties.IsLeftButtonPressed && _startPointerPressed.HasValue && _startPointerPressed.Value.Euclidean(loc) > 1.0)
             {
                 HandleMouseMoveSelection(control, e, loc);
@@ -323,6 +341,8 @@ namespace Caly.Core.Handlers
         private static void HandleMouseMoveOver(PdfPageTextLayerControl control, Point loc)
         {
             PdfAnnotation? annotation = control.PdfTextLayer!.FindAnnotationOver(loc.X, loc.Y);
+            System.Diagnostics.Debug.WriteLine($"HandleMouseMoveOver: X={loc.X} Y={loc.Y} (annot={annotation is not null})");
+
             if (annotation is not null)
             {
                 if (!string.IsNullOrEmpty(annotation.Content))
@@ -614,7 +634,7 @@ namespace Caly.Core.Handlers
 
         private static void ShowAnnotation(PdfPageTextLayerControl control, PdfAnnotation annotation)
         {
-            System.Diagnostics.Debug.WriteLine($"Annotation: [{annotation.Date}] '{annotation.Content}'");
+            //System.Diagnostics.Debug.WriteLine($"Annotation: [{annotation.Date}] '{annotation.Content}'");
 
             if (FlyoutBase.GetAttachedFlyout(control) is not Flyout attachedFlyout)
             {

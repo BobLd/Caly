@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -138,19 +137,15 @@ namespace Caly.Core.Controls
                 if (TextSelectionHandler is not null)
                 {
                     _pointerMovedDisposable = this.GetObservable(PointerMovedEvent)
-                        .DistinctUntilChanged()
                         .Subscribe(TextSelectionHandler!.OnPointerMoved);
 
                     _pointerWheelChangedDisposable = this.GetObservable(PointerWheelChangedEvent, handledEventsToo: true)
-                        .DistinctUntilChanged()
                         .Subscribe(TextSelectionHandler!.OnPointerMoved);
 
                     _pointerPressedDisposable = this.GetObservable(PointerPressedEvent)
-                        .DistinctUntilChanged()
                         .Subscribe(TextSelectionHandler.OnPointerPressed);
 
                     _pointerReleasedDisposable = this.GetObservable(PointerReleasedEvent)
-                        .DistinctUntilChanged()
                         .Subscribe(TextSelectionHandler.OnPointerReleased);
                 }
             }
