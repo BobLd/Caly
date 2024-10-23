@@ -28,6 +28,8 @@ namespace Caly.Core.Services.Interfaces
 
         string? FileName { get; }
 
+        long? FileSize { get; }
+
         string? LocalPath { get; }
 
         /// <summary>
@@ -36,14 +38,16 @@ namespace Caly.Core.Services.Interfaces
         /// <returns>The number of pages in the opened document. <c>0</c> if the document was not opened.</returns>
         Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken token);
 
-        Task SetPageInformationAsync(PdfPageViewModel page, CancellationToken token);
-
+        ValueTask SetDocumentPropertiesAsync(PdfDocumentViewModel page, CancellationToken token);
+        
         Task SetPdfBookmark(PdfDocumentViewModel pdfDocument, CancellationToken token);
 
         Task BuildIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken token);
 
         Task<IEnumerable<TextSearchResultViewModel>> SearchText(PdfDocumentViewModel pdfDocument, string query, CancellationToken token);
-        
+
+
+        Task SetPageInformationAsync(PdfPageViewModel page, CancellationToken token);
 
         void AskPagePicture(PdfPageViewModel page, CancellationToken token);
 

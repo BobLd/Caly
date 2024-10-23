@@ -169,6 +169,19 @@
 											<controls:SearchPanelControl/>
 
 										</TabItem>
+
+                                        <!-- Doc information tab -->
+                                        <TabItem>
+                                            <TabItem.Header>
+                                                <PathIcon Data="{StaticResource info_regular}">
+                                                    <ToolTip.Tip>Document Properties</ToolTip.Tip>
+                                                </PathIcon>
+                                            </TabItem.Header>
+
+											<controls:PdfDocumentPropertiesControl/>
+
+                                        </TabItem>
+
 									</TabControl>
 								</Border>
 

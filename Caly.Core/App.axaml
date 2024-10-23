@@ -20,6 +20,7 @@
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfPageThumbnailControl.axaml"/>
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfPageItemsControl.axaml"/>
 				<ResourceInclude Source="avares://Caly.Core/Controls/PdfPageItem.axaml"/>
+                <ResourceInclude Source="avares://Caly.Core/Controls/PdfDocumentPropertiesControl.axaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
 	</Application.Resources>

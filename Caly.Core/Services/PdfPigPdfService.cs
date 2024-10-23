@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
@@ -53,6 +54,8 @@ namespace Caly.Core.Services
         public string? LocalPath => _filePath?.LocalPath;
 
         public string? FileName => Path.GetFileNameWithoutExtension(LocalPath);
+
+        public long? FileSize => _fileStream?.Length;
 
         public int NumberOfPages { get; private set; }
 
@@ -172,7 +175,7 @@ namespace Caly.Core.Services
                     await fs.CopyToAsync(_fileStream, token);
                     _fileStream.Position = 0;
                 }
-
+                
                 return await Task.Run(() =>
                 {
                     var pdfParsingOptions = new ParsingOptions()
@@ -337,6 +340,41 @@ namespace Caly.Core.Services
                 }
             }
         }
+
+        public ValueTask SetDocumentPropertiesAsync(PdfDocumentViewModel document, CancellationToken token)
+        {
+            Debug.ThrowOnUiThread();
+
+            if (_document is null || isDiposed())
+            {
+                return ValueTask.CompletedTask;
+            }
+
+            var info = _document.Information;
+
+            var others =
+                _document.Information.DocumentInformationDictionary?.Data?
+                    .Where(x=>x.Value is not null)
+                    .ToDictionary(x => x.Key,
+                    x => x.Value.ToString()!);
+
+            document.Properties = new PdfDocumentProperties()
+            {
+                PdfVersion = _document.Version.ToString("0.0"),
+                Title = info.Title,
+                Author = info.Author,
+                CreationDate = info.CreationDate,
+                Creator = info.Creator,
+                Keywords = info.Keywords,
+                ModifiedDate = info.ModifiedDate,
+                Producer = info.Producer,
+                Subject = info.Subject,
+                Others = others
+            };
+
+            return ValueTask.CompletedTask;
+        }
+
 
         public async Task SetPdfBookmark(PdfDocumentViewModel pdfDocument, CancellationToken token)
         {
