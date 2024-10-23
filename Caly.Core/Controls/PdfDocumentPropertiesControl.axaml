@@ -1,0 +1,106 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Caly.Core.Controls"
+        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+  <!--
+    Additional resources 
+    Using Control Themes:
+         https://docs.avaloniaui.net/docs/basics/user-interface/styling/control-themes
+    Using Theme Variants:
+         https://docs.avaloniaui.net/docs/guides/styles-and-resources/how-to-use-theme-variants
+  -->
+  
+  <Design.PreviewWith>
+    <StackPanel Width="400" Spacing="10">      
+        <StackPanel Background="{DynamicResource SystemRegionBrush}">
+          <controls:PdfDocumentPropertiesControl />
+        </StackPanel>
+    </StackPanel>
+  </Design.PreviewWith>
+ 
+  <ControlTheme x:Key="{x:Type controls:PdfDocumentPropertiesControl}" TargetType="controls:PdfDocumentPropertiesControl" x:DataType="viewModels:PdfDocumentViewModel">
+    <Setter Property="Template">
+      <ControlTemplate>
+          <StackPanel Orientation="Vertical">
+
+              <StackPanel Orientation="Horizontal">
+				  <TextBlock Text="File Name:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding FileName}" />
+			  </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="File Size:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding FileSize}" />
+              </StackPanel>
+
+			  <Separator/>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Title:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Title}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Author:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Author}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Subject:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Subject}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="KeyWords:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Keywords}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Created:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.CreationDate}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Modified:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.ModifiedDate}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Creator:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Creator}" />
+              </StackPanel>
+
+              <Separator/>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Pdf Producer:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Producer}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Pdf Version:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.PdfVersion}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Page Count:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding PageCount}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Page Size:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="TODO" />
+              </StackPanel>
+
+              <Separator/>
+
+              <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="Fast Web View:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="TODO" />
+              </StackPanel>
+
+		  </StackPanel>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+</ResourceDictionary>
