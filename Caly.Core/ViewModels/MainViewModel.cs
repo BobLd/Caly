@@ -63,7 +63,7 @@ namespace Caly.Core.ViewModels
                         {
                             foreach (var newDoc in e.NewItems.OfType<PdfDocumentViewModel>())
                             {
-                                await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask);
+                                await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask, newDoc.LoadPropertiesTask);
                             }
 
                             SelectedDocumentIndex = e.NewStartingIndex;

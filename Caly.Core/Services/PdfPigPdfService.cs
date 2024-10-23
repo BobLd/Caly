@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
@@ -337,6 +338,40 @@ namespace Caly.Core.Services
                 }
             }
         }
+
+        public ValueTask SetDocumentPropertiesAsync(PdfDocumentViewModel document, CancellationToken token)
+        {
+            Debug.ThrowOnUiThread();
+
+            if (_document is null || isDiposed())
+            {
+                return ValueTask.CompletedTask;
+            }
+
+            var info = _document.Information;
+
+            var others =
+                _document.Information.DocumentInformationDictionary?.Data?
+                    .Where(x=>x.Value is not null)
+                    .ToDictionary(x => x.Key,
+                    x => x.Value.ToString()!);
+
+            document.Properties = new PdfDocumentProperties()
+            {
+                Title = info.Title,
+                Author = info.Author,
+                CreationDate = info.CreationDate,
+                Creator = info.Creator,
+                Keywords = info.Keywords,
+                ModifiedDate = info.ModifiedDate,
+                Producer = info.Producer,
+                Subject = info.Subject,
+                Others = others
+            };
+
+            return ValueTask.CompletedTask;
+        }
+
 
         public async Task SetPdfBookmark(PdfDocumentViewModel pdfDocument, CancellationToken token)
         {

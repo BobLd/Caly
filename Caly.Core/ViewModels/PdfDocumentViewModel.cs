@@ -26,6 +26,7 @@ using Avalonia.Collections;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Services.Interfaces;
+using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -39,7 +40,7 @@ namespace Caly.Core.ViewModels
         private readonly CancellationTokenSource _cts = new();
 
         [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = [];
-
+        
         [ObservableProperty] private int _selectedTabIndex;
 
         [ObservableProperty] private int? _selectedPageIndex = 1;
@@ -135,6 +136,7 @@ namespace Caly.Core.ViewModels
 
             _loadPagesTask = new Lazy<Task>(LoadPages);
             _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);
+            _loadPropertiesTask = new Lazy<Task>(LoadProperties);
             _buildSearchIndex = new Lazy<Task>(BuildSearchIndex);
 
             _searchResultsDisposable = SearchResults
