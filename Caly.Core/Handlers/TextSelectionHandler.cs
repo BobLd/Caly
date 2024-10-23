@@ -85,7 +85,6 @@ namespace Caly.Core.Handlers
                 return;
             }
 
-
             for (int pageNumber = start; pageNumber <= end; ++pageNumber)
             {
                 docVm.Pages[pageNumber - 1].FlagSelectionChanged();
@@ -308,20 +307,17 @@ namespace Caly.Core.Handlers
                 PdfDocumentControl pdfDocumentControl = control.FindAncestorOfType<PdfDocumentControl>() ??
                                                         throw new ArgumentNullException($"{typeof(PdfDocumentControl)} not found.");
 
+                if (pdfDocumentControl.DataContext is not PdfDocumentViewModel docVm)
+                {
+                    throw new ArgumentNullException($"DataContext {typeof(PdfDocumentViewModel)} not set.");
+                }
+
                 // Focus page has changed
                 int start = Math.Min(focusPageIndex, Selection.FocusPageIndex);
                 int end = Math.Max(focusPageIndex, Selection.FocusPageIndex);
                 for (int i = start; i <= end; ++i) // TODO - do not always do end page, only if deselecting
                 {
-                    var textLayerControl = pdfDocumentControl.GetPdfPageItem(i)?.DataContext;
-
-                    if (textLayerControl is not PdfPageViewModel vm)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Skipping page {i} as not loaded.");
-                        continue;
-                    }
-
-                    Selection.SelectWordsInRange(vm);
+                    Selection.SelectWordsInRange(docVm.Pages[i - 1]);
                 }
             }
 
