@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
@@ -419,7 +418,6 @@ namespace Caly.Core.Services
                             new TextColumn<PdfBookmarkNode, string>("Title", x => x.Title),x => x.Nodes)
                     }
                 };
-                Dispatcher.UIThread.Post(() => pdfDocument.BookmarkSource.ExpandAll());
             }
             catch (OperationCanceledException)
             {

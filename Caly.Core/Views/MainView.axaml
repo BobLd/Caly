@@ -140,8 +140,11 @@
 											</TabItem.Header>
 
                                             <TreeDataGrid Source="{Binding BookmarkSource}"
-                                                          ShowColumnHeaders="False">
+														  CanUserSortColumns="False"
+                                                          ShowColumnHeaders="False"
+                                                          SizeChanged="TreeView_SizeChanged">
 
+												
                                             </TreeDataGrid>
 <!--
 											<TreeView ItemsSource="{Binding Bookmarks}"

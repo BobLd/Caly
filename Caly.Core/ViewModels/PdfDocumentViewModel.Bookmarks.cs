@@ -17,6 +17,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Caly.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -37,6 +38,24 @@ namespace Caly.Core.ViewModels
         {
             _cts.Token.ThrowIfCancellationRequested();
             await Task.Run(() => _pdfService.SetPdfBookmark(this, _cts.Token));
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                BookmarkSource.ExpandAll();
+                BookmarkSource.RowSelection!.SelectionChanged += RowSelection_SelectionChanged;
+            });
+        }
+
+        private void RowSelection_SelectionChanged(object? sender, Avalonia.Controls.Selection.TreeSelectionModelSelectionChangedEventArgs<PdfBookmarkNode> e)
+        {
+            if (e.SelectedItems.Count > 0)
+            {
+                SelectedBookmark = e.SelectedItems[0];
+            }
+            else
+            {
+                SelectedBookmark = null;
+            }
         }
     }
 }
