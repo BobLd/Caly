@@ -138,19 +138,24 @@
 													<ToolTip.Tip>Bookmarks</ToolTip.Tip>
 												</PathIcon>
 											</TabItem.Header>
+
+                                            <TreeDataGrid Source="{Binding BookmarkSource}"
+                                                          ShowColumnHeaders="False">
+
+                                            </TreeDataGrid>
+<!--
 											<TreeView ItemsSource="{Binding Bookmarks}"
                                                       SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
                                                       SelectionMode="Toggle"
                                                       SizeChanged="TreeView_SizeChanged">
 
-												<!--https://stackoverflow.com/questions/77275239/how-to-properly-expand-a-treeviewitem-in-avalonia#77362693-->
-												<!--TreeView is not able to virtualized. Try Avalonia.TreeDataGrid.-->
                                                 <TreeView.Styles>
                                                     <Style Selector="TreeViewItem">
                                                         <Setter Property="IsExpanded" Value="True"/>
                                                     </Style>
                                                 </TreeView.Styles>
 
+                                                
                                                 <TreeView.ItemTemplate>
 													<TreeDataTemplate ItemsSource="{Binding Nodes}">
 														<Border HorizontalAlignment="Left"
@@ -165,6 +170,7 @@
 													</TreeDataTemplate>
 												</TreeView.ItemTemplate>
 											</TreeView>
+											-->
 										</TabItem>
 
 										<!-- Search tab -->

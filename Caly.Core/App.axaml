@@ -34,7 +34,7 @@
 		</FluentTheme>
 
 		<tabalonia:CustomTheme/>
-
+        <StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
 		<StyleInclude Source="avares://Caly.Core/Assets/Icons.axaml"/>
 	</Application.Styles>
 </Application>

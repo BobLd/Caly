@@ -18,6 +18,7 @@
 
 	<ItemGroup>
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+		<PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.0.10" />
 		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.0-rc1" />
 
 		<PackageReference Include="Avalonia" Version="11.2.0-rc1" />

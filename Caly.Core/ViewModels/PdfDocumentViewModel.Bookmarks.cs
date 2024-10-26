@@ -16,6 +16,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Caly.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -25,6 +26,8 @@ namespace Caly.Core.ViewModels
     {
         private readonly Lazy<Task> _loadBookmarksTask;
         public Task LoadBookmarksTask => _loadBookmarksTask.Value;
+
+        [ObservableProperty] private HierarchicalTreeDataGridSource<PdfBookmarkNode> _bookmarkSource;
 
         [ObservableProperty] private ObservableCollection<PdfBookmarkNode>? _bookmarks;
 
