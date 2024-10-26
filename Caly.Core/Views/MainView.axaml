@@ -100,7 +100,7 @@
 					<SplitView Grid.Row="1"
 							   Name="PART_SplitView"
                                IsPaneOpen="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).IsPaneOpen}"
-                               OpenPaneLength="200"
+                               OpenPaneLength="350"
                                CompactPaneLength="0"
                                DisplayMode="CompactInline">
 
