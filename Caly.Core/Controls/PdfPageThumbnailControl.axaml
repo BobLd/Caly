@@ -1,16 +1,18 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:Caly.Core.Controls"
-        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Caly.Core.Controls"
+                    xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+
     <Design.PreviewWith>
         <controls:PdfPageThumbnailControl Height="250" Width="180" />
     </Design.PreviewWith>
 
-    <Style Selector="controls|PdfPageThumbnailControl" x:DataType="viewModels:PdfPageViewModel">
+    <ControlTheme x:Key="{x:Type controls:PdfPageThumbnailControl}" TargetType="controls:PdfPageThumbnailControl" x:DataType="viewModels:PdfPageViewModel">
         <Setter Property="Thumbnail" Value="{Binding Thumbnail}"/>
 
         <Setter Property="Template">
-            <ControlTemplate x:DataType="viewModels:PdfPageViewModel">
+            <ControlTemplate>
+                
                 <Grid>
                     <Border BorderBrush="{StaticResource CalendarDatePickerBorderBrush}"
                             BorderThickness="2"
@@ -18,7 +20,9 @@
                             IsVisible="{Binding IsThumbnailRendering}">
                     </Border>
                 </Grid>
+
             </ControlTemplate>
         </Setter>
-    </Style>
-</Styles>
+    </ControlTheme>
+
+</ResourceDictionary>

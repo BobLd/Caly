@@ -1,7 +1,7 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:Caly.Core.Controls"
-        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Caly.Core.Controls"
+                    xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
 	<Design.PreviewWith>
 		<StackPanel>
 			<controls:PdfPageItem x:DataType="viewModels:PdfPageViewModel"
@@ -10,23 +10,23 @@
 		</StackPanel>
 	</Design.PreviewWith>
 
-
-	<Style Selector="controls|PdfPageItem" x:DataType="viewModels:PdfPageViewModel">
-        <Setter Property="Exception" Value="{Binding Exception}"/>
+    <ControlTheme x:Key="{x:Type controls:PdfPageItem}" TargetType="controls:PdfPageItem" x:DataType="viewModels:PdfPageViewModel">
+		<Setter Property="Exception" Value="{Binding Exception}"/>
 		<Setter Property="Width" Value="{Binding Width}"/>
 		<Setter Property="Height" Value="{Binding Height}"/>
 		<Setter Property="Picture" Value="{Binding PdfPicture}"/>
 		<Setter Property="VisibleArea" Value="{Binding VisibleArea}"/>
 		<Setter Property="IsPageRendering" Value="{Binding IsPageRendering}"/>
 		<Setter Property="IsPageVisible" Value="{Binding IsPageVisible}"/>
-        <Setter Property="Margin" Value="0,0,0,5"></Setter>
+		<Setter Property="Margin" Value="0,0,0,5"></Setter>
 
 		<Setter Property="Template">
 			<ControlTemplate>
-				<ContentPresenter Name="PART_ContentPresenter">
+
+                <ContentPresenter Name="PART_ContentPresenter">
 					<ContentPresenter.Content>
 						<Grid Background="White">
-                            <ProgressBar Width="50"
+							<ProgressBar Width="50"
                                          IsIndeterminate="{Binding IsPageRendering}"
                                          IsEnabled="{Binding IsPageRendering}"
                                          IsVisible="{Binding IsPageRendering}"
@@ -46,19 +46,20 @@
                                                               HorizontalAlignment="Stretch"
                                                               VerticalAlignment="Stretch">
 
-                                <FlyoutBase.AttachedFlyout>
-                                    <Flyout ShowMode="Standard"
+								<FlyoutBase.AttachedFlyout>
+									<Flyout ShowMode="Standard"
                                             Placement="Pointer"
                                             HorizontalOffset="15"
                                             OverlayInputPassThroughElement="{Binding $parent}"/>
-                                </FlyoutBase.AttachedFlyout>
+								</FlyoutBase.AttachedFlyout>
 
-                            </controls:PdfPageTextLayerControl>
+							</controls:PdfPageTextLayerControl>
 						</Grid>
 					</ContentPresenter.Content>
 				</ContentPresenter>
+
 			</ControlTemplate>
 		</Setter>
+	</ControlTheme>
 
-	</Style>
-</Styles>
+</ResourceDictionary>

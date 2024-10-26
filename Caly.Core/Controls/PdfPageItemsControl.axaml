@@ -1,7 +1,7 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:Caly.Core.Controls"
-        xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Caly.Core.Controls"
+                    xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
 
 	<Design.PreviewWith>
 		<StackPanel Width="400" Spacing="10">
@@ -11,11 +11,11 @@
 		</StackPanel>
 	</Design.PreviewWith>
 
-	<Style Selector="controls|PdfPageItemsControl" x:DataType="viewModels:PdfDocumentViewModel">
-        <Setter Property="MinZoomLevel" Value="{Binding MinZoomLevel}"/>
+    <ControlTheme x:Key="{x:Type controls:PdfPageItemsControl}" TargetType="controls:PdfPageItemsControl" x:DataType="viewModels:PdfDocumentViewModel">
+		<Setter Property="MinZoomLevel" Value="{Binding MinZoomLevel}"/>
 		<Setter Property="MaxZoomLevel" Value="{Binding MaxZoomLevel}"/>
 
-        <Setter Property="Template">
+		<Setter Property="Template">
 			<ControlTemplate>
 
 				<Border Background="{TemplateBinding Background}"
@@ -36,7 +36,7 @@
 
 							<ScrollViewer.KeyBindings>
 								<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
-                                <KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
+								<KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
 							</ScrollViewer.KeyBindings>
 
 							<LayoutTransformControl Name="PART_LayoutTransformControl"
@@ -51,13 +51,11 @@
 
 							</LayoutTransformControl>
 						</ScrollViewer>
-
 					</Grid>
-
 				</Border>
 
 			</ControlTemplate>
 		</Setter>
-	</Style>
+	</ControlTheme>
 
-</Styles>
+</ResourceDictionary>
