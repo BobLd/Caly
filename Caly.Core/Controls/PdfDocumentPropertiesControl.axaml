@@ -21,82 +21,135 @@
   <ControlTheme x:Key="{x:Type controls:PdfDocumentPropertiesControl}" TargetType="controls:PdfDocumentPropertiesControl" x:DataType="viewModels:PdfDocumentViewModel">
     <Setter Property="Template">
       <ControlTemplate>
-          <StackPanel Orientation="Vertical">
+          <StackPanel Orientation="Vertical" Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}">
 
               <StackPanel Orientation="Horizontal">
-				  <TextBlock Text="File Name:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-				  <TextBlock Text="{Binding FileName}" />
+				  <TextBlock Text="File Name:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding FileName}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
 			  </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="File Size:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding FileSize}" />
+                  <TextBlock Text="File Size:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding FileSize}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
 			  <Separator/>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Title:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Title}" />
+                  <TextBlock Text="Title:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Title}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Author:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Author}" />
+                  <TextBlock Text="Author:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Author}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Subject:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Subject}" />
+                  <TextBlock Text="Subject:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Subject}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}"/>
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="KeyWords:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Keywords}" />
+                  <TextBlock Text="KeyWords:"
+                             Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Keywords}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}"/>
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Created:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.CreationDate}" />
+                  <TextBlock Text="Created:" Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.CreationDate}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Modified:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.ModifiedDate}" />
+                  <TextBlock Text="Modified:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.ModifiedDate}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Creator:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Creator}" />
+                  <TextBlock Text="Creator:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Creator}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <Separator/>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Pdf Producer:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Producer}" />
+                  <TextBlock Text="Pdf Producer:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.Producer}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Pdf Version:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.PdfVersion}" />
+                  <TextBlock Text="Pdf Version:" Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding Properties.PdfVersion}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Page Count:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding PageCount}" />
+                  <TextBlock Text="Page Count:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding PageCount}"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Page Size:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="TODO" />
+                  <TextBlock Text="Page Size:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="TODO"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
               <Separator/>
 
               <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Fast Web View:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="TODO" />
+                  <TextBlock Text="Fast Web View:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+                  <TextBlock Text="TODO"
+                             TextWrapping="WrapWithOverflow"
+                             Width="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}" />
               </StackPanel>
 
 		  </StackPanel>
