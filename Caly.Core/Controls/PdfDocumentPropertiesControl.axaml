@@ -18,88 +18,160 @@
     </StackPanel>
   </Design.PreviewWith>
  
-  <ControlTheme x:Key="{x:Type controls:PdfDocumentPropertiesControl}" TargetType="controls:PdfDocumentPropertiesControl" x:DataType="viewModels:PdfDocumentViewModel">
+  <ControlTheme x:Key="{x:Type controls:PdfDocumentPropertiesControl}"
+                TargetType="controls:PdfDocumentPropertiesControl"
+                x:DataType="viewModels:PdfDocumentViewModel">
     <Setter Property="Template">
       <ControlTemplate>
-          <StackPanel Orientation="Vertical">
+		  <DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-				  <TextBlock Text="File Name:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-				  <TextBlock Text="{Binding FileName}" />
-			  </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="File Name:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding FileName}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="File Size:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding FileSize}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="File Size:"
+                             Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding FileSize}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-			  <Separator/>
+			  <Separator DockPanel.Dock="Top"/>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Title:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Title}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Title:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.Title}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Author:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Author}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Author:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.Author}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Subject:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Subject}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Subject:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.Subject}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="KeyWords:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Keywords}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="KeyWords:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.Keywords}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Created:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.CreationDate}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Created:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.CreationDate}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Modified:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.ModifiedDate}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Modified:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.ModifiedDate}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Creator:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Creator}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Creator:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.Creator}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <Separator/>
+			  <Separator DockPanel.Dock="Top"/>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Pdf Producer:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.Producer}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Pdf Producer:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.Producer}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Pdf Version:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding Properties.PdfVersion}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Pdf Version:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding Properties.PdfVersion}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Page Count:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="{Binding PageCount}" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Page Count:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="{Binding PageCount}"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Page Size:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="TODO" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Page Size:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="TODO"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-              <Separator/>
+			  <Separator DockPanel.Dock="Top"/>
 
-              <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="Fast Web View:" Width="{TemplateBinding FirstColumnWidth}" HorizontalAlignment="Left" />
-                  <TextBlock Text="TODO" />
-              </StackPanel>
+			  <DockPanel DockPanel.Dock="Top">
+				  <TextBlock Text="Fast Web View:"
+                             Width="{TemplateBinding FirstColumnWidth}"
+                             HorizontalAlignment="Left" />
+				  <TextBlock Text="TODO"
+                             MinWidth="120"
+                             HorizontalAlignment="Left"
+                             TextWrapping="WrapWithOverflow" />
+			  </DockPanel>
 
-		  </StackPanel>
+
+		  </DockPanel>
       </ControlTemplate>
     </Setter>
   </ControlTheme>
