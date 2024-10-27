@@ -164,7 +164,7 @@
 				  <TextBlock Text="Fast Web View:"
                              Width="{TemplateBinding FirstColumnWidth}"
                              HorizontalAlignment="Left" />
-				  <TextBlock Text="TODO"
+				  <TextBlock Text="{Binding Properties.IsLinearised}"
                              MinWidth="120"
                              HorizontalAlignment="Left"
                              TextWrapping="WrapWithOverflow" />

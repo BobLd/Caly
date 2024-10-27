@@ -369,6 +369,7 @@ namespace Caly.Core.Services
                 ModifiedDate = info.ModifiedDate,
                 Producer = info.Producer,
                 Subject = info.Subject,
+                IsLinearised = _document.IsLinearised,
                 Others = others
             };
 

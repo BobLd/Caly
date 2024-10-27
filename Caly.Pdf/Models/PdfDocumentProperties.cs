@@ -62,6 +62,8 @@ namespace Caly.Pdf.Models
         /// </summary>
         public string? ModifiedDate { get; init; }
 
+        public bool IsLinearised { get; init; }
+
         /// <summary>
         /// Other information.
         /// </summary>
