@@ -43,7 +43,27 @@ namespace Caly.Core.ViewModels
             {
                 BookmarkSource.ExpandAll();
                 BookmarkSource.RowSelection!.SelectionChanged += RowSelection_SelectionChanged;
+                BookmarkSource.RowExpanding += BookmarkSource_RowExpanding;
+                BookmarkSource.RowExpanded += BookmarkSource_RowExpanded;
+                BookmarkSource.RowCollapsing += BookmarkSource_RowCollapsing;
             });
+
+            
+        }
+
+        private void BookmarkSource_RowExpanded(object? sender, Avalonia.Controls.Models.TreeDataGrid.RowEventArgs<Avalonia.Controls.Models.TreeDataGrid.HierarchicalRow<PdfBookmarkNode>> e)
+        {
+            
+        }
+
+        private void BookmarkSource_RowCollapsing(object? sender, Avalonia.Controls.Models.TreeDataGrid.RowEventArgs<Avalonia.Controls.Models.TreeDataGrid.HierarchicalRow<PdfBookmarkNode>> e)
+        {
+
+        }
+
+        private void BookmarkSource_RowExpanding(object? sender, Avalonia.Controls.Models.TreeDataGrid.RowEventArgs<Avalonia.Controls.Models.TreeDataGrid.HierarchicalRow<PdfBookmarkNode>> e)
+        {
+            
         }
 
         private void RowSelection_SelectionChanged(object? sender, Avalonia.Controls.Selection.TreeSelectionModelSelectionChangedEventArgs<PdfBookmarkNode> e)

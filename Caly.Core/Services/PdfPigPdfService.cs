@@ -414,8 +414,23 @@ namespace Caly.Core.Services
                 {
                     Columns =
                     {
+                        /*
                         new HierarchicalExpanderColumn<PdfBookmarkNode>(
                             new TextColumn<PdfBookmarkNode, string>("Title", x => x.Title),x => x.Nodes)
+                        */
+                        new HierarchicalExpanderColumn<PdfBookmarkNode>(
+                            new TemplateColumn<PdfBookmarkNode>(
+                                null,
+                                "BookmarkCell",
+                                null,
+                                new GridLength(1, GridUnitType.Auto),
+                                new TemplateColumnOptions<PdfBookmarkNode>()
+                                {
+                                     CanUserResizeColumn = false,
+                                     CanUserSortColumn = false,
+                                     IsTextSearchEnabled = false, // Add Text search?
+                                }),
+                            x => x.Nodes) // can decide expended here
                     }
                 };
             }

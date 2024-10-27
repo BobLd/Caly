@@ -79,35 +79,33 @@ namespace Caly.Core.Views
             }
         }
 
-        private void TreeView_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void TreeDataGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            // Should not be here - to put together with other events
             if (!e.WidthChanged)
             {
                 return;
             }
 
-            if (sender is not TreeView treeView)
+            if (sender is not TreeDataGrid treeView || treeView.RowsPresenter is null)
             {
                 return;
             }
 
             double width = treeView.Bounds.Width;
 
-            foreach (var control in treeView.GetRealizedContainers().OfType<TreeViewItem>())
+            /*
+            foreach (var control in treeView.RowsPresenter.GetRealizedElements())
             {
-                var stackPanel = control.GetVisualChildren().OfType<StackPanel>().FirstOrDefault();
-                if (stackPanel is null)
-                {
-                    continue;
-                }
+                control.SetCurrentValue(WidthProperty, width);
+                control.InvalidateMeasure();
 
-                stackPanel.SetCurrentValue(WidthProperty, width);
-
-                foreach (TextBlock textBlock in stackPanel.GetVisualDescendants().OfType<TextBlock>())
+                foreach (var tb in control.GetVisualDescendants().OfType<TextBlock>())
                 {
-                    textBlock.InvalidateMeasure();
+                    tb.InvalidateMeasure();
                 }
             }
+            */
         }
 
         #region Resize SplitView.Pane

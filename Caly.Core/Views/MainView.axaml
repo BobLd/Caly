@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:Caly.Core.Views"
              xmlns:vm="clr-namespace:Caly.Core.ViewModels"
+			 xmlns:m="clr-namespace:Caly.Core.Models"
              xmlns:tabalonia="clr-namespace:Tabalonia.Controls;assembly=Tabalonia"
              xmlns:controls="clr-namespace:Caly.Core.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -139,14 +140,28 @@
 												</PathIcon>
 											</TabItem.Header>
 
-                                            <TreeDataGrid Source="{Binding BookmarkSource}"
-														  CanUserSortColumns="False"
-                                                          ShowColumnHeaders="False"
-                                                          SizeChanged="TreeView_SizeChanged">
+                                            <Grid>
+												<!--https://github.com/AvaloniaUI/Avalonia.Controls.TreeDataGrid/blob/master/samples/TreeDataGridDemo/MainWindow.axaml-->
+												<TreeDataGrid Source="{Binding BookmarkSource}"
+															  HorizontalAlignment="Stretch"
+															  CanUserSortColumns="False"
+															  ShowColumnHeaders="False"
+															  SizeChanged="TreeDataGrid_SizeChanged"
+															  CanUserResizeColumns="False">
 
-												
-                                            </TreeDataGrid>
-<!--
+													<TreeDataGrid.Resources>
+														<DataTemplate x:Key="BookmarkCell" DataType="m:PdfBookmarkNode">
+															<TextBlock xml:space="preserve"
+																	   Text="{Binding Title}"
+																	   VerticalAlignment="Center"
+																	   TextWrapping="WrapWithOverflow"/>
+														</DataTemplate>
+													</TreeDataGrid.Resources>
+
+												</TreeDataGrid>
+											</Grid>
+
+                                            <!--
 											<TreeView ItemsSource="{Binding Bookmarks}"
                                                       SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
                                                       SelectionMode="Toggle"
