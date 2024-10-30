@@ -21,9 +21,11 @@ namespace Caly.Core.Utilities
 {
     internal static class ReadOnlySequenceExtensions
     {
-        public static void Append(this StringBuilder sb, ReadOnlySequence<char> sequence)
+        public static void AppendReadOnlySequence(this StringBuilder sb, ReadOnlySequence<char> sequence)
         {
-            Span<char> output = sequence.Length < 512 ? stackalloc char[(int)sequence.Length] : new char[sequence.Length];
+            Span<char> output = sequence.Length < 512 ?
+                stackalloc char[(int)sequence.Length] :
+                new char[sequence.Length];
 
             sequence.CopyTo(output);
 
