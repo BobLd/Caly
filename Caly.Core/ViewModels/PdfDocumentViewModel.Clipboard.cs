@@ -58,8 +58,7 @@ namespace Caly.Core.ViewModels
                                            PartialWord, this,
                                            token))
                     {
-                        ReadOnlySequenceExtensions.Append(sb, word);
-
+                        sb.AppendReadOnlySequence(word);
                         if (sb.Length > 0 && !char.IsWhiteSpace(sb[^1]))
                         {
                             sb.Append(' ');

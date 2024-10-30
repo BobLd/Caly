@@ -160,8 +160,7 @@
 												</PathIcon>
 											</TabItem.Header>
 
-											<controls:SearchPanelControl/>
-
+											<controls:PdfSearchPanelControl/>
 										</TabItem>
 
                                         <!-- Doc information tab -->

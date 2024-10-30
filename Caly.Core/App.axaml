@@ -21,7 +21,8 @@
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfPageItemsControl.axaml"/>
 				<ResourceInclude Source="avares://Caly.Core/Controls/PdfPageItem.axaml"/>
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfDocumentPropertiesControl.axaml"/>
-            </ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Caly.Core/Controls/PdfSearchPanelControl.axaml"/>
+			</ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
 	</Application.Resources>
 
