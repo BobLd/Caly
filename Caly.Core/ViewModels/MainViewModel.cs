@@ -23,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Caly.Core.Services.Interfaces;
-using Caly.Core.Utilities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,8 +37,6 @@ namespace Caly.Core.ViewModels
         public ObservableCollection<PdfDocumentViewModel> PdfDocuments { get; } = new();
 
         [ObservableProperty] private int _selectedDocumentIndex;
-
-        [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
 
 #if DEBUG
         partial void OnSelectedDocumentIndexChanged(int oldValue, int newValue)
@@ -85,7 +82,7 @@ namespace Caly.Core.ViewModels
         {
             try
             {
-                return SelectedDocumentIndex < 0 ? null : PdfDocuments[SelectedDocumentIndex];
+                return (SelectedDocumentIndex < 0 || PdfDocuments.Count == 0) ? null : PdfDocuments[SelectedDocumentIndex];
             }
             catch (Exception e)
             {
@@ -150,7 +147,6 @@ namespace Caly.Core.ViewModels
         [RelayCommand]
         private void ActivateSearchTextTab()
         {
-            IsPaneOpen = true;
             GetCurrentPdfDocument()?.ActivateSearchTextTabCommand.Execute(null);
         }
 
@@ -159,6 +155,44 @@ namespace Caly.Core.ViewModels
         {
             PdfDocumentViewModel? vm = GetCurrentPdfDocument();
             return vm is null ? Task.CompletedTask : vm.CopyTextCommand.ExecuteAsync(null);
+        }
+
+        [RelayCommand]
+        private void ActivateNextDocument()
+        {
+            int lastIndex = PdfDocuments.Count - 1;
+
+            if (lastIndex <= 0)
+            {
+                return;
+            }
+
+            int newIndex = SelectedDocumentIndex + 1;
+
+            if (newIndex > lastIndex)
+            {
+                newIndex = 0;
+            }
+            SelectedDocumentIndex = newIndex;
+        }
+
+        [RelayCommand]
+        private void ActivatePreviousDocument()
+        {
+            int lastIndex = PdfDocuments.Count - 1;
+
+            if (lastIndex <= 0)
+            {
+                return;
+            }
+
+            int newIndex = SelectedDocumentIndex - 1;
+
+            if (newIndex < 0)
+            {
+                newIndex = lastIndex;
+            }
+            SelectedDocumentIndex = newIndex;
         }
     }
 }

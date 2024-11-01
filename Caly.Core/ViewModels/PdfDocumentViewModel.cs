@@ -40,7 +40,9 @@ namespace Caly.Core.ViewModels
         private readonly CancellationTokenSource _cts = new();
 
         [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = [];
-        
+
+        [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
+
         [ObservableProperty] private int _selectedTabIndex;
 
         [ObservableProperty] private int? _selectedPageIndex = 1;

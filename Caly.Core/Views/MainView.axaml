@@ -28,6 +28,8 @@
         <KeyBinding Gesture="Ctrl+F4" Command="{Binding CloseDocumentCommand}" />
 		<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
 		<KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
+		<KeyBinding Gesture="Ctrl+PageDown" Command="{Binding ActivateNextDocumentCommand}"/>
+        <KeyBinding Gesture="Ctrl+PageUp" Command="{Binding ActivatePreviousDocumentCommand}"/>
 	</UserControl.KeyBindings>
 
 	<tabalonia:TabsControl Background="Transparent"
@@ -50,7 +52,7 @@
 
 					<DockPanel Grid.Row="0" Background="#3b3b3b">
 						<StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-							<ToggleButton IsChecked="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).IsPaneOpen}">
+							<ToggleButton IsChecked="{Binding IsPaneOpen}">
 								<PathIcon Data="{StaticResource line_horizontal_3_regular}">
 									<ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
 								</PathIcon>
@@ -99,7 +101,7 @@
 
 					<SplitView Grid.Row="1"
 							   Name="PART_SplitView"
-                               IsPaneOpen="{Binding $parent[views:MainView].((vm:MainViewModel)DataContext).IsPaneOpen}"
+                               IsPaneOpen="{Binding IsPaneOpen}"
                                OpenPaneLength="350"
                                CompactPaneLength="0"
                                DisplayMode="CompactInline">
