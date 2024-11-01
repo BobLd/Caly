@@ -1,4 +1,19 @@
-﻿using System;
+﻿// Copyright (C) 2024 BobLd
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY - without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -91,6 +106,11 @@ namespace Caly.Core.Services
                 // loop will break on the next iteration.
                 try
                 {
+                    if (IsDisposed())
+                    {
+                        return;
+                    }
+
                     RenderRequest renderRequest = _pendingRenderRequests.Take(_mainCts.Token);
                     switch (renderRequest.Type)
                     {
@@ -109,7 +129,6 @@ namespace Caly.Core.Services
                         default:
                             throw new NotImplementedException(renderRequest.Type.ToString());
                     }
-
                 }
                 catch (OperationCanceledException) { }
                 catch (InvalidOperationException) { }
@@ -118,6 +137,11 @@ namespace Caly.Core.Services
 
         private async Task ProcessTextLayerRequest(RenderRequest renderRequest)
         {
+            if (IsDisposed())
+            {
+                return;
+            }
+
             if (renderRequest.Token.IsCancellationRequested)
             {
                 System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] Cancelled {renderRequest.Page.PageNumber}");
@@ -250,6 +274,11 @@ namespace Caly.Core.Services
         {
             System.Diagnostics.Debug.WriteLine($"[RENDER] AskPageTextLayer {page.PageNumber}");
 
+            if (IsDisposed())
+            {
+                return;
+            }
+
             var pageCts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
             if (_textLayerTokens.TryAdd(page.PageNumber, pageCts))
@@ -279,12 +308,17 @@ namespace Caly.Core.Services
 
             try
             {
-                if (token.IsCancellationRequested || isDiposed())
+                if (token.IsCancellationRequested || IsDisposed())
                 {
                     return;
                 }
 
                 await _semaphore.WaitAsync(CancellationToken.None);
+
+                if (IsDisposed())
+                {
+                    return;
+                }
 
                 token.ThrowIfCancellationRequested();
 
@@ -301,7 +335,7 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
@@ -316,7 +350,7 @@ namespace Caly.Core.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (_document is null || isDiposed())
+                if (_document is null || IsDisposed())
                 {
                     return null;
                 }
@@ -334,7 +368,7 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
@@ -345,7 +379,7 @@ namespace Caly.Core.Services
         {
             Debug.ThrowOnUiThread();
 
-            if (_document is null || isDiposed())
+            if (_document is null || IsDisposed())
             {
                 return ValueTask.CompletedTask;
             }
@@ -382,7 +416,7 @@ namespace Caly.Core.Services
 
             try
             {
-                if (token.IsCancellationRequested || isDiposed())
+                if (token.IsCancellationRequested || IsDisposed())
                 {
                     return;
                 }
@@ -413,7 +447,7 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
@@ -462,48 +496,12 @@ namespace Caly.Core.Services
             return new PdfBookmarkNode(node.Title, pageNumber, children.Count == 0 ? null : children);
         }
 
-        private bool isDiposed()
+        private bool IsDisposed()
         {
             return Interlocked.Read(ref _isDisposed) != 0;
         }
 
         private long _isDisposed;
-
-        public void Dispose()
-        {
-            Debug.ThrowOnUiThread();
-
-            Interlocked.Increment(ref _isDisposed);
-
-            System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document for {FileName}");
-
-            _pendingRenderRequests.CompleteAdding();
-
-            _semaphore.Dispose();
-
-            _textSearchService.Dispose();
-
-            if (_fileStream is not null)
-            {
-                _fileStream.Dispose();
-                _fileStream = null;
-            }
-
-            if (_document is not null)
-            {
-                _document.Dispose();
-                _document = null;
-            }
-
-            _pendingRenderRequests.Dispose();
-
-            GC.KeepAlive(_renderingLoopTask);
-
-            System.Diagnostics.Debug.Assert(_renderingLoopTask.IsCanceled ||
-                                            _renderingLoopTask.IsCompleted ||
-                                            _renderingLoopTask.IsCompletedSuccessfully ||
-                                            _renderingLoopTask.IsFaulted);
-        }
 
         public async ValueTask DisposeAsync()
         {
@@ -511,9 +509,33 @@ namespace Caly.Core.Services
 
             try
             {
+                if (IsDisposed())
+                {
+                    System.Diagnostics.Debug.WriteLine($"[WARN] Trying to dispose but already disposed for {FileName}.");
+                    return;
+                }
+
                 Interlocked.Increment(ref _isDisposed);
-                
-                System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document async for {FileName}");
+
+                System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document async for {FileName}.");
+
+                foreach (var token in _thumbnailTokens)
+                {
+                    await token.Value.CancelAsync();
+                    token.Value.Dispose();
+                }
+
+                foreach (var token in _textLayerTokens)
+                {
+                    await token.Value.CancelAsync();
+                    token.Value.Dispose();
+                }
+
+                foreach (var token in _pictureTokens)
+                {
+                    await token.Value.CancelAsync();
+                    token.Value.Dispose();
+                }
 
                 _pendingRenderRequests.CompleteAdding();
 
@@ -533,16 +555,14 @@ namespace Caly.Core.Services
                     _document = null;
                 }
 
-                _pendingRenderRequests.Dispose();
-
-                GC.KeepAlive(_renderingLoopTask);
-
                 await _renderingLoopTask;
                 
                 System.Diagnostics.Debug.Assert(_renderingLoopTask.IsCanceled ||
                                                 _renderingLoopTask.IsCompleted ||
                                                 _renderingLoopTask.IsCompletedSuccessfully ||
                                                 _renderingLoopTask.IsFaulted);
+
+                _pendingRenderRequests.Dispose();
             }
             catch (Exception ex)
             {

@@ -94,6 +94,8 @@ namespace Caly.Core.ViewModels
                     await p.LoadPageSize(ct);
                 });
             }
+            catch (OperationCanceledException)
+            { }
             catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine($"ERROR in WorkerProc {e}");

@@ -31,6 +31,11 @@ namespace Caly.Core.Services
 
         private async Task ProcessPictureRequest(RenderRequest renderRequest)
         {
+            if (IsDisposed())
+            {
+                return;
+            }
+
             if (renderRequest.Token.IsCancellationRequested)
             {
                 System.Diagnostics.Debug.WriteLine($"[RENDER] [PICTURE] Cancelled {renderRequest.Page.PageNumber}");
@@ -99,7 +104,14 @@ namespace Caly.Core.Services
         public void AskPagePicture(PdfPageViewModel page, CancellationToken token)
         {
             System.Diagnostics.Debug.WriteLine($"[RENDER] AskPagePicture {page.PageNumber}");
+
+            if (IsDisposed())
+            {
+                return;
+            }
+
             var pageCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+
             if (_pictureTokens.TryAdd(page.PageNumber, pageCts))
             {
                 _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.Picture, pageCts.Token), pageCts.Token);
@@ -141,12 +153,17 @@ namespace Caly.Core.Services
             SKPicture? pic;
             try
             {
-                if (cancellationToken.IsCancellationRequested || isDiposed())
+                if (cancellationToken.IsCancellationRequested || IsDisposed())
                 {
                     return null;
                 }
 
                 await _semaphore.WaitAsync(CancellationToken.None);
+
+                if (IsDisposed())
+                {
+                    return null;
+                }
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -156,9 +173,15 @@ namespace Caly.Core.Services
             {
                 return null;
             }
+            catch (Exception e)
+            {
+                // We just ignore for the moment
+                Debug.WriteExceptionToFile(e);
+                return null;
+            }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !isDiposed())
+                if (_semaphore.CurrentCount == 0 && !IsDisposed())
                 {
                     _semaphore.Release();
                 }

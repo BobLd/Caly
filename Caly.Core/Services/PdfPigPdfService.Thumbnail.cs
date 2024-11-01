@@ -33,6 +33,11 @@ namespace Caly.Core.Services
         
         private async Task ProcessThumbnailRequest(RenderRequest renderRequest)
         {
+            if (IsDisposed())
+            {
+                return;
+            }
+
             if (renderRequest.Token.IsCancellationRequested)
             {
                 System.Diagnostics.Debug.WriteLine($"[RENDER] [THUMBNAIL] Cancelled {renderRequest.Page.PageNumber}");
@@ -52,6 +57,8 @@ namespace Caly.Core.Services
                         System.Diagnostics.Debug.WriteLine($"[RENDER] [THUMBNAIL] No need process {renderRequest.Page.PageNumber}");
                         return;
                     }
+                    
+                    renderRequest.Token.ThrowIfCancellationRequested();
 
                     var picture = renderRequest.Page.PdfPicture?.Clone();
                     if (picture is not null)
@@ -83,6 +90,11 @@ namespace Caly.Core.Services
                 if (renderRequest.Page.Thumbnail is not null)
                 {
                 }
+            }
+            catch (Exception e)
+            {
+                // We just ignore for the moment
+                Debug.WriteExceptionToFile(e);
             }
 
             System.Diagnostics.Debug.WriteLine($"[RENDER] [THUMBNAIL] End process {renderRequest.Page.PageNumber}");
@@ -132,7 +144,14 @@ namespace Caly.Core.Services
         public void AskPageThumbnail(PdfPageViewModel page, CancellationToken token)
         {
             System.Diagnostics.Debug.WriteLine($"[RENDER] AskPageThumbnail {page.PageNumber}");
+
+            if (IsDisposed())
+            {
+                return;
+            }
+
             var pageCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+
             if (_thumbnailTokens.TryAdd(page.PageNumber, pageCts))
             {
                 _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.Thumbnail, pageCts.Token), pageCts.Token);
