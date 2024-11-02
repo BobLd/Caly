@@ -513,6 +513,21 @@ namespace Caly.Core.Services
 
         private long _isDisposed;
 
+
+        private static async Task ClearTokensAsync(ConcurrentDictionary<int, CancellationTokenSource> tokens)
+        {
+            var keys = tokens.Keys.ToArray();
+
+            foreach (int key in keys)
+            {
+                if (tokens.TryRemove(key, out var token))
+                {
+                    await token.CancelAsync();
+                    token.Dispose();
+                }
+            }
+        }
+
         public async ValueTask DisposeAsync()
         {
             Debug.ThrowOnUiThread();
@@ -533,23 +548,9 @@ namespace Caly.Core.Services
 
                 System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document async for {FileName}.");
 
-                foreach (var token in _thumbnailTokens)
-                {
-                    await token.Value.CancelAsync();
-                    token.Value.Dispose();
-                }
-
-                foreach (var token in _textLayerTokens)
-                {
-                    await token.Value.CancelAsync();
-                    token.Value.Dispose();
-                }
-
-                foreach (var token in _pictureTokens)
-                {
-                    await token.Value.CancelAsync();
-                    token.Value.Dispose();
-                }
+                await ClearTokensAsync(_thumbnailTokens);
+                await ClearTokensAsync(_textLayerTokens);
+                await ClearTokensAsync(_pictureTokens);
 
                 _pendingRenderRequests.CompleteAdding();
 
