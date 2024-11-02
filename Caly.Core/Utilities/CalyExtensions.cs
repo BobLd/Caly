@@ -30,6 +30,24 @@ namespace Caly.Core.Utilities
             return OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
         }
 
+        private static readonly int[] _versionParts = new int [4];
+
+        static CalyExtensions()
+        {
+            var assemblyName = Process.GetCurrentProcess().MainModule.FileName;
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assemblyName);
+
+            _versionParts[0] = fvi.ProductMajorPart;
+            _versionParts[1] = fvi.ProductMinorPart;
+            _versionParts[2] = fvi.ProductBuildPart;
+            _versionParts[3] = fvi.ProductPrivatePart;
+        }
+
+        public static string GetCalyVersion()
+        {
+            return string.Join('.', _versionParts);
+        }
+
         public static T FindFromNameScope<T>(this INameScope e, string name) where T : Control
         {
             var element = e.Find<T>(name);

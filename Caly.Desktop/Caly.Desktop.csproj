@@ -8,6 +8,7 @@
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AssemblyName>Caly</AssemblyName>
+		<VersionPrefix>0.0.1</VersionPrefix>
 	</PropertyGroup>
 
 	<!--https://learn.microsoft.com/en-gb/dotnet/core/deploying/native-aot/optimizing-->
