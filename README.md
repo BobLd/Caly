@@ -5,7 +5,7 @@
 > [!IMPORTANT]
 > The development is currently in alpha.
 
-![caly preview](https://github.com/user-attachments/assets/79fba976-6534-4f9c-bdfc-6dd2d316f383)
+![caly preview](https://github.com/user-attachments/assets/dfc4f96a-cd9a-436a-a540-1865c69b87d4)
 
 ### Cross-Platform Compatibility
 
@@ -41,6 +41,8 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 * **Cross-Platform:** Run Caly Pdf Reader on your preferred operating system.
 * **Lightweight & Fast:** Designed for optimal performance and minimal resource consumption.
 * **Active Development:** We are constantly working on improving Caly Pdf Reader with new features and bug fixes.
+
+![image](https://github.com/user-attachments/assets/e7d40369-b404-4144-a7dd-b66fb6f3c493)
 
 ## Getting Started
 
