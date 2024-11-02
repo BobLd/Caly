@@ -30,6 +30,12 @@ namespace Caly.Core.Services
     {
         private readonly TimeSpan _annotationExpiration = TimeSpan.FromSeconds(20);
         private readonly Visual _target;
+        private readonly TimeSpan _minDelay = TimeSpan.FromSeconds(3);
+
+        private string? _previousNotificationMessage;
+        private DateTime _previousNotificationTime = DateTime.MinValue;
+        private string? _previousExceptionWindowMessage;
+        private DateTime _previousExceptionWindowTime = DateTime.MinValue;
 
         private WindowNotificationManager? _windowNotificationManager;
 
@@ -66,10 +72,7 @@ namespace Caly.Core.Services
                 return Task.FromResult<string?>(string.Empty);
             });
         }
-
-        private string? _previousNotificationMessage;
-        private string? _previousExceptionWindowMessage;
-
+        
         public void ShowNotification(string? title, string? message, NotificationType type)
         {
             Dispatcher.UIThread.Post(() =>
@@ -78,11 +81,17 @@ namespace Caly.Core.Services
                 System.Diagnostics.Debug.WriteLine($"Annotation ({type}): {title}\n{message}");
                 if (_windowNotificationManager is not null)
                 {
-                    if (message != _previousNotificationMessage)
+                    DateTime now = DateTime.UtcNow;
+                    if (string.IsNullOrEmpty(message) ||
+                        (now - _previousNotificationTime <= _minDelay &&
+                        message.Equals(_previousNotificationMessage)))
                     {
-                        _windowNotificationManager.Show(new Notification(title, message, type, _annotationExpiration));
-                        _previousNotificationMessage = message;
+                        return;
                     }
+
+                    _previousNotificationTime = now;
+                    _previousNotificationMessage = message;
+                    _windowNotificationManager.Show(new Notification(title, message, type, _annotationExpiration));
                 }
                 else
                 {
@@ -108,12 +117,20 @@ namespace Caly.Core.Services
                     return;
                 }
 
-                if (exception.Message != _previousExceptionWindowMessage) // TODO - Improve to count same messages
+                DateTime now = DateTime.UtcNow;
+                if (string.IsNullOrEmpty(exception.Message) ||
+                    (now - _previousExceptionWindowTime <= _minDelay &&
+                     exception.Message.Equals(_previousExceptionWindowMessage)))
                 {
-                    var window = new MessageWindow { DataContext = exception };
-                    await window.ShowDialog(w);
-                    _previousExceptionWindowMessage = exception.Message;
+                    return;
                 }
+
+                // TODO - Improve to count same messages
+                _previousExceptionWindowTime = now;
+                _previousExceptionWindowMessage = exception.Message;
+                var window = new MessageWindow { DataContext = exception };
+                await window.ShowDialog(w);
+
             }, DispatcherPriority.Loaded);
         }
 
