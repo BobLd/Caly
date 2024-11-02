@@ -210,17 +210,12 @@ namespace Caly.Core.Services
                     return;
                 }
 
-                var pdfService = App.Current?.Services?.GetRequiredService<IPdfService>();
-                if (pdfService is null)
-                {
-                    throw new NullReferenceException($"Missing {nameof(IPdfService)} instance.");
-                }
-
-                int pageCount = await pdfService.OpenDocument(storageFile, password, cancellationToken);
+                var documentViewModel = App.Current!.Services!.GetRequiredService<PdfDocumentViewModel>();
+  
+                int pageCount = await documentViewModel.OpenDocument(storageFile, password, cancellationToken);
 
                 if (pageCount > 0)
                 {
-                    var documentViewModel = new PdfDocumentViewModel(pdfService);
                     if (_openedFiles.TryAdd(storageFile.Path.LocalPath, documentViewModel))
                     {
                         // We need a lock to avoid issues with tabs when opening documents in parallel
@@ -231,7 +226,7 @@ namespace Caly.Core.Services
                 }
 
                 // TODO - Log
-                await Task.Run(pdfService.DisposeAsync, CancellationToken.None);
+                //await Task.Run(pdfService.DisposeAsync, CancellationToken.None);
             }
         }
 

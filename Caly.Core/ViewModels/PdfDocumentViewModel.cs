@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Collections;
+using Avalonia.Platform.Storage;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Services.Interfaces;
@@ -77,6 +78,8 @@ namespace Caly.Core.ViewModels
 
         internal string? LocalPath { get; private set; }
 
+        private Task? _processPagesInfoQueueTask;
+
         private async Task ProcessPagesInfoQueue(CancellationToken token)
         {
             try
@@ -110,39 +113,21 @@ namespace Caly.Core.ViewModels
         {
             ArgumentNullException.ThrowIfNull(pdfService, nameof(pdfService));
 
-            if (pdfService.NumberOfPages <= 0)
-            {
-                throw new ArgumentException(
-                    $"Invalid number of pages in PdfPageService, got '{pdfService.NumberOfPages}'.");
-            }
-
-            if (pdfService.NumberOfPages > 1)
-            {
-                // We only need the channel if we have more than 1 page in the document
-                Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(
-                    new BoundedChannelOptions(_initialPagesInfoToLoad)
-                    {
-                        AllowSynchronousContinuations = false,
-                        FullMode = BoundedChannelFullMode.DropWrite,
-                        SingleReader = false,
-                        SingleWriter = true
-                    });
-                _channelWriter = pageInfoChannel.Writer;
-                _channelReader = pageInfoChannel.Reader;
-
-                Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
-            }
+            System.Diagnostics.Debug.Assert(pdfService.NumberOfPages == 0);
 
             _pdfService = pdfService;
-            PageCount = _pdfService.NumberOfPages;
-            FileName = _pdfService.FileName;
-            LocalPath = _pdfService.LocalPath;
-            if (_pdfService.FileSize.HasValue)
-            {
-                FileSize = Helpers.FormatSizeBytes(_pdfService.FileSize.Value);
-            }
 
-            TextSelectionHandler = new TextSelectionHandler(PageCount);
+            // We only need the channel if we have more than 1 page in the document?
+            Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(
+                new BoundedChannelOptions(_initialPagesInfoToLoad)
+                {
+                    AllowSynchronousContinuations = false,
+                    FullMode = BoundedChannelFullMode.DropWrite,
+                    SingleReader = false,
+                    SingleWriter = true
+                });
+            _channelWriter = pageInfoChannel.Writer;
+            _channelReader = pageInfoChannel.Reader;
 
             _loadPagesTask = new Lazy<Task>(LoadPages);
             _loadBookmarksTask = new Lazy<Task>(LoadBookmarks);
@@ -201,6 +186,40 @@ namespace Caly.Core.ViewModels
                         Exception = new ExceptionViewModel(ex);
                     }
                 });
+        }
+
+        /// <summary>
+        /// Open the pdf document.
+        /// </summary>
+        /// <returns>The number of pages in the opened document. <c>0</c> if the document was not opened.</returns>
+        public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken token)
+        {
+            // TODO - Combine token _cts.Token and token
+
+            int pageCount = await _pdfService.OpenDocument(storageFile, password, token);
+
+            if (pageCount == 0)
+            {
+                return pageCount;
+            }
+
+            PageCount = _pdfService.NumberOfPages;
+            FileName = _pdfService.FileName;
+            LocalPath = _pdfService.LocalPath;
+            if (_pdfService.FileSize.HasValue)
+            {
+                FileSize = Helpers.FormatSizeBytes(_pdfService.FileSize.Value);
+            }
+
+            TextSelectionHandler = new TextSelectionHandler(PageCount);
+
+            if (PageCount > 1)
+            {
+                // Fire and forget
+                _processPagesInfoQueueTask = Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
+            }
+
+            return pageCount;
         }
 
         public void ClearAllThumbnails()
