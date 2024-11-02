@@ -31,7 +31,6 @@ namespace Caly.Core.ViewModels
 
             _cts.Dispose();
 
-            await _pdfService.DisposeAsync();
             _searchResultsDisposable.Dispose();
         }
 

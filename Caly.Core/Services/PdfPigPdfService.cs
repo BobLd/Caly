@@ -575,8 +575,6 @@ namespace Caly.Core.Services
 
                 _semaphore.Dispose();
 
-                _textSearchService.Dispose();
-
                 if (_fileStream is not null)
                 {
                     await _fileStream.DisposeAsync();
