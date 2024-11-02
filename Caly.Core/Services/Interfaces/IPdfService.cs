@@ -22,7 +22,7 @@ using Caly.Core.ViewModels;
 
 namespace Caly.Core.Services.Interfaces
 {
-    public interface IPdfService : IAsyncDisposable
+    public interface IPdfService : IAsyncDisposable, IDisposable
     {
         int NumberOfPages { get; }
 

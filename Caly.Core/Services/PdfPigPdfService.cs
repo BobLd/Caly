@@ -357,6 +357,11 @@ namespace Caly.Core.Services
 
                 await _semaphore.WaitAsync(CancellationToken.None);
 
+                if (IsDisposed())
+                {
+                    return null;
+                }
+
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var page = _document.GetPage<PageTextLayerContent>(pageNumber);
@@ -422,6 +427,11 @@ namespace Caly.Core.Services
                 }
 
                 await _semaphore.WaitAsync(CancellationToken.None);
+
+                if (IsDisposed())
+                {
+                    return;
+                }
 
                 token.ThrowIfCancellationRequested();
 
@@ -515,7 +525,11 @@ namespace Caly.Core.Services
                     return;
                 }
 
-                Interlocked.Increment(ref _isDisposed);
+                await _semaphore.WaitAsync(CancellationToken.None); // Acquire the lock
+
+                Interlocked.Increment(ref _isDisposed); // Flag as disposed
+
+                _semaphore.Release(); // Release lock
 
                 System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document async for {FileName}.");
 
@@ -568,6 +582,11 @@ namespace Caly.Core.Services
             {
                 System.Diagnostics.Debug.WriteLine($"[INFO] ERROR DisposeAsync for {FileName}: {ex.Message}");
             }
+        }
+
+        public async void Dispose()
+        {
+            await DisposeAsync();
         }
     }
 }

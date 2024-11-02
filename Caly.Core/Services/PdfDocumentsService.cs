@@ -226,17 +226,12 @@ namespace Caly.Core.Services
                         // We need a lock to avoid issues with tabs when opening documents in parallel
                         _mainViewModel.PdfDocuments.AddSafely(documentViewModel);
                         BringMainWindowToFront();
-                    }
-                    else
-                    {
-                        // TODO - Log
-                        await Task.Run(pdfService.DisposeAsync, CancellationToken.None);
+                        return;
                     }
                 }
-                else
-                {
-                    await Task.Run(pdfService.DisposeAsync, CancellationToken.None);
-                }
+
+                // TODO - Log
+                await Task.Run(pdfService.DisposeAsync, CancellationToken.None);
             }
         }
 
