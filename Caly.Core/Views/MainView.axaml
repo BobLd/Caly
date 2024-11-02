@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:views="clr-namespace:Caly.Core.Views"
              xmlns:vm="clr-namespace:Caly.Core.ViewModels"
              xmlns:tabalonia="clr-namespace:Tabalonia.Controls;assembly=Tabalonia"
              xmlns:controls="clr-namespace:Caly.Core.Controls"
@@ -50,52 +49,72 @@
 
 				<Grid RowDefinitions="30,*">
 
+                    <!-- Top navigation bar -->
 					<DockPanel Grid.Row="0" Background="#3b3b3b">
-						<StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-							<ToggleButton IsChecked="{Binding IsPaneOpen}">
-								<PathIcon Data="{StaticResource line_horizontal_3_regular}">
-									<ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
-								</PathIcon>
-							</ToggleButton>
 
-							<NumericUpDown Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
-                                           MinWidth="120"
-                                           MaxWidth="200"
-                                           Minimum="1"
-                                           Maximum="{Binding PageCount}"
-                                           ClipValueToMinMax="True"
-                                           ButtonSpinnerLocation="Left"
-                                           FormatString="0"
-                                           ParsingNumberStyle="Integer"
-                                           VerticalContentAlignment="Center"
-                                           HorizontalContentAlignment="Center"/>
+                        <!-- Toggle sidebar -->
+                        <ToggleButton DockPanel.Dock="Left"
+                                      VerticalAlignment="Stretch"
+                                      IsChecked="{Binding IsPaneOpen}">
+                            <PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource line_horizontal_3_regular}">
+                                <ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
+                            </PathIcon>
+                        </ToggleButton>
 
-							<TextBlock VerticalAlignment="Center"
-                                       HorizontalAlignment="Center"
-                                       Margin="5,0">
-								<Run Text="/"/>
-								<Run Text="{Binding PageCount}"/>
-							</TextBlock>
-						</StackPanel>
+                        <!-- Page navigation -->
+                        <NumericUpDown DockPanel.Dock="Left"
+                                       Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
+                                       MinWidth="120"
+                                       MaxWidth="200"
+                                       Minimum="1"
+                                       Maximum="{Binding PageCount}"
+                                       ClipValueToMinMax="True"
+                                       ButtonSpinnerLocation="Left"
+                                       FormatString="0"
+                                       ParsingNumberStyle="Integer"
+                                       VerticalContentAlignment="Center"
+                                       HorizontalContentAlignment="Center"/>
 
-						<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-							<Button HorizontalAlignment="Center" Command="{Binding ZoomOutCommand}">
-								<PathIcon Data="{StaticResource zoom_out_regular}">
-									<ToolTip.Tip>Zoom Out</ToolTip.Tip>
-								</PathIcon>
-							</Button>
+                        <TextBlock DockPanel.Dock="Left"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Margin="5,0">
+                            <Run Text="/"/>
+                            <Run Text="{Binding PageCount}"/>
+                        </TextBlock>
 
-							<Button HorizontalAlignment="Center" Command="{Binding ZoomInCommand}">
-								<PathIcon Data="{StaticResource zoom_in_regular}">
-									<ToolTip.Tip>Zoom In</ToolTip.Tip>
-								</PathIcon>
-							</Button>
+						<!-- Zoom in / out -->
+                        <Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ZoomOutCommand}">
+                            <PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource zoom_out_regular}">
+                                <ToolTip.Tip>Zoom Out</ToolTip.Tip>
+                            </PathIcon>
+                        </Button>
 
-							<TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Center"/>
+                        <Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ZoomInCommand}">
+                            <PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource zoom_in_regular}">
+                                <ToolTip.Tip>Zoom In</ToolTip.Tip>
+                            </PathIcon>
+                        </Button>
 
-						</StackPanel>
+                        <TextBlock DockPanel.Dock="Left"
+                                   Margin="5,0"
+                                   Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+						
+                        <Grid/>
 
 					</DockPanel>
 
@@ -120,9 +139,12 @@
                                                 SelectedIndex="{Binding SelectedTabIndex}">
 
 										<!-- Thumbnails tab -->
-										<TabItem IsSelected="True">
+										<TabItem MinHeight="40"
+                                                 IsSelected="True">
 											<TabItem.Header>
-												<PathIcon Data="{StaticResource copy_regular}">
+												<PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource copy_regular}">
 													<ToolTip.Tip>Thumbnails</ToolTip.Tip>
 													<PathIcon.RenderTransform>
 														<ScaleTransform ScaleY="-1"/>
@@ -133,10 +155,13 @@
 										</TabItem>
 
 										<!-- Bookmarks tab -->
-										<TabItem IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
+										<TabItem MinHeight="40"
+                                                 IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                  IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
 											<TabItem.Header>
-												<PathIcon Data="{StaticResource bookmark_regular}">
+												<PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource bookmark_regular}">
 													<ToolTip.Tip>Bookmarks</ToolTip.Tip>
 												</PathIcon>
 											</TabItem.Header>
@@ -155,9 +180,11 @@
 										</TabItem>
 
 										<!-- Search tab -->
-										<TabItem>
+                                        <TabItem MinHeight="40">
 											<TabItem.Header>
-												<PathIcon Data="{StaticResource document_search_regular}">
+												<PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource document_search_regular}">
 													<ToolTip.Tip>Search</ToolTip.Tip>
 												</PathIcon>
 											</TabItem.Header>
@@ -166,9 +193,11 @@
 										</TabItem>
 
                                         <!-- Doc information tab -->
-                                        <TabItem>
+                                        <TabItem MinHeight="40">
                                             <TabItem.Header>
-                                                <PathIcon Data="{StaticResource info_regular}">
+                                                <PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource info_regular}">
                                                     <ToolTip.Tip>Document Properties</ToolTip.Tip>
                                                 </PathIcon>
                                             </TabItem.Header>
