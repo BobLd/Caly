@@ -34,6 +34,13 @@ namespace Caly.Core.Services
 {
     internal sealed class PdfDocumentsService : IPdfDocumentsService
     {
+        private sealed class PdfDocumentRecord
+        {
+            public required AsyncServiceScope Scope { get; init; }
+
+            public required PdfDocumentViewModel ViewModel { get; init; }
+        }
+
         private readonly Visual _target;
         private readonly MainViewModel _mainViewModel;
         private readonly IFilesService _filesService;
@@ -43,7 +50,7 @@ namespace Caly.Core.Services
         private readonly ChannelWriter<IStorageFile?> _channelWriter;
         private readonly ChannelReader<IStorageFile?> _channelReader;
 
-        private readonly ConcurrentDictionary<string, PdfDocumentViewModel> _openedFiles = new();
+        private readonly ConcurrentDictionary<string, PdfDocumentRecord> _openedFiles = new();
 
         private async Task ProcessDocumentsQueue(CancellationToken token)
         {
@@ -166,9 +173,14 @@ namespace Caly.Core.Services
 
             _mainViewModel.PdfDocuments.RemoveSafely(document);
 
-            _openedFiles.TryRemove(document.LocalPath, out _);
-
-            await document.CleanAfterClose();
+            if (_openedFiles.TryRemove(document.LocalPath, out var docRecord))
+            {
+                await docRecord.Scope.DisposeAsync();
+            }
+            else
+            {
+                // TODO - Log error
+            }
 
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
         }
@@ -187,11 +199,11 @@ namespace Caly.Core.Services
             // string? id = await storageFile.SaveBookmarkAsync();
 
             // Check if file is already open
-            if (_openedFiles.TryGetValue(storageFile.Path.LocalPath, out var vm))
+            if (_openedFiles.TryGetValue(storageFile.Path.LocalPath, out var doc))
             {
                 // Already open - Activate tab
                 // We need a lock to avoid issues with tabs when opening documents in parallel (this might not be needed here though).
-                int index = _mainViewModel.PdfDocuments.IndexOfSafely(vm);
+                int index = _mainViewModel.PdfDocuments.IndexOfSafely(doc.ViewModel);
                 if (index != -1 && _mainViewModel.SelectedDocumentIndex != index)
                 {
                     _mainViewModel.SelectedDocumentIndex = index;
@@ -210,18 +222,31 @@ namespace Caly.Core.Services
                     return;
                 }
 
-                var pdfService = App.Current?.Services?.GetRequiredService<IPdfService>();
-                if (pdfService is null)
-                {
-                    throw new NullReferenceException($"Missing {nameof(IPdfService)} instance.");
-                }
+                var scope = App.Current!.Services!.CreateAsyncScope();
 
-                int pageCount = await pdfService.OpenDocument(storageFile, password, cancellationToken);
+                var documentViewModel = scope.ServiceProvider.GetRequiredService<PdfDocumentViewModel>();
+
+                int pageCount;
+                try
+                {
+                    pageCount = await documentViewModel.OpenDocument(storageFile, password, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    // TODO - Log error
+                    await Task.Run(scope.DisposeAsync, CancellationToken.None);
+                    throw;
+                }
 
                 if (pageCount > 0)
                 {
-                    var documentViewModel = new PdfDocumentViewModel(pdfService);
-                    if (_openedFiles.TryAdd(storageFile.Path.LocalPath, documentViewModel))
+                    var docRecord = new PdfDocumentRecord()
+                    {
+                        Scope = scope,
+                        ViewModel = documentViewModel
+                    };
+
+                    if (_openedFiles.TryAdd(storageFile.Path.LocalPath, docRecord))
                     {
                         // We need a lock to avoid issues with tabs when opening documents in parallel
                         _mainViewModel.PdfDocuments.AddSafely(documentViewModel);
@@ -230,8 +255,8 @@ namespace Caly.Core.Services
                     }
                 }
 
-                // TODO - Log
-                await Task.Run(pdfService.DisposeAsync, CancellationToken.None);
+                // TODO - Log error
+                await Task.Run(scope.DisposeAsync, CancellationToken.None);
             }
         }
 
