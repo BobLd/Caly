@@ -52,8 +52,11 @@
 
 					<DockPanel Grid.Row="0" Background="#3b3b3b">
 						<StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-							<ToggleButton IsChecked="{Binding IsPaneOpen}">
-								<PathIcon Data="{StaticResource line_horizontal_3_regular}">
+							<ToggleButton VerticalAlignment="Stretch"
+                                          IsChecked="{Binding IsPaneOpen}">
+								<PathIcon Width="17"
+                                          Height="17"
+                                          Data="{StaticResource line_horizontal_3_regular}">
 									<ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
 								</PathIcon>
 							</ToggleButton>
@@ -79,14 +82,22 @@
 						</StackPanel>
 
 						<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-							<Button HorizontalAlignment="Center" Command="{Binding ZoomOutCommand}">
-								<PathIcon Data="{StaticResource zoom_out_regular}">
+							<Button HorizontalAlignment="Center"
+                                    VerticalAlignment="Stretch"
+                                    Command="{Binding ZoomOutCommand}">
+								<PathIcon Width="17"
+                                          Height="17"
+                                          Data="{StaticResource zoom_out_regular}">
 									<ToolTip.Tip>Zoom Out</ToolTip.Tip>
 								</PathIcon>
 							</Button>
 
-							<Button HorizontalAlignment="Center" Command="{Binding ZoomInCommand}">
-								<PathIcon Data="{StaticResource zoom_in_regular}">
+							<Button HorizontalAlignment="Center"
+                                    VerticalAlignment="Stretch"
+                                    Command="{Binding ZoomInCommand}">
+								<PathIcon Width="17"
+                                          Height="17"
+                                          Data="{StaticResource zoom_in_regular}">
 									<ToolTip.Tip>Zoom In</ToolTip.Tip>
 								</PathIcon>
 							</Button>
@@ -120,9 +131,12 @@
                                                 SelectedIndex="{Binding SelectedTabIndex}">
 
 										<!-- Thumbnails tab -->
-										<TabItem IsSelected="True">
+										<TabItem MinHeight="40"
+                                                 IsSelected="True">
 											<TabItem.Header>
-												<PathIcon Data="{StaticResource copy_regular}">
+												<PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource copy_regular}">
 													<ToolTip.Tip>Thumbnails</ToolTip.Tip>
 													<PathIcon.RenderTransform>
 														<ScaleTransform ScaleY="-1"/>
@@ -133,10 +147,13 @@
 										</TabItem>
 
 										<!-- Bookmarks tab -->
-										<TabItem IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
+										<TabItem MinHeight="40"
+                                                 IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                  IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
 											<TabItem.Header>
-												<PathIcon Data="{StaticResource bookmark_regular}">
+												<PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource bookmark_regular}">
 													<ToolTip.Tip>Bookmarks</ToolTip.Tip>
 												</PathIcon>
 											</TabItem.Header>
@@ -155,9 +172,11 @@
 										</TabItem>
 
 										<!-- Search tab -->
-										<TabItem>
+                                        <TabItem MinHeight="40">
 											<TabItem.Header>
-												<PathIcon Data="{StaticResource document_search_regular}">
+												<PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource document_search_regular}">
 													<ToolTip.Tip>Search</ToolTip.Tip>
 												</PathIcon>
 											</TabItem.Header>
@@ -166,9 +185,11 @@
 										</TabItem>
 
                                         <!-- Doc information tab -->
-                                        <TabItem>
+                                        <TabItem MinHeight="40">
                                             <TabItem.Header>
-                                                <PathIcon Data="{StaticResource info_regular}">
+                                                <PathIcon Width="17"
+                                                          Height="17"
+                                                          Data="{StaticResource info_regular}">
                                                     <ToolTip.Tip>Document Properties</ToolTip.Tip>
                                                 </PathIcon>
                                             </TabItem.Header>
