@@ -225,8 +225,18 @@ namespace Caly.Core.Services
                 var scope = App.Current!.Services!.CreateAsyncScope();
 
                 var documentViewModel = scope.ServiceProvider.GetRequiredService<PdfDocumentViewModel>();
-  
-                int pageCount = await documentViewModel.OpenDocument(storageFile, password, cancellationToken);
+
+                int pageCount;
+                try
+                {
+                    pageCount = await documentViewModel.OpenDocument(storageFile, password, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    // TODO - Log error
+                    await Task.Run(scope.DisposeAsync, CancellationToken.None);
+                    throw;
+                }
 
                 if (pageCount > 0)
                 {
