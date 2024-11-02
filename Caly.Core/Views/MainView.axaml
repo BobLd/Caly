@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:views="clr-namespace:Caly.Core.Views"
              xmlns:vm="clr-namespace:Caly.Core.ViewModels"
              xmlns:tabalonia="clr-namespace:Tabalonia.Controls;assembly=Tabalonia"
              xmlns:controls="clr-namespace:Caly.Core.Controls"
@@ -50,63 +49,72 @@
 
 				<Grid RowDefinitions="30,*">
 
+                    <!-- Top navigation bar -->
 					<DockPanel Grid.Row="0" Background="#3b3b3b">
-						<StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-							<ToggleButton VerticalAlignment="Stretch"
-                                          IsChecked="{Binding IsPaneOpen}">
-								<PathIcon Width="17"
-                                          Height="17"
-                                          Data="{StaticResource line_horizontal_3_regular}">
-									<ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
-								</PathIcon>
-							</ToggleButton>
 
-							<NumericUpDown Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
-                                           MinWidth="120"
-                                           MaxWidth="200"
-                                           Minimum="1"
-                                           Maximum="{Binding PageCount}"
-                                           ClipValueToMinMax="True"
-                                           ButtonSpinnerLocation="Left"
-                                           FormatString="0"
-                                           ParsingNumberStyle="Integer"
-                                           VerticalContentAlignment="Center"
-                                           HorizontalContentAlignment="Center"/>
+                        <!-- Toggle sidebar -->
+                        <ToggleButton DockPanel.Dock="Left"
+                                      VerticalAlignment="Stretch"
+                                      IsChecked="{Binding IsPaneOpen}">
+                            <PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource line_horizontal_3_regular}">
+                                <ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
+                            </PathIcon>
+                        </ToggleButton>
 
-							<TextBlock VerticalAlignment="Center"
-                                       HorizontalAlignment="Center"
-                                       Margin="5,0">
-								<Run Text="/"/>
-								<Run Text="{Binding PageCount}"/>
-							</TextBlock>
-						</StackPanel>
+                        <!-- Page navigation -->
+                        <NumericUpDown DockPanel.Dock="Left"
+                                       Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
+                                       MinWidth="120"
+                                       MaxWidth="200"
+                                       Minimum="1"
+                                       Maximum="{Binding PageCount}"
+                                       ClipValueToMinMax="True"
+                                       ButtonSpinnerLocation="Left"
+                                       FormatString="0"
+                                       ParsingNumberStyle="Integer"
+                                       VerticalContentAlignment="Center"
+                                       HorizontalContentAlignment="Center"/>
 
-						<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-							<Button HorizontalAlignment="Center"
-                                    VerticalAlignment="Stretch"
-                                    Command="{Binding ZoomOutCommand}">
-								<PathIcon Width="17"
-                                          Height="17"
-                                          Data="{StaticResource zoom_out_regular}">
-									<ToolTip.Tip>Zoom Out</ToolTip.Tip>
-								</PathIcon>
-							</Button>
+                        <TextBlock DockPanel.Dock="Left"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Margin="5,0">
+                            <Run Text="/"/>
+                            <Run Text="{Binding PageCount}"/>
+                        </TextBlock>
 
-							<Button HorizontalAlignment="Center"
-                                    VerticalAlignment="Stretch"
-                                    Command="{Binding ZoomInCommand}">
-								<PathIcon Width="17"
-                                          Height="17"
-                                          Data="{StaticResource zoom_in_regular}">
-									<ToolTip.Tip>Zoom In</ToolTip.Tip>
-								</PathIcon>
-							</Button>
+						<!-- Zoom in / out -->
+                        <Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ZoomOutCommand}">
+                            <PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource zoom_out_regular}">
+                                <ToolTip.Tip>Zoom Out</ToolTip.Tip>
+                            </PathIcon>
+                        </Button>
 
-							<TextBlock Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Center"/>
+                        <Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ZoomInCommand}">
+                            <PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource zoom_in_regular}">
+                                <ToolTip.Tip>Zoom In</ToolTip.Tip>
+                            </PathIcon>
+                        </Button>
 
-						</StackPanel>
+                        <TextBlock DockPanel.Dock="Left"
+                                   Margin="5,0"
+                                   Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+						
+                        <Grid/>
 
 					</DockPanel>
 
