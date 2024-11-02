@@ -232,23 +232,6 @@ namespace Caly.Core.ViewModels
             _pdfService.ClearAllPagePictures();
         }
 
-        /// <summary>
-        /// Dispose objects.
-        /// </summary>
-        internal async Task CleanAfterClose()
-        {
-            Debug.ThrowOnUiThread();
-
-            await Parallel.ForEachAsync(Pages, (p, _) => p.DisposeAsync());
-
-            Pages.Clear();
-            Bookmarks?.Clear();
-            await _pdfService.DisposeAsync();
-
-            _cts.Dispose();
-            _searchResultsDisposable.Dispose();
-        }
-
         internal async ValueTask CancelAsync()
         {
             await _cts.CancelAsync();

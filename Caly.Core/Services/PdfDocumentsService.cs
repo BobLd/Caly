@@ -168,7 +168,7 @@ namespace Caly.Core.Services
 
             _openedFiles.TryRemove(document.LocalPath, out _);
 
-            await document.CleanAfterClose();
+            await document.DisposeAsync();
 
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
         }
@@ -225,7 +225,8 @@ namespace Caly.Core.Services
                     }
                 }
 
-                // TODO - Log
+                // TODO - Log error
+                await Task.Run(documentViewModel.DisposeAsync, CancellationToken.None);
                 //await Task.Run(pdfService.DisposeAsync, CancellationToken.None);
             }
         }
