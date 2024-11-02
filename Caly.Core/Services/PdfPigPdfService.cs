@@ -402,10 +402,10 @@ namespace Caly.Core.Services
                 PdfVersion = _document.Version.ToString("0.0"),
                 Title = info.Title,
                 Author = info.Author,
-                CreationDate = info.CreationDate,
+                CreationDate = FormatPdfDate(info.CreationDate),
                 Creator = info.Creator,
                 Keywords = info.Keywords,
-                ModifiedDate = info.ModifiedDate,
+                ModifiedDate = FormatPdfDate(info.ModifiedDate),
                 Producer = info.Producer,
                 Subject = info.Subject,
                 Others = others
@@ -414,6 +414,25 @@ namespace Caly.Core.Services
             return ValueTask.CompletedTask;
         }
 
+        private static string? FormatPdfDate(string? rawDate)
+        {
+            if (string.IsNullOrEmpty(rawDate))
+            {
+                return rawDate;
+            }
+
+            if (rawDate.StartsWith("D:"))
+            {
+                rawDate = rawDate.Substring(2, rawDate.Length - 2);
+            }
+
+            if (UglyToad.PdfPig.Util.DateFormatHelper.TryParseDateTimeOffset(rawDate, out DateTimeOffset offset))
+            {
+                return offset.ToString("yyyy-MM-dd HH:mm:ss zzz");
+            }
+
+            return rawDate;
+        }
 
         public async Task SetPdfBookmark(PdfDocumentViewModel pdfDocument, CancellationToken token)
         {
