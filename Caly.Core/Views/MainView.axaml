@@ -55,6 +55,7 @@
                         <!-- Toggle sidebar -->
                         <ToggleButton DockPanel.Dock="Left"
                                       VerticalAlignment="Stretch"
+										  Background="Transparent"
                                       IsChecked="{Binding IsPaneOpen}">
                             <PathIcon Width="17"
                                       Height="17"
@@ -89,6 +90,7 @@
                         <Button DockPanel.Dock="Left"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
+									Background="Transparent"
                                 Command="{Binding ZoomOutCommand}">
                             <PathIcon Width="17"
                                       Height="17"
@@ -100,6 +102,7 @@
                         <Button DockPanel.Dock="Left"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
+                                    Background="Transparent"
                                 Command="{Binding ZoomInCommand}">
                             <PathIcon Width="17"
                                       Height="17"
