@@ -32,6 +32,11 @@ namespace Caly.Core.ViewModels
             _cts.Dispose();
 
             _searchResultsDisposable.Dispose();
+
+            if (_processPagesInfoQueueTask is not null)
+            {
+                await _processPagesInfoQueueTask;
+            }
         }
 
         public async void Dispose()
