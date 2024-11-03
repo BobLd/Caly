@@ -44,12 +44,17 @@ namespace Caly.Core.Services
             _target = target;
             if (_target is Window w)
             {
-                w.Loaded += _window_Loaded; // TODO - Unsubscribe
+                w.Loaded += _window_Loaded;
             }
         }
 
         private void _window_Loaded(object? sender, RoutedEventArgs e)
         {
+            if (_target is Window w)
+            {
+                w.Loaded -= _window_Loaded;
+            }
+
             if (sender is MainWindow mw)
             {
                 _windowNotificationManager = mw.NotificationManager;
