@@ -137,14 +137,14 @@ namespace Caly.Core.Views
 
         private void Rectangle_OnPointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            if (sender is not Rectangle)
+            if (sender is not Rectangle rect)
             {
                 return;
             }
 
             if (_splitView is null)
             {
-                _splitView = this.FindDescendantOfType<SplitView>();
+                _splitView = rect.FindAncestorOfType<SplitView>();
                 if (_splitView is null)
                 {
                     return;

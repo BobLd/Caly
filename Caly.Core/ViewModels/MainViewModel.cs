@@ -38,6 +38,8 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private int _selectedDocumentIndex;
 
+        [ObservableProperty] private bool _isPaneOpen;
+
 #if DEBUG
         partial void OnSelectedDocumentIndexChanged(int oldValue, int newValue)
         {

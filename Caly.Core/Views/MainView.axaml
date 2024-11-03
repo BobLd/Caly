@@ -23,218 +23,253 @@
 	</UserControl.Resources>
 
 	<UserControl.KeyBindings>
-        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
-        <KeyBinding Gesture="Ctrl+F4" Command="{Binding CloseDocumentCommand}" />
+		<KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
+		<KeyBinding Gesture="Ctrl+F4" Command="{Binding CloseDocumentCommand}" />
 		<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
 		<KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
 		<KeyBinding Gesture="Ctrl+PageDown" Command="{Binding ActivateNextDocumentCommand}"/>
-        <KeyBinding Gesture="Ctrl+PageUp" Command="{Binding ActivatePreviousDocumentCommand}"/>
+		<KeyBinding Gesture="Ctrl+PageUp" Command="{Binding ActivatePreviousDocumentCommand}"/>
 	</UserControl.KeyBindings>
 
-	<tabalonia:TabsControl Background="Transparent"
-                           Padding="0"
-                           AddItemCommand="{Binding OpenFileCommand}"
-                           CloseItemCommand="{Binding CloseTabCommand}"
-                           ItemsSource="{Binding PdfDocuments}"
-                           SelectedIndex="{Binding SelectedDocumentIndex}">
-        <TabControl.ItemTemplate>
-			<DataTemplate>
-				<TextBlock DockPanel.Dock="Left"
-                           Text="{Binding FileName}"
-                           TextTrimming="CharacterEllipsis"/>
-			</DataTemplate>
-		</TabControl.ItemTemplate>
-		<TabControl.ContentTemplate>
-			<DataTemplate x:DataType="vm:PdfDocumentViewModel">
+	<Grid RowDefinitions="*,18">
 
-				<Grid RowDefinitions="30,*">
+		<SplitView Grid.Row="0"
+                   IsPaneOpen="{Binding IsPaneOpen, Mode=TwoWay}"
+                   OpenPaneLength="300"
+                   CompactPaneLength="0"
+                   DisplayMode="CompactOverlay"
+                   PanePlacement="Right">
+            <SplitView.Pane>
+				<!-- Settings Pane -->
+				<Grid Background="BlueViolet">
 
-                    <!-- Top navigation bar -->
-					<DockPanel Grid.Row="0" Background="#3b3b3b">
+                </Grid>
+			</SplitView.Pane>
 
-                        <!-- Toggle sidebar -->
-                        <ToggleButton DockPanel.Dock="Left"
-                                      VerticalAlignment="Stretch"
-										  Background="Transparent"
-                                      IsChecked="{Binding IsPaneOpen}">
-                            <PathIcon Width="17"
-                                      Height="17"
-                                      Data="{StaticResource line_horizontal_3_regular}">
-                                <ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
-                            </PathIcon>
-                        </ToggleButton>
+			<SplitView.Content>
 
-                        <!-- Page navigation -->
-                        <NumericUpDown DockPanel.Dock="Left"
-                                       Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
-                                       MinWidth="120"
-                                       MaxWidth="200"
-                                       Minimum="1"
-                                       Maximum="{Binding PageCount}"
-                                       ClipValueToMinMax="True"
-                                       ButtonSpinnerLocation="Left"
-                                       FormatString="0"
-                                       ParsingNumberStyle="Integer"
-                                       VerticalContentAlignment="Center"
-                                       HorizontalContentAlignment="Center"/>
+                <tabalonia:TabsControl Background="Transparent"
+                                       Padding="0"
+									   Margin="0"
+                                       AddItemCommand="{Binding OpenFileCommand}"
+                                       CloseItemCommand="{Binding CloseTabCommand}"
+                                       ItemsSource="{Binding PdfDocuments}"
+                                       SelectedIndex="{Binding SelectedDocumentIndex}">
+					<TabControl.ItemTemplate>
+						<DataTemplate>
+							<TextBlock DockPanel.Dock="Left"
+									   Text="{Binding FileName}"
+									   TextTrimming="CharacterEllipsis"/>
+						</DataTemplate>
+					</TabControl.ItemTemplate>
+					<TabControl.ContentTemplate>
+						<DataTemplate x:DataType="vm:PdfDocumentViewModel">
 
-                        <TextBlock DockPanel.Dock="Left"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center"
-                                   Margin="5,0">
-                            <Run Text="/"/>
-                            <Run Text="{Binding PageCount}"/>
-                        </TextBlock>
+							<Grid RowDefinitions="30,*">
 
-						<!-- Zoom in / out -->
-                        <Button DockPanel.Dock="Left"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Stretch"
-									Background="Transparent"
-                                Command="{Binding ZoomOutCommand}">
-                            <PathIcon Width="17"
-                                      Height="17"
-                                      Data="{StaticResource zoom_out_regular}">
-                                <ToolTip.Tip>Zoom Out</ToolTip.Tip>
-                            </PathIcon>
-                        </Button>
+								<!-- Top navigation bar -->
+								<DockPanel Grid.Row="0" Background="#3b3b3b">
 
-                        <Button DockPanel.Dock="Left"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Stretch"
-                                    Background="Transparent"
-                                Command="{Binding ZoomInCommand}">
-                            <PathIcon Width="17"
-                                      Height="17"
-                                      Data="{StaticResource zoom_in_regular}">
-                                <ToolTip.Tip>Zoom In</ToolTip.Tip>
-                            </PathIcon>
-                        </Button>
+									<!-- Toggle sidebar -->
+									<ToggleButton DockPanel.Dock="Left"
+												  VerticalAlignment="Stretch"
+												  Background="Transparent"
+												  IsChecked="{Binding IsPaneOpen}">
+										<PathIcon Width="17"
+												  Height="17"
+												  Data="{StaticResource line_horizontal_3_regular}">
+											<ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
+										</PathIcon>
+									</ToggleButton>
 
-                        <TextBlock DockPanel.Dock="Left"
-                                   Margin="5,0"
-                                   Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center"/>
-						
-                        <Grid/>
+									<!-- Page navigation -->
+									<NumericUpDown DockPanel.Dock="Left"
+												   Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
+												   MinWidth="120"
+												   MaxWidth="200"
+												   Minimum="1"
+												   Maximum="{Binding PageCount}"
+												   ClipValueToMinMax="True"
+												   ButtonSpinnerLocation="Left"
+												   FormatString="0"
+												   ParsingNumberStyle="Integer"
+												   VerticalContentAlignment="Center"
+												   HorizontalContentAlignment="Center"/>
 
-					</DockPanel>
+									<TextBlock DockPanel.Dock="Left"
+											   VerticalAlignment="Center"
+											   HorizontalAlignment="Center"
+											   Margin="5,0">
+										<Run Text="/"/>
+										<Run Text="{Binding PageCount}"/>
+									</TextBlock>
 
-					<SplitView Grid.Row="1"
-							   Name="PART_SplitView"
-                               IsPaneOpen="{Binding IsPaneOpen}"
-                               OpenPaneLength="{Binding PaneSize, Mode=TwoWay}"
-                               CompactPaneLength="0"
-                               DisplayMode="CompactInline">
+									<!-- Zoom in / out -->
+									<Button DockPanel.Dock="Left"
+											HorizontalAlignment="Center"
+											VerticalAlignment="Stretch"
+											Background="Transparent"
+											Command="{Binding ZoomOutCommand}">
+										<PathIcon Width="17"
+												  Height="17"
+												  Data="{StaticResource zoom_out_regular}">
+											<ToolTip.Tip>Zoom Out</ToolTip.Tip>
+										</PathIcon>
+									</Button>
 
-						<!-- Left navigation bar -->
-						<SplitView.Pane>
+									<Button DockPanel.Dock="Left"
+											HorizontalAlignment="Center"
+											VerticalAlignment="Stretch"
+											Background="Transparent"
+											Command="{Binding ZoomInCommand}">
+										<PathIcon Width="17"
+												  Height="17"
+												  Data="{StaticResource zoom_in_regular}">
+											<ToolTip.Tip>Zoom In</ToolTip.Tip>
+										</PathIcon>
+									</Button>
 
-							<Grid ColumnDefinitions="*,4">
-								<Border Grid.Column="0"
-                                        BorderThickness="1"
-                                        BorderBrush="{StaticResource SystemChromeHighColor}">
+									<TextBlock DockPanel.Dock="Left"
+											   Margin="5,0"
+											   Text="{Binding ZoomLevel, StringFormat={}{0:0.#%}}"
+											   VerticalAlignment="Center"
+											   HorizontalAlignment="Center"/>
 
-									<TabControl Name="PART_TabControlNavigation"
-                                                TabStripPlacement="Left"
-                                                Padding="12,0,0,0"
-                                                SelectedIndex="{Binding SelectedTabIndex}">
+									<Grid/>
 
-										<!-- Thumbnails tab -->
-										<TabItem MinHeight="40"
-                                                 IsSelected="True">
-											<TabItem.Header>
-												<PathIcon Width="17"
-                                                          Height="17"
-                                                          Data="{StaticResource copy_regular}">
-													<ToolTip.Tip>Thumbnails</ToolTip.Tip>
-													<PathIcon.RenderTransform>
-														<ScaleTransform ScaleY="-1"/>
-													</PathIcon.RenderTransform>
-												</PathIcon>
-											</TabItem.Header>
-											<controls:PdfDocumentThumbnailControl />
-										</TabItem>
+								</DockPanel>
 
-										<!-- Bookmarks tab -->
-										<TabItem MinHeight="40"
-                                                 IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                 IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
-											<TabItem.Header>
-												<PathIcon Width="17"
-                                                          Height="17"
-                                                          Data="{StaticResource bookmark_regular}">
-													<ToolTip.Tip>Bookmarks</ToolTip.Tip>
-												</PathIcon>
-											</TabItem.Header>
-											<TreeView ItemsSource="{Binding Bookmarks}"
-                                                      SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
-                                                      SelectionMode="Toggle"
-                                                      SizeChanged="TreeView_SizeChanged">
-												<TreeView.ItemTemplate>
-													<TreeDataTemplate ItemsSource="{Binding Nodes}">
-                                                        <TextBlock xml:space="preserve"
-                                                                   Text="{Binding Title}"
-                                                                   TextWrapping="WrapWithOverflow" />
-													</TreeDataTemplate>
-												</TreeView.ItemTemplate>
-											</TreeView>
-										</TabItem>
+								<SplitView Grid.Row="1"
+										   Name="PART_SplitView"
+										   IsPaneOpen="{Binding IsPaneOpen}"
+										   OpenPaneLength="{Binding PaneSize, Mode=TwoWay}"
+										   CompactPaneLength="0"
+										   DisplayMode="CompactInline">
 
-										<!-- Search tab -->
-                                        <TabItem MinHeight="40">
-											<TabItem.Header>
-												<PathIcon Width="17"
-                                                          Height="17"
-                                                          Data="{StaticResource document_search_regular}">
-													<ToolTip.Tip>Search</ToolTip.Tip>
-												</PathIcon>
-											</TabItem.Header>
+									<!-- Left navigation bar -->
+									<SplitView.Pane>
 
-											<controls:PdfSearchPanelControl/>
-										</TabItem>
+										<Grid ColumnDefinitions="*,4">
+											<Border Grid.Column="0"
+													BorderThickness="1"
+													BorderBrush="{StaticResource SystemChromeHighColor}">
 
-                                        <!-- Doc information tab -->
-                                        <TabItem MinHeight="40">
-                                            <TabItem.Header>
-                                                <PathIcon Width="17"
-                                                          Height="17"
-                                                          Data="{StaticResource info_regular}">
-                                                    <ToolTip.Tip>Document Properties</ToolTip.Tip>
-                                                </PathIcon>
-                                            </TabItem.Header>
+												<TabControl Name="PART_TabControlNavigation"
+															TabStripPlacement="Left"
+															Padding="12,0,0,0"
+															SelectedIndex="{Binding SelectedTabIndex}">
 
-											<controls:PdfDocumentPropertiesControl/>
+													<!-- Thumbnails tab -->
+													<TabItem MinHeight="40"
+															 IsSelected="True">
+														<TabItem.Header>
+															<PathIcon Width="17"
+																	  Height="17"
+																	  Data="{StaticResource copy_regular}">
+																<ToolTip.Tip>Thumbnails</ToolTip.Tip>
+																<PathIcon.RenderTransform>
+																	<ScaleTransform ScaleY="-1"/>
+																</PathIcon.RenderTransform>
+															</PathIcon>
+														</TabItem.Header>
+														<controls:PdfDocumentThumbnailControl />
+													</TabItem>
 
-                                        </TabItem>
+													<!-- Bookmarks tab -->
+													<TabItem MinHeight="40"
+															 IsVisible="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}"
+															 IsEnabled="{Binding Bookmarks, Converter={x:Static ObjectConverters.IsNotNull}}">
+														<TabItem.Header>
+															<PathIcon Width="17"
+																	  Height="17"
+																	  Data="{StaticResource bookmark_regular}">
+																<ToolTip.Tip>Bookmarks</ToolTip.Tip>
+															</PathIcon>
+														</TabItem.Header>
+														<TreeView ItemsSource="{Binding Bookmarks}"
+																  SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
+																  SelectionMode="Toggle"
+																  SizeChanged="TreeView_SizeChanged">
+															<TreeView.ItemTemplate>
+																<TreeDataTemplate ItemsSource="{Binding Nodes}">
+																	<TextBlock xml:space="preserve"
+																			   Text="{Binding Title}"
+																			   TextWrapping="WrapWithOverflow" />
+																</TreeDataTemplate>
+															</TreeView.ItemTemplate>
+														</TreeView>
+													</TabItem>
 
-									</TabControl>
-								</Border>
+													<!-- Search tab -->
+													<TabItem MinHeight="40">
+														<TabItem.Header>
+															<PathIcon Width="17"
+																	  Height="17"
+																	  Data="{StaticResource document_search_regular}">
+																<ToolTip.Tip>Search</ToolTip.Tip>
+															</PathIcon>
+														</TabItem.Header>
 
-								<!-- Resize left navigation bar -->
-								<Rectangle Grid.Column="1"
-                                           Fill="{StaticResource SystemChromeHighColor}"
-                                           PointerMoved="Rectangle_OnPointerMoved"
-                                           PointerEntered="Rectangle_OnPointerEntered"
-                                           PointerExited="Rectangle_OnPointerExited"
-                                           PointerPressed="Rectangle_OnPointerPressed"
-                                           PointerReleased="Rectangle_OnPointerReleased"/>
+														<controls:PdfSearchPanelControl/>
+													</TabItem>
+
+													<!-- Doc information tab -->
+													<TabItem MinHeight="40">
+														<TabItem.Header>
+															<PathIcon Width="17"
+																	  Height="17"
+																	  Data="{StaticResource info_regular}">
+																<ToolTip.Tip>Document Properties</ToolTip.Tip>
+															</PathIcon>
+														</TabItem.Header>
+
+														<controls:PdfDocumentPropertiesControl/>
+
+													</TabItem>
+
+												</TabControl>
+											</Border>
+
+											<!-- Resize left navigation bar -->
+											<Rectangle Grid.Column="1"
+													   Fill="{StaticResource SystemChromeHighColor}"
+													   PointerMoved="Rectangle_OnPointerMoved"
+													   PointerEntered="Rectangle_OnPointerEntered"
+													   PointerExited="Rectangle_OnPointerExited"
+													   PointerPressed="Rectangle_OnPointerPressed"
+													   PointerReleased="Rectangle_OnPointerReleased"/>
+
+										</Grid>
+									</SplitView.Pane>
+
+									<!-- Document control -->
+									<SplitView.Content>
+										<controls:PdfDocumentControl />
+									</SplitView.Content>
+
+								</SplitView>
 
 							</Grid>
-						</SplitView.Pane>
 
-						<!-- Document control -->
-						<SplitView.Content>
-							<controls:PdfDocumentControl />
-						</SplitView.Content>
+						</DataTemplate>
+					</TabControl.ContentTemplate>
+				</tabalonia:TabsControl>
 
-					</SplitView>
+			</SplitView.Content>
+		</SplitView>
 
-				</Grid>
-
-			</DataTemplate>
-		</TabControl.ContentTemplate>
-	</tabalonia:TabsControl>
-
+		<DockPanel Grid.Row="1">
+			<ToggleButton DockPanel.Dock="Left"
+                          VerticalAlignment="Stretch"
+                          Background="Transparent"
+                          IsChecked="{Binding IsPaneOpen}">
+				<PathIcon Width="14"
+                          Height="14"
+                          Data="{StaticResource settings_regular}"
+                          VerticalAlignment="Center">
+					<ToolTip.Tip>Settings</ToolTip.Tip>
+				</PathIcon>
+			</ToggleButton>
+		</DockPanel>
+	</Grid>
 </UserControl>
