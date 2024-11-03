@@ -121,7 +121,7 @@
 					<SplitView Grid.Row="1"
 							   Name="PART_SplitView"
                                IsPaneOpen="{Binding IsPaneOpen}"
-                               OpenPaneLength="350"
+                               OpenPaneLength="{Binding PaneSize, Mode=TwoWay}"
                                CompactPaneLength="0"
                                DisplayMode="CompactInline">
 

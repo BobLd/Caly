@@ -93,19 +93,23 @@ namespace Caly.Core
                 services.AddSingleton(_ => (Visual)mainView);
             }
 #endif
+            services.AddSingleton<ISettingsService, JsonSettingsService>();
             services.AddSingleton<IFilesService, FilesService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IClipboardService, ClipboardService>();
             services.AddSingleton<IPdfDocumentsService, PdfDocumentsService>();
-            
+
             services.AddScoped<IPdfService, PdfPigPdfService>();
             services.AddScoped<ITextSearchService, LiftiTextSearchService>();
             services.AddScoped<PdfDocumentViewModel>();
 
             Services = services.BuildServiceProvider();
 
-            // We need to make sure IPdfDocumentsService singleton is initiated in UI thread
 #pragma warning disable CS8601 // Possible null reference assignment.
+            // Load settings
+            Services.GetRequiredService<ISettingsService>().Load();
+
+            // We need to make sure IPdfDocumentsService singleton is initiated in UI thread
             _pdfDocumentsService = Services.GetRequiredService<IPdfDocumentsService>();
 #pragma warning restore CS8601 // Possible null reference assignment.
 
@@ -116,6 +120,11 @@ namespace Caly.Core
 
         private async void Desktop_Startup(object? sender, ControlledApplicationLifetimeStartupEventArgs e)
         {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.Startup -= Desktop_Startup;
+            }
+
             _listeningToFiles = Task.Run(ListenToIncomingFiles); // Start listening
 
             if (e.Args.Length == 0)
@@ -133,7 +142,6 @@ namespace Caly.Core
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.Startup -= Desktop_Startup;
                 desktop.Exit -= Desktop_Exit;
             }
         }

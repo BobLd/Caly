@@ -8,6 +8,8 @@
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AssemblyName>Caly</AssemblyName>
+
+		<JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
 	</PropertyGroup>
 
 	<!--https://learn.microsoft.com/en-gb/dotnet/core/deploying/native-aot/optimizing-->

@@ -7,7 +7,9 @@
         x:Class="Caly.Core.Views.MainWindow"
         Icon="/Assets/caly-logo.ico"
         Title="Caly Pdf Reader"
-        MinWidth="250">
+        MinWidth="250"
+        Width="250"
+        Height="0">
     <Border DragDrop.AllowDrop="True">
         <views:MainView />
     </Border>

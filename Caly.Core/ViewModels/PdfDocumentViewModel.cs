@@ -26,6 +26,7 @@ using Avalonia.Collections;
 using Avalonia.Platform.Storage;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
+using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -38,11 +39,15 @@ namespace Caly.Core.ViewModels
         private const int _initialPagesInfoToLoad = 25;
 
         private readonly IPdfService _pdfService;
+        private readonly ISettingsService _settingsService;
+
         private readonly CancellationTokenSource _cts = new();
 
         [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = [];
 
         [ObservableProperty] private bool _isPaneOpen = !CalyExtensions.IsMobilePlatform();
+
+        [ObservableProperty] private double _paneSize;
 
         [ObservableProperty] private int _selectedTabIndex;
 
@@ -80,6 +85,11 @@ namespace Caly.Core.ViewModels
 
         private Task? _processPagesInfoQueueTask;
 
+        partial void OnPaneSizeChanged(double oldValue, double newValue)
+        {
+            _settingsService.SetProperty(CalySettings.CalySettingsProperty.PaneSize, newValue);
+        }
+
         private async Task ProcessPagesInfoQueue(CancellationToken token)
         {
             try
@@ -109,13 +119,17 @@ namespace Caly.Core.ViewModels
 
         private readonly IDisposable _searchResultsDisposable;
 
-        public PdfDocumentViewModel(IPdfService pdfService)
+        public PdfDocumentViewModel(IPdfService pdfService, ISettingsService settingsService)
         {
             ArgumentNullException.ThrowIfNull(pdfService, nameof(pdfService));
+            ArgumentNullException.ThrowIfNull(settingsService, nameof(settingsService));
 
             System.Diagnostics.Debug.Assert(pdfService.NumberOfPages == 0);
 
             _pdfService = pdfService;
+            _settingsService = settingsService;
+
+            _paneSize = _settingsService.GetSettings().PaneSize;
 
             // We only need the channel if we have more than 1 page in the document?
             Channel<PdfPageViewModel> pageInfoChannel = Channel.CreateBounded<PdfPageViewModel>(
