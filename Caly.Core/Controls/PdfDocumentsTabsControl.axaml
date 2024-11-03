@@ -35,9 +35,19 @@
 									  VerticalAlignment="Stretch"
 									  Background="Transparent"
 									  IsChecked="{Binding IsPaneOpen}">
-							<PathIcon Width="17"
-									  Height="17"
-									  Data="{StaticResource line_horizontal_3_regular}">
+							<ToggleButton.Styles>
+                                <Style Selector="PathIcon.closed">
+                                    <Setter Property="Data" Value="{StaticResource pane_close_regular}" />
+                                </Style>
+                                <Style Selector="PathIcon.opened">
+                                    <Setter Property="Data" Value="{StaticResource pane_open_regular}" />
+                                </Style>
+                            </ToggleButton.Styles>
+
+                            <PathIcon Width="17"
+                                      Height="17"
+                                      Classes.opened="{Binding IsPaneOpen}"
+									  Classes.closed="{Binding !IsPaneOpen}">
 								<ToolTip.Tip>Toggle Sidebar Menu</ToolTip.Tip>
 							</PathIcon>
 						</ToggleButton>
