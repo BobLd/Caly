@@ -53,18 +53,13 @@ namespace Caly.Core.ViewModels
             _documentCollectionDisposable = PdfDocuments
                 .GetWeakCollectionChangedObservable()
                 .ObserveOn(Scheduler.Default)
-                .Subscribe(async e =>
+                .Subscribe(e =>
                 {
                     // NB: Tabalonia uses a Remove + Add when moving tabs
                     try
                     {
                         if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems?.Count > 0)
                         {
-                            foreach (var newDoc in e.NewItems.OfType<PdfDocumentViewModel>())
-                            {
-                                await Task.WhenAll(newDoc.LoadPagesTask, newDoc.LoadBookmarksTask, newDoc.LoadPropertiesTask);
-                            }
-
                             SelectedDocumentIndex = e.NewStartingIndex;
                         }
                     }

@@ -226,14 +226,20 @@ namespace Caly.Core.Services
 
                 var documentViewModel = scope.ServiceProvider.GetRequiredService<PdfDocumentViewModel>();
 
+                BringMainWindowToFront();
+
+                // We need a lock to avoid issues with tabs when opening documents in parallel
+                _mainViewModel.PdfDocuments.AddSafely(documentViewModel); // Add the pdf document straight away
+
                 int pageCount;
                 try
                 {
-                    pageCount = await documentViewModel.OpenDocument(storageFile, password, cancellationToken);
+                    pageCount = await documentViewModel.OpenDocument(storageFile, password, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     // TODO - Log error
+                    _mainViewModel.PdfDocuments.RemoveSafely(documentViewModel);
                     await Task.Run(scope.DisposeAsync, CancellationToken.None);
                     throw;
                 }
@@ -248,14 +254,17 @@ namespace Caly.Core.Services
 
                     if (_openedFiles.TryAdd(storageFile.Path.LocalPath, docRecord))
                     {
-                        // We need a lock to avoid issues with tabs when opening documents in parallel
-                        _mainViewModel.PdfDocuments.AddSafely(documentViewModel);
-                        BringMainWindowToFront();
+                        await Task.WhenAll(
+                                documentViewModel.LoadPagesTask,
+                                documentViewModel.LoadBookmarksTask,
+                                documentViewModel.LoadPropertiesTask)
+                            .ConfigureAwait(false);
                         return;
                     }
                 }
 
                 // TODO - Log error
+                _mainViewModel.PdfDocuments.RemoveSafely(documentViewModel);
                 await Task.Run(scope.DisposeAsync, CancellationToken.None);
             }
         }
