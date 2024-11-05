@@ -55,7 +55,7 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private int _pageCount;
 
-        [ObservableProperty] private string? _fileName;
+        [ObservableProperty] private string? _fileName = "Opening...";
 
         [ObservableProperty] private string? _fileSize;
 
@@ -232,7 +232,7 @@ namespace Caly.Core.ViewModels
                 // Fire and forget
                 _processPagesInfoQueueTask = Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
             }
-
+            
             return pageCount;
         }
 
