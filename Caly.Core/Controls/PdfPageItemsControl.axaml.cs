@@ -25,6 +25,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media.Transformation;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
@@ -385,24 +386,28 @@ public sealed class PdfPageItemsControl : ItemsControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        EnsureScrollBars();
+        LayoutUpdated += OnLayoutUpdated;
         ItemsPanelRoot!.DataContextChanged += ItemsPanelRoot_DataContextChanged;
     }
 
     private void ItemsPanelRoot_DataContextChanged(object? sender, EventArgs e)
     {
-        void ExecuteScrollWhenLayoutUpdated(object? sender, EventArgs e)
+        LayoutUpdated += OnLayoutUpdated;
+    }
+
+    private void OnLayoutUpdated(object? sender, EventArgs e)
+    {
+        LayoutUpdated -= OnLayoutUpdated;
+
+        Dispatcher.UIThread.Post(() =>
         {
-            LayoutUpdated -= ExecuteScrollWhenLayoutUpdated;
             EnsureScrollBars();
 
             // Ensure the pages visibility is set when OnApplyTemplate()
             // is not called, i.e. when a new document is opened but the
             // page has exactly the same dimension of the visible page
             SetPagesVisibility();
-        }
-
-        LayoutUpdated += ExecuteScrollWhenLayoutUpdated;
+        }, DispatcherPriority.Loaded);
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -808,26 +813,32 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// </summary>
     private void EnsureScrollBars()
     {
+        if (_isSettingPageVisibility)
+        {
+            return;
+        }
+
         int currentPage = SelectedPageIndex.HasValue ? SelectedPageIndex.Value - 1 : 0;
 
         try
         {
             _isSettingPageVisibility = true;
 
+            int lastPageIndex = Math.Max(Items.Count, PageCount) - 1;
+
             // There's a bug in VirtualizingStackPanel. Scroll bars do not display correctly
             // This hack fixes that by scrolling into view a page that's not realised
-            if (currentPage >= GetMinPageIndex() && currentPage <= GetMaxPageIndex())
+
+            if (currentPage != lastPageIndex)
             {
-                // Current page is realised
-                if (currentPage != 0)
-                {
-                    ScrollIntoView(0);
-                }
-                else if (currentPage != PageCount - 1)
-                {
-                    ScrollIntoView(PageCount - 1);
-                }
+                ScrollIntoView(lastPageIndex);
             }
+            else if(currentPage != 0)
+            {
+                ScrollIntoView(0);
+            }
+            
+            //UpdateLayout();
         }
         finally
         {

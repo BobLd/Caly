@@ -177,7 +177,7 @@ namespace Caly.Core.Services
 
                     using (FileStream createStream = File.Create(_settingsFile))
                     {
-                        JsonSerializer.Serialize(createStream, _current, SourceGenerationContext.Default.CalySettings);
+                        JsonSerializer.Serialize(createStream, _current!, SourceGenerationContext.Default.CalySettings);
                     }
 
                     return;
@@ -212,7 +212,7 @@ namespace Caly.Core.Services
 
                     await using (FileStream createStream = File.Create(_settingsFile))
                     {
-                        await JsonSerializer.SerializeAsync(createStream, _current, SourceGenerationContext.Default.CalySettings);
+                        await JsonSerializer.SerializeAsync(createStream, _current!, SourceGenerationContext.Default.CalySettings);
                     }
                     return;
                 }
