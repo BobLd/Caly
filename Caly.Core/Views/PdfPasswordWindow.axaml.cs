@@ -13,7 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using System;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
@@ -21,9 +23,20 @@ namespace Caly.Core.Views
 {
     public sealed partial class PdfPasswordWindow : Window
     {
+        private TextBox _textBoxPassword;
+
         public PdfPasswordWindow()
         {
             InitializeComponent();
+        }
+
+        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        {
+            base.OnApplyTemplate(e);
+
+            _textBoxPassword = this.Find<TextBox>("PART_TextBoxPassword")!;
+            ArgumentNullException.ThrowIfNull(_textBoxPassword, nameof(_textBoxPassword));
+            _textBoxPassword.Loaded += TextBox_Loaded;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -43,10 +56,24 @@ namespace Caly.Core.Views
 
         private void OkButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            var textBox = this.Find<TextBox>("PasswordTextBox");
-            if (!string.IsNullOrEmpty(textBox?.Text))
+            if (!string.IsNullOrEmpty(_textBoxPassword?.Text))
             {
-                Close(textBox.Text);
+                Close(_textBoxPassword.Text);
+            }
+        }
+
+        private static void TextBox_Loaded(object? sender, RoutedEventArgs e)
+        {
+            if (sender is not TextBox textBox)
+            {
+                return;
+            }
+
+            textBox.Loaded -= TextBox_Loaded;
+
+            if (!textBox.Focus())
+            {
+                System.Diagnostics.Debug.WriteLine("Something wrong happened while setting focus on password box.");
             }
         }
     }
