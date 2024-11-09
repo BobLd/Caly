@@ -15,13 +15,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Layout;
 
-namespace Caly.Core.Controls
+namespace Caly.Core.Controls.Virtualizing
 {
     /// <summary>
     /// Stores the realized element state for a virtualizing panel that arranges its children
@@ -223,7 +220,7 @@ namespace Caly.Core.Controls
             var first = FirstIndex;
             var last = LastIndex;
             var startIndex = index - first;
-            var endIndex = (index + count) - first;
+            var endIndex = index + count - first;
 
             if (endIndex < 0)
             {
@@ -383,7 +380,7 @@ namespace Caly.Core.Controls
             }
             else
             {
-                var startIndex = (index + 1) - FirstIndex;
+                var startIndex = index + 1 - FirstIndex;
                 var count = _elements.Count;
 
                 for (var i = startIndex; i < count; ++i)

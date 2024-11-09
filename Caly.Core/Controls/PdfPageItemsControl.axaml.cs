@@ -27,6 +27,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Caly.Core.Controls.Virtualizing;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Tabalonia.Controls;
@@ -46,7 +47,7 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// <summary>
     /// The default value for the <see cref="ItemsControl.ItemsPanel"/> property.
     /// </summary>
-    private static readonly FuncTemplate<Panel?> DefaultPanel = new(() => new VirtualizingStackPanel());
+    private static readonly FuncTemplate<Panel?> DefaultPanel = new(() => new CalyVirtualizingStackPanel());
 
     /// <summary>
     /// Defines the <see cref="Scroll"/> property.
@@ -231,7 +232,7 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// </summary>
     private int GetMinPageIndex()
     {
-        if (ItemsPanelRoot is VirtualizingStackPanel v)
+        if (ItemsPanelRoot is CalyVirtualizingStackPanel v)
         {
             return Math.Max(0, v.FirstRealizedIndex);
         }
@@ -243,7 +244,7 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// </summary>
     private int GetMaxPageIndex()
     {
-        if (ItemsPanelRoot is VirtualizingStackPanel v && v.LastRealizedIndex != -1)
+        if (ItemsPanelRoot is CalyVirtualizingStackPanel v && v.LastRealizedIndex != -1)
         {
             return Math.Min(PageCount, v.LastRealizedIndex + 1);
         }
@@ -401,7 +402,7 @@ public sealed class PdfPageItemsControl : ItemsControl
 
         Dispatcher.UIThread.Post(() =>
         {
-            EnsureScrollBars();
+            //EnsureScrollBars();
 
             // Ensure the pages visibility is set when OnApplyTemplate()
             // is not called, i.e. when a new document is opened but the
@@ -437,7 +438,7 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private bool HasRealisedItems()
     {
-        if (ItemsPanelRoot is VirtualizingStackPanel vsp)
+        if (ItemsPanelRoot is CalyVirtualizingStackPanel vsp)
         {
             return vsp.FirstRealizedIndex != -1 && vsp.LastRealizedIndex != -1;
         }

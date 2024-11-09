@@ -26,7 +26,7 @@ using Avalonia.Layout;
 using Avalonia.Utilities;
 using Avalonia.VisualTree;
 
-namespace Caly.Core.Controls
+namespace Caly.Core.Controls.Virtualizing
 {
 
     /// <summary>
@@ -315,7 +315,7 @@ namespace Caly.Core.Controls
             var fromControl = from as Control;
 
             if (count == 0 ||
-                (fromControl is null && direction is not NavigationDirection.First and not NavigationDirection.Last))
+                fromControl is null && direction is not NavigationDirection.First and not NavigationDirection.Last)
                 return null;
 
             var horiz = Orientation == Orientation.Horizontal;
@@ -538,7 +538,7 @@ namespace Caly.Core.Controls
             if (viewport.lastIndex >= 0)
             {
                 var remaining = itemCount - viewport.lastIndex - 1;
-                sizeU = viewport.realizedEndU + (remaining * _lastEstimatedElementSizeU);
+                sizeU = viewport.realizedEndU + remaining * _lastEstimatedElementSizeU;
             }
 
             return orientation == Orientation.Horizontal ? new(sizeU, sizeV) : new(sizeV, sizeU);
@@ -554,7 +554,7 @@ namespace Caly.Core.Controls
                 var u = orientation == Orientation.Horizontal ?
                     _scrollToElement.Bounds.Right :
                     _scrollToElement.Bounds.Bottom;
-                var sizeU = u + (remaining * _lastEstimatedElementSizeU);
+                var sizeU = u + remaining * _lastEstimatedElementSizeU;
                 return orientation == Orientation.Horizontal ?
                     new(sizeU, DesiredSize.Height) :
                     new(DesiredSize.Width, sizeU);
@@ -788,7 +788,7 @@ namespace Caly.Core.Controls
                 generator.ItemContainerPrepared(controlItem, item, index);
             }
 
-            controlItem.SetCurrentValue(Visual.IsVisibleProperty, true);
+            controlItem.SetCurrentValue(IsVisibleProperty, true);
             return controlItem;
         }
 
@@ -804,7 +804,7 @@ namespace Caly.Core.Controls
             if (_recyclePool?.TryGetValue(recycleKey, out var recyclePool) == true && recyclePool.Count > 0)
             {
                 var recycled = recyclePool.Pop();
-                recycled.SetCurrentValue(Visual.IsVisibleProperty, true);
+                recycled.SetCurrentValue(IsVisibleProperty, true);
                 generator.PrepareItemContainer(recycled, item, index);
                 generator.ItemContainerPrepared(recycled, item, index);
                 return recycled;
@@ -843,7 +843,7 @@ namespace Caly.Core.Controls
             }
             else if (recycleKey == s_itemIsItsOwnContainer)
             {
-                element.SetCurrentValue(Visual.IsVisibleProperty, false);
+                element.SetCurrentValue(IsVisibleProperty, false);
             }
             else if (KeyboardNavigation.GetTabOnceActiveElement(ItemsControl) == element)
             {
@@ -854,7 +854,7 @@ namespace Caly.Core.Controls
             {
                 ItemContainerGenerator!.ClearItemContainer(element);
                 PushToRecyclePool(recycleKey, element);
-                element.SetCurrentValue(Visual.IsVisibleProperty, false);
+                element.SetCurrentValue(IsVisibleProperty, false);
             }
         }
 
@@ -874,7 +874,7 @@ namespace Caly.Core.Controls
             {
                 ItemContainerGenerator!.ClearItemContainer(element);
                 PushToRecyclePool(recycleKey, element);
-                element.SetCurrentValue(Visual.IsVisibleProperty, false);
+                element.SetCurrentValue(IsVisibleProperty, false);
             }
         }
 
