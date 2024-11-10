@@ -21,6 +21,9 @@ namespace Caly.Core.Utilities
 {
     internal static class ReadOnlySequenceExtensions
     {
+        private const char Padding = '\0';
+        private const char Space = ' ';
+
         public static void AppendReadOnlySequence(this StringBuilder sb, ReadOnlySequence<char> sequence)
         {
             Span<char> output = sequence.Length < 512 ?
@@ -28,6 +31,15 @@ namespace Caly.Core.Utilities
                 new char[sequence.Length];
 
             sequence.CopyTo(output);
+
+            // Padding chars are problematic in string builder, we remove them
+            for (int i = 0; i < output.Length; ++i)
+            {
+                if (output[i] == Padding)
+                {
+                    output[i] = Space;
+                }
+            }
 
             if (!output.IsEmpty && !MemoryExtensions.IsWhiteSpace(output))
             {
