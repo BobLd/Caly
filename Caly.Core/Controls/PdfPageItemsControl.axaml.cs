@@ -856,5 +856,9 @@ public sealed class PdfPageItemsControl : ItemsControl
         {
             oldVm.ClearAllPagePictures();
         }
+        else if (change.Property == ItemsSourceProperty)
+        {
+
+        }
     }
 }

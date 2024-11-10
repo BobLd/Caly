@@ -14,9 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reflection.Emit;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -299,6 +301,19 @@ namespace Caly.Core.Controls.Virtualizing
             }
         }
 
+        protected override void OnDataContextEndUpdate()
+        {
+            base.OnDataContextEndUpdate();
+            //OnItemsChanged(null, CollectionUtils.ResetEventArgs);
+        }
+
+        protected override void OnDataContextBeginUpdate()
+        {
+            base.OnDataContextBeginUpdate();
+            _lastEstimatedElementSizeU = 25; // Reset
+            OnItemsChanged(null, CollectionUtils.ResetEventArgs);
+        }
+
         protected override void OnItemsControlChanged(ItemsControl? oldValue)
         {
             base.OnItemsControlChanged(oldValue);
@@ -433,7 +448,6 @@ namespace Caly.Core.Controls.Virtualizing
                 _scrollToElement = scrollToElement;
                 _scrollToIndex = index;
 
-                /*
                 // If the item being brought into view was added since the last layout pass then
                 // our bounds won't be updated, so any containing scroll viewers will not have an
                 // updated extent. Do a layout pass to ensure that the containing scroll viewers
@@ -441,7 +455,7 @@ namespace Caly.Core.Controls.Virtualizing
                 if (!Bounds.Contains(rect) && !_viewport.Contains(rect))
                 {
                     _isWaitingForViewportUpdate = true;
-                    root.LayoutManager.ExecuteLayoutPass();
+                    //root.LayoutManager.ExecuteLayoutPass();
                     _isWaitingForViewportUpdate = false;
                 }
 
@@ -454,7 +468,7 @@ namespace Caly.Core.Controls.Virtualizing
                 // - The viewport is then updated by the layout system which invalidates our measure
                 // - Measure is then done with the new viewport.
                 _isWaitingForViewportUpdate = !_viewport.Contains(rect);
-                root.LayoutManager.ExecuteLayoutPass();
+                //root.LayoutManager.ExecuteLayoutPass();
 
                 // If for some reason the layout system didn't give us a new viewport during the layout, we
                 // need to do another layout pass as the one that took place was a no-op.
@@ -462,9 +476,8 @@ namespace Caly.Core.Controls.Virtualizing
                 {
                     _isWaitingForViewportUpdate = false;
                     InvalidateMeasure();
-                    root.LayoutManager.ExecuteLayoutPass();
+                    //root.LayoutManager.ExecuteLayoutPass();
                 }
-                */
 
                 // During the previous BringIntoView, the scroll width extent might have been out of date if
                 // elements have different widths. Because of that, the ScrollViewer might not scroll to the correct offset.
