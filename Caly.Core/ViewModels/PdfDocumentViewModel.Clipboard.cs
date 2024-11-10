@@ -14,14 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Buffers;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
-using Caly.Core.Utilities;
-using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,70 +24,20 @@ namespace Caly.Core.ViewModels
 {
     public partial class PdfDocumentViewModel
     {
-        // English rules
-        private static ReadOnlySpan<char> _noWhitespaceAfter => [' ',  '(', '[', '{'];
-        private static ReadOnlySpan<char> _noWhitespaceBefore => [' ', ')', ']', '}', ':', '.', '′', '\'', ',', '?', '!'];
-
         [RelayCommand(CanExecute = nameof(CanCopyText))]
         private async Task CopyText(CancellationToken token)
         {
             try
             {
-                PdfTextSelection selection = TextSelectionHandler.Selection;
-
-                if (!selection.IsValid)
+                if (!TextSelectionHandler.Selection.IsValid)
                 {
                     return;
                 }
 
-                // https://docs.avaloniaui.net/docs/next/concepts/services/clipboardS
-
                 IClipboardService clipboardService = App.Current?.Services?.GetRequiredService<IClipboardService>() ??
-                                                      throw new NullReferenceException($"Missing {nameof(IClipboardService)} instance.");
+                                                     throw new NullReferenceException($"Missing {nameof(IClipboardService)} instance.");
 
-                System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync");
-
-                string text = await Task.Run(async () =>
-                {
-                    System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync: Get text");
-                    var sb = new StringBuilder();
-
-                    await foreach (var word in selection
-                                       .GetDocumentSelectionAsAsync(w => w.Value,
-                                           PartialWord, this,
-                                           token))
-                    {
-                        if (word.IsEmpty)
-                        {
-                            continue;
-                        }
-
-                        if (_noWhitespaceBefore.Contains(word.FirstSpan[0]) && char.IsWhiteSpace(sb[^1]))
-                        {
-                            sb.Length--; 
-                        }
-
-                        sb.AppendReadOnlySequence(word);
-
-                        if (sb.Length == 0 || _noWhitespaceAfter.Contains(sb[^1]))
-                        {
-                            continue;
-                        }
-
-                        sb.Append(' ');
-                    }
-
-                    if (sb[^1] == ' ')
-                    {
-                        sb.Length--; // Last char added was a space
-                    }
-                    return sb.ToString();
-                }, token);
-
-                System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync: Get text Done");
-
-                await clipboardService.SetAsync(text);
-                System.Diagnostics.Debug.WriteLine("Ended SetClipboardAsync");
+                await clipboardService.SetAsync(this, token);
             }
             catch (Exception e)
             {
@@ -104,19 +49,6 @@ namespace Caly.Core.ViewModels
         private bool CanCopyText()
         {
             return TextSelectionHandler.Selection.IsValid;
-        }
-
-        private static ReadOnlySequence<char> PartialWord(PdfWord word, int startIndex, int endIndex)
-        {
-            // TODO - We have an issue with words containing ligatures (e.g. 'f‌i', 'ff', 'fl')
-            // The index seems to not be correct as there is 1 bounding box for e.g. 2 chars.
-            // The startIndex / endIndex being based on bounding boxes, the index is lagged.
-
-            System.Diagnostics.Debug.Assert(startIndex != -1);
-            System.Diagnostics.Debug.Assert(endIndex != -1);
-            System.Diagnostics.Debug.Assert(startIndex <= endIndex);
-
-            return word.Value.Slice(startIndex, endIndex - startIndex + 1);
         }
     }
 }
