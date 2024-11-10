@@ -13,12 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using System.Threading;
 using System.Threading.Tasks;
+using Caly.Core.ViewModels;
 
 namespace Caly.Core.Services.Interfaces
 {
     internal interface IClipboardService
     {
+        /// <summary>
+        /// Set clipboard.
+        /// </summary>
+        Task SetAsync(PdfDocumentViewModel document, CancellationToken token);
+
         /// <summary>
         /// Set clipboard.
         /// </summary>

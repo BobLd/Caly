@@ -38,6 +38,8 @@ namespace Caly.Pdf.Models
         }
 #endif
 
+        private readonly Range[]? _toCharIndex;
+
         public TextOrientation TextOrientation { get; }
 
         /// <summary>
@@ -80,7 +82,7 @@ namespace Caly.Pdf.Models
             Count = letters.Count;
 
             LettersBoundingBoxes = new PdfRectangle[letters.Count];
-
+            
             var firstLetter = letters[0];
             LettersBoundingBoxes[0] = firstLetter.BoundingBox;
 
@@ -94,6 +96,23 @@ namespace Caly.Pdf.Models
             }
 
             Value = new ReadOnlySequence<char>(first, 0, current, current.Memory.Length);
+
+            System.Diagnostics.Debug.Assert(Value.Length >= LettersBoundingBoxes.Length);
+
+            // TODO - Optimise that to only need ToCharIndex when length don't match
+
+            if (Value.Length != LettersBoundingBoxes.Length)
+            {
+                // Usually because of ligatures
+                _toCharIndex = new Range[letters.Count];
+
+                int k = 0;
+                for (int l = 0; l < letters.Count; ++l)
+                {
+                    var letter = letters[l];
+                    _toCharIndex[l] = new Range(k, k += letter.Value.Length);
+                }
+            }
 
             switch (TextOrientation)
             {
@@ -117,6 +136,16 @@ namespace Caly.Pdf.Models
                     BoundingBox = GetBoundingBoxOther(letters);
                     break;
             }
+        }
+
+        public int GetCharIndexFromBboxIndex(int bboxIndex)
+        {
+            if (_toCharIndex is null)
+            {
+                return bboxIndex;
+            }
+
+            return _toCharIndex[bboxIndex].End.Value - 1;
         }
 
         public bool Contains(double x, double y)
