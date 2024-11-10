@@ -29,6 +29,10 @@ namespace Caly.Core.ViewModels
 {
     public partial class PdfDocumentViewModel
     {
+        // English rules
+        private static ReadOnlySpan<char> _noWhitespaceAfter => [' ',  '(', '[', '{'];
+        private static ReadOnlySpan<char> _noWhitespaceBefore => [' ', ')', ']', '}', ':', '.', '′', '\'', ',', '?', '!'];
+
         [RelayCommand(CanExecute = nameof(CanCopyText))]
         private async Task CopyText(CancellationToken token)
         {
@@ -58,24 +62,31 @@ namespace Caly.Core.ViewModels
                                            PartialWord, this,
                                            token))
                     {
-                        sb.AppendReadOnlySequence(word);
-                        if (sb.Length > 0 && !char.IsWhiteSpace(sb[^1]))
+                        if (word.IsEmpty)
                         {
-                            sb.Append(' ');
+                            continue;
                         }
+
+                        if (_noWhitespaceBefore.Contains(word.FirstSpan[0]) && char.IsWhiteSpace(sb[^1]))
+                        {
+                            sb.Length--; 
+                        }
+
+                        sb.AppendReadOnlySequence(word);
+
+                        if (sb.Length == 0 || _noWhitespaceAfter.Contains(sb[^1]))
+                        {
+                            continue;
+                        }
+
+                        sb.Append(' ');
                     }
 
-                    sb.Length--; // Last char added was a space
-                    return sb.ToString();
-
-                    static ReadOnlySequence<char> PartialWord(PdfWord word, int startIndex, int endIndex)
+                    if (sb[^1] == ' ')
                     {
-                        System.Diagnostics.Debug.Assert(startIndex != -1);
-                        System.Diagnostics.Debug.Assert(endIndex != -1);
-                        System.Diagnostics.Debug.Assert(startIndex <= endIndex);
-
-                        return word.Value.Slice(startIndex, endIndex - startIndex + 1);
+                        sb.Length--; // Last char added was a space
                     }
+                    return sb.ToString();
                 }, token);
 
                 System.Diagnostics.Debug.WriteLine("Starting SetClipboardAsync: Get text Done");
@@ -89,10 +100,23 @@ namespace Caly.Core.ViewModels
                 Exception = new ExceptionViewModel(e);
             }
         }
-
+        
         private bool CanCopyText()
         {
             return TextSelectionHandler.Selection.IsValid;
+        }
+
+        private static ReadOnlySequence<char> PartialWord(PdfWord word, int startIndex, int endIndex)
+        {
+            // TODO - We have an issue with words containing ligatures (e.g. 'f‌i', 'ff', 'fl')
+            // The index seems to not be correct as there is 1 bounding box for e.g. 2 chars.
+            // The startIndex / endIndex being based on bounding boxes, the index is lagged.
+
+            System.Diagnostics.Debug.Assert(startIndex != -1);
+            System.Diagnostics.Debug.Assert(endIndex != -1);
+            System.Diagnostics.Debug.Assert(startIndex <= endIndex);
+
+            return word.Value.Slice(startIndex, endIndex - startIndex + 1);
         }
     }
 }
