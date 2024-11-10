@@ -154,7 +154,7 @@ namespace Caly.Core.Services
 
             if (_thumbnailTokens.TryAdd(page.PageNumber, pageCts))
             {
-                _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.Thumbnail, pageCts.Token), pageCts.Token);
+                _pendingOtherRequests.Add(new RenderRequest(page, RenderRequestTypes.Thumbnail, pageCts.Token), pageCts.Token);
             }
             else
             {

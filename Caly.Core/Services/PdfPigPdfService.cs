@@ -54,7 +54,9 @@ namespace Caly.Core.Services
         {
         }
 
-        private readonly BlockingCollection<RenderRequest> _pendingRenderRequests = new(new ConcurrentStack<RenderRequest>());
+        private readonly BlockingCollection<RenderRequest> _pendingHighPriorityRequests = new(new ConcurrentStack<RenderRequest>());
+        private readonly BlockingCollection<RenderRequest> _pendingOtherRequests = new(new ConcurrentStack<RenderRequest>());
+        private readonly BlockingCollection<RenderRequest>[] _pendingRequests;
 
         private readonly IDialogService _dialogService;
         private readonly ITextSearchService _textSearchService;
@@ -88,6 +90,9 @@ namespace Caly.Core.Services
             _dialogService = dialogService;
             _textSearchService = textSearchService;
 
+            // Priority to rendering page
+            _pendingRequests = [_pendingHighPriorityRequests, _pendingOtherRequests];
+
             _renderingLoopTask = Task.Run(RenderingLoop, _mainCts.Token);
         }
 
@@ -96,7 +101,7 @@ namespace Caly.Core.Services
             Debug.ThrowOnUiThread();
 
             // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
-            while (!_pendingRenderRequests.IsCompleted)
+            while (!_pendingHighPriorityRequests.IsCompleted && !_pendingOtherRequests.IsCompleted)
             {
                 // Blocks if dataItems.Count == 0.
                 // IOE means that Take() was called on a completed collection.
@@ -111,7 +116,16 @@ namespace Caly.Core.Services
                         return;
                     }
 
-                    RenderRequest renderRequest = _pendingRenderRequests.Take(_mainCts.Token);
+                    int q = BlockingCollection<RenderRequest>.TakeFromAny(_pendingRequests, out RenderRequest? renderRequest, _mainCts.Token);
+                    //RenderRequest renderRequest = _pendingOtherRequests.Take(_mainCts.Token);
+
+                    System.Diagnostics.Debug.WriteLine($"[RENDER] Dequeued from {q}.");
+
+                    if (renderRequest is null)
+                    {
+                        continue;
+                    }
+
                     switch (renderRequest.Type)
                     {
                         case RenderRequestTypes.Picture:
@@ -133,6 +147,13 @@ namespace Caly.Core.Services
                 catch (OperationCanceledException) { }
                 catch (InvalidOperationException) { }
             }
+
+            // TODO - What happens if one queue is complete, and the other is not
+
+            //while (!_pendingHighPriorityRequests.IsCompleted || !_pendingOtherRequests.IsCompleted)
+            //{
+
+            //}
         }
 
         private async Task ProcessTextLayerRequest(RenderRequest renderRequest)
@@ -283,7 +304,7 @@ namespace Caly.Core.Services
 
             if (_textLayerTokens.TryAdd(page.PageNumber, pageCts))
             {
-                _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.TextLayer, pageCts.Token), pageCts.Token);
+                _pendingOtherRequests.Add(new RenderRequest(page, RenderRequestTypes.TextLayer, pageCts.Token), pageCts.Token);
             }
             else
             {
@@ -571,7 +592,8 @@ namespace Caly.Core.Services
                 await ClearTokensAsync(_textLayerTokens);
                 await ClearTokensAsync(_pictureTokens);
 
-                _pendingRenderRequests.CompleteAdding();
+                _pendingOtherRequests.CompleteAdding();
+                _pendingHighPriorityRequests.CompleteAdding();
 
                 _semaphore.Dispose();
 
@@ -594,7 +616,8 @@ namespace Caly.Core.Services
                                                 _renderingLoopTask.IsCompletedSuccessfully ||
                                                 _renderingLoopTask.IsFaulted);
 
-                _pendingRenderRequests.Dispose();
+                _pendingOtherRequests.Dispose();
+                _pendingHighPriorityRequests.Dispose();
             }
             catch (Exception ex)
             {

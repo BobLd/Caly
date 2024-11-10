@@ -114,7 +114,7 @@ namespace Caly.Core.Services
 
             if (_pictureTokens.TryAdd(page.PageNumber, pageCts))
             {
-                _pendingRenderRequests.Add(new RenderRequest(page, RenderRequestTypes.Picture, pageCts.Token), pageCts.Token);
+                _pendingHighPriorityRequests.Add(new RenderRequest(page, RenderRequestTypes.Picture, pageCts.Token), pageCts.Token);
             }
             else
             {
