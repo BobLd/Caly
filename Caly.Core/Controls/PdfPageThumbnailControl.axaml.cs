@@ -29,7 +29,7 @@ namespace Caly.Core.Controls
          */
 
         private static readonly Brush _areaBrush = new SolidColorBrush(Colors.DodgerBlue, 0.3);
-        private static readonly Pen _areaPen = new Pen(Colors.DodgerBlue.ToUInt32());
+        private static readonly Pen _areaPen = new Pen(Colors.DodgerBlue.ToUInt32(), 2);
 
         private Matrix _scale = Matrix.Identity;
 

@@ -19,8 +19,7 @@
                     <Border BorderBrush="{StaticResource CalendarDatePickerBorderBrush}"
                             BorderThickness="2"
                             IsEnabled="{Binding IsThumbnailRendering}"
-                            IsVisible="{Binding IsThumbnailRendering}">
-                    </Border>
+                            IsVisible="{Binding IsThumbnailRendering}"/>
                 </Grid>
 
             </ControlTemplate>

@@ -11,8 +11,11 @@
 		</StackPanel>
 	</Design.PreviewWith>
 
-    <ControlTheme x:Key="{x:Type controls:PdfPageItemsControl}" TargetType="controls:PdfPageItemsControl" x:DataType="viewModels:PdfDocumentViewModel">
-		<Setter Property="MinZoomLevel" Value="{Binding MinZoomLevel}"/>
+    <ControlTheme x:Key="{x:Type controls:PdfPageItemsControl}"
+                  TargetType="controls:PdfPageItemsControl"
+                  x:DataType="viewModels:PdfDocumentViewModel">
+
+        <Setter Property="MinZoomLevel" Value="{Binding MinZoomLevel}"/>
 		<Setter Property="MaxZoomLevel" Value="{Binding MaxZoomLevel}"/>
 
 		<Setter Property="Template">
@@ -40,9 +43,9 @@
 							</ScrollViewer.KeyBindings>
 
 							<LayoutTransformControl Name="PART_LayoutTransformControl"
-																 HorizontalAlignment="Center"
-																 VerticalAlignment="Center"
-																 ClipToBounds="True">
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    ClipToBounds="True">
 
 								<ItemsPresenter Name="PART_ItemsPresenter"
 												HorizontalAlignment="Center"
@@ -56,6 +59,7 @@
 
 			</ControlTemplate>
 		</Setter>
+
 	</ControlTheme>
 
 </ResourceDictionary>

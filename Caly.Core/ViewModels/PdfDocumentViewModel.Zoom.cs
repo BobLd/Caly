@@ -37,7 +37,7 @@ namespace Caly.Core.ViewModels
 #pragma warning restore CA1822
 
         [ObservableProperty] private double _zoomLevel = 1;
-
+        
         [RelayCommand]
         private void ZoomIn()
         {
@@ -73,6 +73,24 @@ namespace Caly.Core.ViewModels
                 }
 
                 ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[index - 1]);
+            }
+        }
+
+        [RelayCommand]
+        private void RotateClockwise()
+        {
+            foreach (PdfPageViewModel page in Pages)
+            {
+                page.RotateClockwiseCommand.Execute(null);
+            }
+        }
+
+        [RelayCommand]
+        private void RotateCounterclockwise()
+        {
+            foreach (PdfPageViewModel page in Pages)
+            {
+                page.RotateCounterclockwiseCommand.Execute(null);
             }
         }
     }
