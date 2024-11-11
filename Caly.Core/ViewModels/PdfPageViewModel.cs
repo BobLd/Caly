@@ -23,6 +23,7 @@ using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
 using Caly.Pdf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SkiaSharp;
 
 namespace Caly.Core.ViewModels
@@ -63,6 +64,10 @@ namespace Caly.Core.ViewModels
         private Rect? _visibleArea;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsPortrait))]
+        private int _rotation;
+
+        [ObservableProperty]
         private bool _selectionChangedFlag;
 
         [ObservableProperty]
@@ -77,6 +82,8 @@ namespace Caly.Core.ViewModels
         public bool IsPageRendering => PdfPicture is null || PdfPicture.Item is null; // TODO - refactor might not be optimal
 
         public bool IsThumbnailRendering => Thumbnail is null;
+
+        public bool IsPortrait => Rotation == 0 || Rotation == 180;
 
 #if DEBUG
         /// <summary>
@@ -181,6 +188,18 @@ namespace Caly.Core.ViewModels
         public async Task SetPageTextLayer(CancellationToken token)
         {
             await _pdfService.SetPageTextLayer(this, token);
+        }
+
+        [RelayCommand]
+        private void RotateClockwise()
+        {
+            Rotation = (Rotation + 90) % 360;
+        }
+
+        [RelayCommand]
+        private void RotateCounterclockwise()
+        {
+            Rotation = (Rotation + 270) % 360;
         }
 
         public ValueTask DisposeAsync()

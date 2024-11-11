@@ -43,7 +43,7 @@ public sealed class PdfPageItemsControl : ItemsControl
     private bool _isTabDragging = false;
 
     /// <summary>
-    /// The default value for the <see cref="ItemsControl.ItemsPanel"/> property.
+    /// The default value for the <see cref="PdfPageItemsControl.ItemsPanel"/> property.
     /// </summary>
     private static readonly FuncTemplate<Panel?> DefaultPanel = new(() => new VirtualizingStackPanel());
 
@@ -83,7 +83,7 @@ public sealed class PdfPageItemsControl : ItemsControl
     /// Defines the <see cref="ZoomLevel"/> property.
     /// </summary>
     public static readonly StyledProperty<double> ZoomLevelProperty = AvaloniaProperty.Register<PdfPageItemsControl, double>(nameof(ZoomLevel), 1, defaultBindingMode: BindingMode.TwoWay);
-
+    
     private ScrollViewer? _scroll;
     private LayoutTransformControl? _layoutTransformControl;
     private TabsControl? _tabsControl;
@@ -145,7 +145,7 @@ public sealed class PdfPageItemsControl : ItemsControl
         get => GetValue(ZoomLevelProperty);
         set => SetValue(ZoomLevelProperty, value);
     }
-    
+
     /// <summary>
     /// Get the page control for the page number.
     /// </summary>
@@ -519,6 +519,17 @@ public sealed class PdfPageItemsControl : ItemsControl
                 return true;
             }
 
+            double vmWidth = vm.IsPortrait ? vm.Width : vm.Height;
+            if (Math.Abs(view.Width - vmWidth) > double.Epsilon)
+            {
+                double delta = (view.Width - vmWidth) / 2.0; // Centered
+                view = new Rect(
+                    view.Position.X + delta,
+                    view.Position.Y,
+                    vmWidth,
+                    view.Height);
+            }
+
             double top = view.Top;
             double left = view.Left;
             double bottom = view.Bottom;
@@ -552,7 +563,30 @@ public sealed class PdfPageItemsControl : ItemsControl
                 isPageVisible = true;
 
                 // Set overlap area (Translate and inverse transform)
-                vm.VisibleArea = view.Translate(new Vector(-left, -top));
+                Rect visibleArea = view.Translate(new Vector(-left, -top));
+
+                switch (vm.Rotation)
+                {
+                    case 90:
+                        visibleArea = new Rect(visibleArea.Y, cp.Bounds.Width - visibleArea.Right, visibleArea.Height, visibleArea.Width);
+                        break;
+
+                    case 180:
+                        visibleArea = new Rect(cp.Bounds.Width - visibleArea.Right, cp.Bounds.Height - visibleArea.Bottom, visibleArea.Width, visibleArea.Height);
+                        break;
+
+                    case 270:
+                        visibleArea = new Rect(cp.Bounds.Height - visibleArea.Bottom, visibleArea.X, visibleArea.Height, visibleArea.Width);
+                        break;
+
+#if DEBUG
+                    default:
+                        System.Diagnostics.Debug.Assert(vm.Rotation == 0);
+                        break;
+#endif
+                }
+
+                vm.VisibleArea = visibleArea;
 
                 return true;
             }

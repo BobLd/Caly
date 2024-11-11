@@ -11,57 +11,101 @@
 		</StackPanel>
 	</Design.PreviewWith>
 
-    <ControlTheme x:Key="{x:Type controls:PdfPageItem}" TargetType="controls:PdfPageItem" x:DataType="viewModels:PdfPageViewModel">
+	<ControlTheme x:Key="{x:Type controls:PdfPageItem}"
+                  TargetType="controls:PdfPageItem"
+                  x:DataType="viewModels:PdfPageViewModel">
+
 		<Setter Property="Exception" Value="{Binding Exception}"/>
-		<Setter Property="Width" Value="{Binding Width}"/>
-		<Setter Property="Height" Value="{Binding Height}"/>
 		<Setter Property="Picture" Value="{Binding PdfPicture}"/>
 		<Setter Property="VisibleArea" Value="{Binding VisibleArea}"/>
 		<Setter Property="IsPageRendering" Value="{Binding IsPageRendering}"/>
 		<Setter Property="IsPageVisible" Value="{Binding IsPageVisible}"/>
-		<Setter Property="Margin" Value="0,0,0,5"></Setter>
+		<Setter Property="Margin" Value="0,0,0,5"/>
 
+		<!-- ContextFlyout -->
+		<Setter Property="ContextFlyout">
+			<MenuFlyout>
+				<MenuItem Header="Copy" Command="{Binding $parent[controls:PdfPageItemsControl].((viewModels:PdfDocumentViewModel)DataContext).CopyTextCommand}"/>
+
+				<Separator/>
+
+				<MenuItem Header="Rotate Counterclockwise"
+                          Command="{Binding RotateCounterclockwiseCommand}">
+					<MenuItem.Icon>
+						<PathIcon Width="15"
+                                  Height="15"
+                                  Data="{StaticResource arrow_rotate_counterclockwise_regular}"/>
+					</MenuItem.Icon>
+				</MenuItem>
+
+				<MenuItem Header="Rotate Clockwise"
+                          Command="{Binding RotateClockwiseCommand}">
+					<MenuItem.Icon>
+						<PathIcon Width="15"
+                                  Height="15"
+                                  Data="{StaticResource arrow_rotate_clockwise_regular}"/>
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuFlyout>
+		</Setter>
+
+        <!-- Page -->
 		<Setter Property="Template">
 			<ControlTemplate>
 
-                <ContentPresenter Name="PART_ContentPresenter">
+				<ContentPresenter Name="PART_ContentPresenter">
 					<ContentPresenter.Content>
-						<Grid Background="White">
-							<progRing:ProgressRing Width="50"
-												   Height="50"
-                                                   IsActive="{Binding IsPageRendering}"
-                                                   IsEnabled="{Binding IsPageRendering}"
-                                                   IsVisible="{Binding IsPageRendering}"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
+						<Grid>
 
-							<controls:SkiaPdfPageControl Picture="{Binding PdfPicture}"
-                                                         VisibleArea="{Binding VisibleArea}"
-                                                         HorizontalAlignment="Stretch"
-                                                         VerticalAlignment="Stretch"/>
+							<LayoutTransformControl >
+								<LayoutTransformControl.LayoutTransform>
+									<RotateTransform Angle="{Binding Rotation}" />
+								</LayoutTransformControl.LayoutTransform>
 
-							<controls:PdfPageTextLayerControl Name="PART_PdfPageTextLayerControl"
-                                                              PdfTextLayer="{Binding PdfTextLayer}"
-                                                              PageNumber="{Binding PageNumber}"
-                                                              TextSelectionHandler="{Binding TextSelectionHandler}"
-                                                              SelectionChangedFlag="{Binding SelectionChangedFlag}"
-                                                              HorizontalAlignment="Stretch"
-                                                              VerticalAlignment="Stretch">
+								<Grid Background="White"
+                                      Width="{Binding Width}"
+                                      Height="{Binding Height}">
 
-								<FlyoutBase.AttachedFlyout>
-									<Flyout ShowMode="Standard"
-                                            Placement="Pointer"
-                                            HorizontalOffset="15"
-                                            OverlayInputPassThroughElement="{Binding $parent}"/>
-								</FlyoutBase.AttachedFlyout>
+									<progRing:ProgressRing Width="50"
+                                                           Height="50"
+                                                           IsActive="{Binding IsPageRendering}"
+                                                           IsEnabled="{Binding IsPageRendering}"
+                                                           IsVisible="{Binding IsPageRendering}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
 
-							</controls:PdfPageTextLayerControl>
+									<controls:SkiaPdfPageControl Picture="{Binding PdfPicture}"
+                                                                 VisibleArea="{Binding VisibleArea}"
+                                                                 HorizontalAlignment="Stretch"
+                                                                 VerticalAlignment="Stretch"/>
+
+									<controls:PdfPageTextLayerControl Name="PART_PdfPageTextLayerControl"
+                                                                      PdfTextLayer="{Binding PdfTextLayer}"
+                                                                      PageNumber="{Binding PageNumber}"
+                                                                      TextSelectionHandler="{Binding TextSelectionHandler}"
+                                                                      SelectionChangedFlag="{Binding SelectionChangedFlag}"
+                                                                      HorizontalAlignment="Stretch"
+                                                                      VerticalAlignment="Stretch">
+
+										<FlyoutBase.AttachedFlyout>
+											<Flyout ShowMode="Standard"
+                                                    Placement="Pointer"
+                                                    HorizontalOffset="15"
+                                                    OverlayInputPassThroughElement="{Binding $parent}"/>
+										</FlyoutBase.AttachedFlyout>
+
+									</controls:PdfPageTextLayerControl>
+
+								</Grid>
+							</LayoutTransformControl>
+
 						</Grid>
 					</ContentPresenter.Content>
 				</ContentPresenter>
 
 			</ControlTemplate>
 		</Setter>
+
 	</ControlTheme>
 
 </ResourceDictionary>

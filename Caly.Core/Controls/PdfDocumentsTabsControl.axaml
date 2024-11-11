@@ -36,15 +36,15 @@
 									  Background="Transparent"
 									  IsChecked="{Binding IsPaneOpen}">
 							<ToggleButton.Styles>
-                                <Style Selector="PathIcon.closed">
-                                    <Setter Property="Data" Value="{StaticResource pane_close_regular}" />
-                                </Style>
-                                <Style Selector="PathIcon.opened">
-                                    <Setter Property="Data" Value="{StaticResource pane_open_regular}" />
-                                </Style>
-                            </ToggleButton.Styles>
+								<Style Selector="PathIcon.closed">
+									<Setter Property="Data" Value="{StaticResource pane_close_regular}" />
+								</Style>
+								<Style Selector="PathIcon.opened">
+									<Setter Property="Data" Value="{StaticResource pane_open_regular}" />
+								</Style>
+							</ToggleButton.Styles>
 
-                            <PathIcon Width="17"
+							<PathIcon Width="17"
                                       Height="17"
                                       Classes.opened="{Binding IsPaneOpen}"
 									  Classes.closed="{Binding !IsPaneOpen}">
@@ -73,6 +73,35 @@
 							<Run Text="/"/>
 							<Run Text="{Binding PageCount}"/>
 						</TextBlock>
+
+						<controls:VerticalSeparator/>
+
+						<!-- Rotate pages -->
+						<Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Background="Transparent"
+                                Command="{Binding RotateCounterclockwiseCommand}">
+							<PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource arrow_rotate_counterclockwise_regular}">
+								<ToolTip.Tip>Rotate Counterclockwise</ToolTip.Tip>
+							</PathIcon>
+						</Button>
+
+						<Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Background="Transparent"
+                                Command="{Binding RotateClockwiseCommand}">
+							<PathIcon Width="17"
+                                      Height="17"
+                                      Data="{StaticResource arrow_rotate_clockwise_regular}">
+								<ToolTip.Tip>Rotate Clockwise</ToolTip.Tip>
+							</PathIcon>
+						</Button>
+
+						<controls:VerticalSeparator/>
 
 						<!-- Zoom in / out -->
 						<Button DockPanel.Dock="Left"
