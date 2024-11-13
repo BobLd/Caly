@@ -56,7 +56,7 @@ namespace Caly.Core.Services
             {
                 w.Closing -= _window_Closing;
 
-                if (_current is not null)
+                if (_current is not null && w.WindowState == WindowState.Normal)
                 {
                     _current.Width = (int)w.Width;
                     _current.Height = (int)w.Height;
