@@ -37,5 +37,6 @@
 		<tabalonia:CustomTheme/>
 
 		<StyleInclude Source="avares://Caly.Core/Assets/Icons.axaml"/>
+        <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml"/>
 	</Application.Styles>
 </Application>

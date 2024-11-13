@@ -1,7 +1,8 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="using:Caly.Core.Controls"
-                    xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+                    xmlns:viewModels="clr-namespace:Caly.Core.ViewModels"
+                    xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing">
 	<Design.PreviewWith>
 		<StackPanel>
 			<controls:PdfPageItem x:DataType="viewModels:PdfPageViewModel"
@@ -26,12 +27,13 @@
                 <ContentPresenter Name="PART_ContentPresenter">
 					<ContentPresenter.Content>
 						<Grid Background="White">
-							<ProgressBar Width="50"
-                                         IsIndeterminate="{Binding IsPageRendering}"
-                                         IsEnabled="{Binding IsPageRendering}"
-                                         IsVisible="{Binding IsPageRendering}"
-                                         HorizontalAlignment="Center"
-                                         VerticalAlignment="Center"/>
+							<progRing:ProgressRing Width="50"
+												   Height="50"
+                                                   IsActive="{Binding IsPageRendering}"
+                                                   IsEnabled="{Binding IsPageRendering}"
+                                                   IsVisible="{Binding IsPageRendering}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
 
 							<controls:SkiaPdfPageControl Picture="{Binding PdfPicture}"
                                                          VisibleArea="{Binding VisibleArea}"
