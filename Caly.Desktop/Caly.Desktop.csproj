@@ -47,10 +47,19 @@
 		<DebugSymbols>false</DebugSymbols>
 		<MetricsSupport>false</MetricsSupport>
 
+		<!--
 		<UseSystemResourceKeys>true</UseSystemResourceKeys>
 		<DebuggerSupport>false</DebuggerSupport>
 		<TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
 		<StackTraceSupport>false</StackTraceSupport>
+		-->
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<IlcGenerateMapFile>true</IlcGenerateMapFile>
+		<IlcGenerateMetadataLog>true</IlcGenerateMetadataLog>
+		<IlcGenerateMstatFile>true</IlcGenerateMstatFile>
+		<IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Avalonia">
