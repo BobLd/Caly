@@ -18,18 +18,18 @@
 
 	<ItemGroup>
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.0" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.1" />
 
-		<PackageReference Include="Avalonia" Version="11.2.0" />
-		<PackageReference Include="Avalonia.Skia" Version="11.2.0" />
-		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0" />
-		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.0" />
+		<PackageReference Include="Avalonia" Version="11.2.1" />
+		<PackageReference Include="Avalonia.Skia" Version="11.2.1" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.1" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
 		<PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.8" />
 		<PackageReference Include="Lifti.Core" Version="6.3.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-		<PackageReference Include="SkiaSharp" Version="2.88.8" />
-		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+		<PackageReference Include="SkiaSharp" Version="2.88.9" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
 	</ItemGroup>
 
