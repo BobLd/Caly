@@ -73,6 +73,10 @@ namespace Caly.Core.Services
                     {
                         if (picture is not null)
                         {
+                            // This is the first we load the page, width and height are not set yet
+                            renderRequest.Page.Width = picture.Item.CullRect.Width;
+                            renderRequest.Page.Height = picture.Item.CullRect.Height;
+
                             await SetThumbnail(renderRequest.Page, picture.Item);
                         }
                     }
