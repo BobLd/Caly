@@ -15,7 +15,6 @@
 
 using System;
 using System.Buffers;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Caly.Core.Utilities
@@ -59,12 +58,18 @@ namespace Caly.Core.Utilities
 
         public static string GetString(this ReadOnlyMemory<char> memory)
         {
+            /*
             if (MemoryMarshal.TryGetString(memory, out string? str, out _, out _))
             {
                 return str;
             }
+            */
 
-            return string.Empty;
+            return string.Create(memory.Length, memory, (chars, state) =>
+            {
+                // https://www.stevejgordon.co.uk/creating-strings-with-no-allocation-overhead-using-string-create-csharp
+                state.Span.CopyTo(chars);
+            });
         }
     }
 }
