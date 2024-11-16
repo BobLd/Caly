@@ -71,12 +71,12 @@ namespace Caly.Core.Services
                         continue;
                     }
 
-                    if (_noWhitespaceBefore.Contains(word.FirstSpan[0]) && char.IsWhiteSpace(sb[^1]))
+                    if (_noWhitespaceBefore.Contains(word.Span[0]) && char.IsWhiteSpace(sb[^1]))
                     {
                         sb.Length--;
                     }
 
-                    sb.AppendReadOnlySequence(word);
+                    sb.AppendClean(word);
 
                     if (sb.Length == 0 || _noWhitespaceAfter.Contains(sb[^1]))
                     {
@@ -114,7 +114,7 @@ namespace Caly.Core.Services
             await clipboard.ClearAsync();
         }
         
-        private static ReadOnlySequence<char> PartialWord(PdfWord word, int startIndex, int endIndex)
+        private static ReadOnlyMemory<char> PartialWord(PdfWord word, int startIndex, int endIndex)
         {
             // TODO - We have an issue with words containing ligatures (e.g. 'f‌i', 'ff', 'fl')
             // The index seems to not be correct as there is 1 bounding box for e.g. 2 chars.
