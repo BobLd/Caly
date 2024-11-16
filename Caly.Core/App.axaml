@@ -10,7 +10,6 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary>
-                    <converters:NumericUpDownPdfPageConverter x:Key="numericUpDownPdfPageConverter"/>
                     <converters:ZeroPageIndexConverter x:Key="zeroPageIndexConverter"/>
                     <x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
 				</ResourceDictionary>

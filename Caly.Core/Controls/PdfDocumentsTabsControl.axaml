@@ -53,22 +53,44 @@
 						</ToggleButton>
 
 						<!-- Page navigation -->
-						<NumericUpDown DockPanel.Dock="Left"
-									   Text="{Binding SelectedPageIndex, Converter={StaticResource numericUpDownPdfPageConverter}, ConverterParameter={Binding}, Mode=TwoWay}"
-									   MinWidth="120"
-									   MaxWidth="200"
-									   Minimum="1"
-									   Maximum="{Binding PageCount}"
-									   ClipValueToMinMax="True"
-									   ButtonSpinnerLocation="Left"
-									   FormatString="0"
-									   ParsingNumberStyle="Integer"
-									   VerticalContentAlignment="Center"
-									   HorizontalContentAlignment="Center"/>
+                        <Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Background="Transparent"
+                                Command="{Binding GoToPreviousPageCommand}">
+                            <PathIcon Width="14"
+                                      Height="14"
+                                      Data="{StaticResource chevron_up_regular}">
+                                <ToolTip.Tip>Previous Page</ToolTip.Tip>
+                            </PathIcon>
+                        </Button>
+
+                        <Button DockPanel.Dock="Left"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                Background="Transparent"
+                                Command="{Binding GoToNextPageCommand}">
+                            <PathIcon Width="14"
+                                      Height="14"
+                                      Data="{StaticResource chevron_down_regular}">
+                                <ToolTip.Tip>Next Page</ToolTip.Tip>
+                            </PathIcon>
+                        </Button>
+
+						<TextBox MinWidth="50"
+                                 MaxWidth="50"
+                                 TextAlignment="Center"
+                                 HorizontalContentAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 VerticalAlignment="Center"
+								 KeyDown="PageNumberTextBox_OnKeyDown"
+                                 Text="{Binding SelectedPageIndexString}">
+                        </TextBox>
 
 						<TextBlock DockPanel.Dock="Left"
 								   VerticalAlignment="Center"
 								   HorizontalAlignment="Center"
+								   TextAlignment="Center"
 								   Margin="5,0">
 							<Run Text="/"/>
 							<Run Text="{Binding PageCount}"/>

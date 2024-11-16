@@ -20,6 +20,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using Caly.Core.ViewModels;
 
 namespace Caly.Core.Controls;
 
@@ -143,4 +144,42 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
         e.Handled = true;
     }
     #endregion
+
+    private void PageNumberTextBox_OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        if (sender is TextBox { DataContext: PdfDocumentViewModel vm })
+        {
+            if (int.TryParse(vm.SelectedPageIndexString, out int pageNumber))
+            {
+                if (pageNumber >= 1 && pageNumber <= vm.PageCount)
+                {
+                    vm.SelectedPageIndex = pageNumber;
+                }
+                else if (pageNumber < 1)
+                {
+                    vm.SelectedPageIndex = 1;
+                }
+                else
+                {
+                    vm.SelectedPageIndex = vm.PageCount;
+                }
+            }
+            else
+            {
+                if (vm.SelectedPageIndex.HasValue)
+                {
+                    vm.SelectedPageIndexString = vm.SelectedPageIndex.Value.ToString("0");
+                }
+                else
+                {
+                    vm.SelectedPageIndexString = string.Empty;
+                }
+            }
+        }
+    }
 }
