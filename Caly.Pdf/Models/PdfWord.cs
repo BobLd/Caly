@@ -38,7 +38,7 @@ namespace Caly.Pdf.Models
         }
 #endif
 
-        private readonly Range[]? _toCharIndex;
+        private readonly int[]? _toCharIndex;
 
         public TextOrientation TextOrientation { get; }
 
@@ -99,18 +99,17 @@ namespace Caly.Pdf.Models
 
             System.Diagnostics.Debug.Assert(Value.Length >= LettersBoundingBoxes.Length);
 
-            // TODO - Optimise that to only need ToCharIndex when length don't match
-
             if (Value.Length != LettersBoundingBoxes.Length)
             {
+                // TODO - Could put this loop in previous for loop
                 // Usually because of ligatures
-                _toCharIndex = new Range[letters.Count];
+                _toCharIndex = new int[letters.Count];
 
                 int k = 0;
                 for (int l = 0; l < letters.Count; ++l)
                 {
                     var letter = letters[l];
-                    _toCharIndex[l] = new Range(k, k += letter.Value.Length);
+                    _toCharIndex[l] = k += letter.Value.Length;
                 }
             }
 
@@ -145,7 +144,7 @@ namespace Caly.Pdf.Models
                 return bboxIndex;
             }
 
-            return _toCharIndex[bboxIndex].End.Value - 1;
+            return _toCharIndex[bboxIndex] - 1;
         }
 
         public bool Contains(double x, double y)
