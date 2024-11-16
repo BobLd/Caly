@@ -14,14 +14,6 @@
 		<vm:MainViewModel />
 	</Design.DataContext>
 
-	<UserControl.Resources>
-		<ResourceDictionary>
-			<ResourceDictionary.MergedDictionaries>
-				<ResourceInclude Source="/Controls/PdfPageButtonSpinner.axaml"/>
-			</ResourceDictionary.MergedDictionaries>
-		</ResourceDictionary>
-	</UserControl.Resources>
-
 	<UserControl.KeyBindings>
 		<KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
 		<KeyBinding Gesture="Ctrl+F4" Command="{Binding CloseDocumentCommand}" />

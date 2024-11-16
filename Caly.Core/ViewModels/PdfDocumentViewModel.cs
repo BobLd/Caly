@@ -51,8 +51,37 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty] private int _selectedTabIndex;
 
-        [ObservableProperty] private int? _selectedPageIndex = 1;
+        /// <summary>
+        /// Starts at <c>1</c>, ends at <see cref="PageCount"/>.
+        /// </summary>
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(GoToPreviousPageCommand))]
+        [NotifyCanExecuteChangedFor(nameof(GoToNextPageCommand))]
+        private string _selectedPageIndexString = "1";
 
+        private int? _selectedPageIndex = 1;
+
+        /// <summary>
+        /// Starts at <c>1</c>, ends at <see cref="PageCount"/>.
+        /// </summary>
+        public int? SelectedPageIndex
+        {
+            get
+            {
+                return _selectedPageIndex;
+            }
+
+            set
+            {
+                if (!SetProperty(ref _selectedPageIndex, value))
+                {
+                    return;
+                }
+
+                SelectedPageIndexString = value.HasValue ? value.Value.ToString("0") : string.Empty;
+            }
+        }
+        
         [ObservableProperty] private int _pageCount;
 
         [ObservableProperty] private string? _fileName;
@@ -299,7 +328,7 @@ namespace Caly.Core.ViewModels
             await Task.Run(() => _pdfService.BuildIndex(this, progress, _cts.Token), _cts.Token);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
         private void GoToPreviousPage()
         {
             if (!SelectedPageIndex.HasValue)
@@ -309,7 +338,17 @@ namespace Caly.Core.ViewModels
             SelectedPageIndex = Math.Max(1, SelectedPageIndex.Value - 1);
         }
 
-        [RelayCommand]
+        private bool CanGoToPreviousPage()
+        {
+            if (!SelectedPageIndex.HasValue)
+            {
+                return false;
+            }
+
+            return SelectedPageIndex.Value > 1;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
         private void GoToNextPage()
         {
             if (!SelectedPageIndex.HasValue)
@@ -317,6 +356,16 @@ namespace Caly.Core.ViewModels
                 return;
             }
             SelectedPageIndex = Math.Min(PageCount, SelectedPageIndex.Value + 1);
+        }
+
+        private bool CanGoToNextPage()
+        {
+            if (!SelectedPageIndex.HasValue)
+            {
+                return false;
+            }
+
+            return SelectedPageIndex.Value < PageCount;
         }
     }
 }
