@@ -22,6 +22,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Caly.Core.Models;
 using Caly.Core.Services.Interfaces;
+using Caly.Core.Utilities;
 using Caly.Core.Views;
 using static Caly.Core.Models.CalySettings;
 
@@ -42,6 +43,12 @@ namespace Caly.Core.Services
 
         public JsonSettingsService(Visual target)
         {
+            if (CalyExtensions.IsMobilePlatform())
+            {
+                SetDefaultSettings(); // TODO - Create proper mobile class
+                return;
+            }
+
             _target = target;
             if (_target is Window w)
             {
@@ -169,6 +176,11 @@ namespace Caly.Core.Services
 
         public void Load()
         {
+            if (CalyExtensions.IsMobilePlatform())
+            {
+                return; // TODO - Create proper mobile class
+            }
+
             try
             {
                 if (!File.Exists(_settingsFile))
@@ -204,6 +216,11 @@ namespace Caly.Core.Services
         {
             Debug.ThrowOnUiThread();
 
+            if (CalyExtensions.IsMobilePlatform())
+            {
+                return; // TODO - Create proper mobile class
+            }
+
             try
             {
                 if (!File.Exists(_settingsFile))
@@ -236,6 +253,11 @@ namespace Caly.Core.Services
 
         public void Save()
         {
+            if (CalyExtensions.IsMobilePlatform())
+            {
+                return; // TODO - Create proper mobile class
+            }
+
             if (_current is not null)
             {
                 try
@@ -260,6 +282,11 @@ namespace Caly.Core.Services
         public async Task SaveAsync()
         {
             Debug.ThrowOnUiThread();
+
+            if (CalyExtensions.IsMobilePlatform())
+            {
+                return; // TODO - Create proper mobile class
+            }
 
             if (_current is not null)
             {
