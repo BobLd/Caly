@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Caly.Core.Services.Interfaces;
+using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Lifti;
 using Lifti.Tokenization;
@@ -49,6 +50,7 @@ namespace Caly.Core.Services
         public LiftiTextSearchService()
         {
             _index = new FullTextIndexBuilder<int>()
+                //.WithIndexModificationAction(OnIndexChange)
                 .WithObjectTokenization<PdfPageViewModel>(
                     options => options
                         .WithKey(p => p.PageNumber)
@@ -69,7 +71,7 @@ namespace Caly.Core.Services
                                     throw new NullReferenceException("Cannot index search on a null PdfTextLayer.");
                                 }
 
-                                return textLayer.Select(w => string.Concat(w.Value));
+                                return textLayer.Select(w => w.Value.GetString());
                             }, ct);
                         }, tokenizationOptions: builder => builder.WithFactory(o => new CalyIndexTokenizer(o)))
                 ).Build();

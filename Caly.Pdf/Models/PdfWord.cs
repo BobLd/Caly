@@ -13,7 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using System.Buffers;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.DocumentLayoutAnalysis;
@@ -31,10 +30,7 @@ namespace Caly.Pdf.Models
                 return string.Empty;
             }
 
-            Span<char> output = Value.Length < 512 ? stackalloc char[(int)Value.Length] : new char[Value.Length];
-
-            Value.CopyTo(output);
-            return new string(output);
+            return new string(Value.Span);
         }
 #endif
 
@@ -64,7 +60,7 @@ namespace Caly.Pdf.Models
 
         public PdfRectangle[] LettersBoundingBoxes { get; }
 
-        public ReadOnlySequence<char> Value { get; }
+        public ReadOnlyMemory<char> Value { get; }
 
         public int Count { get; }
 
@@ -84,24 +80,30 @@ namespace Caly.Pdf.Models
             LettersBoundingBoxes = new PdfRectangle[letters.Count];
             
             var firstLetter = letters[0];
-            LettersBoundingBoxes[0] = firstLetter.BoundingBox;
 
-            var first = new MemorySegment<char>(firstLetter.Value);
-            var current = first;
-            for (int i = 1; i < letters.Count; i++)
+            LettersBoundingBoxes[0] = firstLetter.BoundingBox;
+            int charsCount = firstLetter.Value.Length;
+
+            for (int i = 1; i < letters.Count; ++i)
             {
                 var letter = letters[i];
                 LettersBoundingBoxes[i] = letter.BoundingBox;
-                current = current.Append(letter.Value);
+                charsCount += letter.Value.Length;
             }
 
-            Value = new ReadOnlySequence<char>(first, 0, current, current.Memory.Length);
+            char[] chars = new char[charsCount];
 
-            System.Diagnostics.Debug.Assert(Value.Length >= LettersBoundingBoxes.Length);
-
-            if (Value.Length != LettersBoundingBoxes.Length)
+            if (chars.Length == letters.Count)
             {
-                // TODO - Could put this loop in previous for loop
+                for (int l = 0; l < letters.Count; ++l)
+                {
+                    var letter = letters[l];
+                    System.Diagnostics.Debug.Assert(letter.Value.Length == 1);
+                    chars[l] = letter.Value.Span[0];
+                }
+            }
+            else
+            {
                 // Usually because of ligatures
                 _toCharIndex = new int[letters.Count];
 
@@ -109,9 +111,16 @@ namespace Caly.Pdf.Models
                 for (int l = 0; l < letters.Count; ++l)
                 {
                     var letter = letters[l];
-                    _toCharIndex[l] = k += letter.Value.Length;
+                    for (int c = 0; c < letter.Value.Length; ++c)
+                    {
+                        chars[k++] = letter.Value.Span[c];
+                    }
+
+                    _toCharIndex[l] = k;
                 }
             }
+
+            Value = chars;
 
             switch (TextOrientation)
             {

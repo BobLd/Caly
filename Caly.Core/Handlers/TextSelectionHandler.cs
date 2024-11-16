@@ -360,14 +360,7 @@ namespace Caly.Core.Handlers
             PdfWord? word = control.PdfTextLayer!.FindWordOver(loc.X, loc.Y);
             if (word is not null)
             {
-                ReadOnlySequence<char> sequence = word.Value;
-
-                Span<char> output = sequence.Length < 512 ? stackalloc char[(int)sequence.Length]
-                    : new char[sequence.Length]; // This allocates and could be improved using ArrayPool<T>
-
-                sequence.CopyTo(output);
-
-                if (UrlMatch().IsMatch(output))
+                if (UrlMatch().IsMatch(word.Value.Span))
                 {
                     control.SetHandCursor();
                 }
@@ -544,21 +537,14 @@ namespace Caly.Core.Handlers
 
                     if (word is not null)
                     {
-                        ReadOnlySequence<char> sequence = word.Value;
-                        Span<char> output = sequence.Length < 512
-                            ? stackalloc char[(int)sequence.Length]
-                            : new char[sequence.Length]; // This allocates and could be improved using ArrayPool<T>
-
-                        sequence.CopyTo(output);
-
-                        foreach (ValueMatch match in UrlMatch().EnumerateMatches(output))
+                        foreach (ValueMatch match in UrlMatch().EnumerateMatches(word.Value.Span))
                         {
                             if (match.Length == 0)
                             {
                                 continue;
                             }
 
-                            CalyExtensions.OpenBrowser(output.Slice(match.Index, match.Length));
+                            CalyExtensions.OpenBrowser(word.Value.Span.Slice(match.Index, match.Length));
                             break; // Only opens first url matched
                         }
                     }

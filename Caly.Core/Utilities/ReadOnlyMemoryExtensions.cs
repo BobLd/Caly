@@ -15,22 +15,23 @@
 
 using System;
 using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Caly.Core.Utilities
 {
-    internal static class ReadOnlySequenceExtensions
+    internal static class ReadOnlyMemoryExtensions
     {
         private const char Padding = '\0';
         private const char Space = ' ';
 
-        public static void AppendReadOnlySequence(this StringBuilder sb, ReadOnlySequence<char> sequence)
+        public static void AppendClean(this StringBuilder sb, ReadOnlyMemory<char> memory)
         {
-            Span<char> output = sequence.Length < 512 ?
-                stackalloc char[(int)sequence.Length] :
-                new char[sequence.Length];
+            Span<char> output = memory.Length < 512 ?
+                stackalloc char[(int)memory.Length] :
+                new char[memory.Length];
 
-            sequence.CopyTo(output);
+            memory.Span.CopyTo(output);
 
             // Padding chars are problematic in string builder, we remove them
             for (int i = 0; i < output.Length; ++i)
@@ -45,6 +46,25 @@ namespace Caly.Core.Utilities
             {
                 sb.Append(output);
             }
+        }
+
+        public static string GetString(this ReadOnlySequence<char> sequence)
+        {
+            return string.Create((int)sequence.Length, sequence, (chars, state) =>
+            {
+                // https://www.stevejgordon.co.uk/creating-strings-with-no-allocation-overhead-using-string-create-csharp
+                state.CopyTo(chars);
+            });
+        }
+
+        public static string GetString(this ReadOnlyMemory<char> memory)
+        {
+            if (MemoryMarshal.TryGetString(memory, out string? str, out _, out _))
+            {
+                return str;
+            }
+
+            return string.Empty;
         }
     }
 }
