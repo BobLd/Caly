@@ -39,9 +39,19 @@ namespace Caly.Core.Controls
         public static readonly StyledProperty<Rect?> VisibleAreaProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, Rect?>(nameof(VisibleArea), null);
 
         /// <summary>
+        /// Defines the <see cref="ThumbnailWidth"/> property.
+        /// </summary>
+        public static readonly StyledProperty<double> ThumbnailWidthProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, double>(nameof(ThumbnailWidth));
+
+        /// <summary>
         /// Defines the <see cref="ThumbnailHeight"/> property.
         /// </summary>
         public static readonly StyledProperty<double> ThumbnailHeightProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, double>(nameof(ThumbnailHeight));
+
+        /// <summary>
+        /// Defines the <see cref="PageWidth"/> property.
+        /// </summary>
+        public static readonly StyledProperty<double> PageWidthProperty = AvaloniaProperty.Register<PdfPageThumbnailControl, double>(nameof(PageWidth));
 
         /// <summary>
         /// Defines the <see cref="PageHeight"/> property.
@@ -59,10 +69,22 @@ namespace Caly.Core.Controls
             set => SetValue(VisibleAreaProperty, value);
         }
 
+        public double ThumbnailWidth
+        {
+            get => GetValue(ThumbnailWidthProperty);
+            set => SetValue(ThumbnailWidthProperty, value);
+        }
+
         public double ThumbnailHeight
         {
             get => GetValue(ThumbnailHeightProperty);
             set => SetValue(ThumbnailHeightProperty, value);
+        }
+
+        public double PageWidth
+        {
+            get => GetValue(PageWidthProperty);
+            set => SetValue(PageWidthProperty, value);
         }
 
         public double PageHeight
@@ -87,7 +109,10 @@ namespace Caly.Core.Controls
         {
             base.OnPropertyChanged(change);
 
-            if (change.Property == ThumbnailHeightProperty || change.Property == PageHeightProperty)
+            if (change.Property == ThumbnailWidthProperty ||
+                change.Property == ThumbnailHeightProperty ||
+                change.Property == PageWidthProperty ||
+                change.Property == PageHeightProperty)
             {
                 UpdateScaleMatrix();
             }

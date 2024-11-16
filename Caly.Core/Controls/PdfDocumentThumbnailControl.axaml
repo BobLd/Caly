@@ -31,12 +31,16 @@
                                           Height="{Binding ThumbnailHeight}">
 										<controls:PdfPageThumbnailControl
                                             VisibleArea="{Binding VisibleArea}"
+											ThumbnailWidth="{Binding ThumbnailWidth}"
                                             ThumbnailHeight="{Binding ThumbnailHeight}"
+											PageWidth="{Binding Width}"
                                             PageHeight="{Binding Height}"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"/>
 									</Grid>
-									<Label Content="{Binding PageNumber}" HorizontalAlignment="Center" Padding="0"/>
+									<Label Content="{Binding PageNumber}"
+                                           HorizontalAlignment="Center"
+                                           Padding="0"/>
 								</StackPanel>
 							</DataTemplate>
 						</ListBox.ItemTemplate>

@@ -41,11 +41,11 @@ namespace Caly.Core.ViewModels
         private IRef<SKPicture>? _pdfPicture;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(ThumbnailHeight))]
+        [NotifyPropertyChangedFor(nameof(ThumbnailWidth))]
         private double _width;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(ThumbnailHeight))]
+        [NotifyPropertyChangedFor(nameof(ThumbnailWidth))]
         private double _height;
 
         [ObservableProperty]
@@ -70,9 +70,9 @@ namespace Caly.Core.ViewModels
 
         public bool IsPageVisible => VisibleArea.HasValue;
 
-        public int ThumbnailWidth { get; } = 100;
+        public int ThumbnailWidth => (int)(Width / Height * ThumbnailHeight);
 
-        public int ThumbnailHeight => (int)(Height / Width * ThumbnailWidth);
+        public int ThumbnailHeight => 135;
 
         public bool IsPageRendering => PdfPicture is null || PdfPicture.Item is null; // TODO - refactor might not be optimal
 
