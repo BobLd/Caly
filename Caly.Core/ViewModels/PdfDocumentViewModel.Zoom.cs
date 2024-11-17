@@ -23,7 +23,7 @@ namespace Caly.Core.ViewModels
     {
         private static readonly double[] _zoomLevelsDiscrete =
         [
-            0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1,
+            0.08, 0.125, 0.25, 0.33, 0.5, 0.67, 0.75, 1,
             1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64
         ];
 
@@ -36,9 +36,12 @@ namespace Caly.Core.ViewModels
         public double MaxZoomLevel => 64;
 #pragma warning restore CA1822
 
-        [ObservableProperty] private double _zoomLevel = 1;
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(ZoomInCommand))]
+        [NotifyCanExecuteChangedFor(nameof(ZoomOutCommand))]
+        private double _zoomLevel = 1;
         
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanZoomIn))]
         private void ZoomIn()
         {
             var index = Array.BinarySearch(_zoomLevelsDiscrete, ZoomLevel);
@@ -57,7 +60,12 @@ namespace Caly.Core.ViewModels
             }
         }
 
-        [RelayCommand]
+        private bool CanZoomIn()
+        {
+            return ZoomLevel < MaxZoomLevel;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanZoomOut))]
         private void ZoomOut()
         {
             var index = Array.BinarySearch(_zoomLevelsDiscrete, ZoomLevel);
@@ -74,6 +82,11 @@ namespace Caly.Core.ViewModels
 
                 ZoomLevel = Math.Max(MinZoomLevel, _zoomLevelsDiscrete[index - 1]);
             }
+        }
+
+        private bool CanZoomOut()
+        {
+            return ZoomLevel > MinZoomLevel;
         }
 
         [RelayCommand]
