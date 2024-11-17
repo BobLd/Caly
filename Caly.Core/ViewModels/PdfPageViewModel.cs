@@ -43,10 +43,14 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(ThumbnailWidth))]
+        [NotifyPropertyChangedFor(nameof(DisplayWidth))]
+        [NotifyPropertyChangedFor(nameof(DisplayHeight))]
         private double _width;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(ThumbnailWidth))]
+        [NotifyPropertyChangedFor(nameof(DisplayWidth))]
+        [NotifyPropertyChangedFor(nameof(DisplayHeight))]
         private double _height;
 
         [ObservableProperty]
@@ -65,6 +69,8 @@ namespace Caly.Core.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsPortrait))]
+        [NotifyPropertyChangedFor(nameof(DisplayWidth))]
+        [NotifyPropertyChangedFor(nameof(DisplayHeight))]
         private int _rotation;
 
         [ObservableProperty]
@@ -78,6 +84,10 @@ namespace Caly.Core.ViewModels
         public int ThumbnailWidth => (int)(Width / Height * ThumbnailHeight);
 
         public int ThumbnailHeight => 135;
+
+        public double DisplayWidth => IsPortrait ? Width : Height;
+
+        public double DisplayHeight => IsPortrait ? Height : Width;
 
         public bool IsPageRendering => PdfPicture is null || PdfPicture.Item is null; // TODO - refactor might not be optimal
 

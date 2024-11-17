@@ -337,7 +337,6 @@ namespace Caly.Core.Handlers
         private static void HandleMouseMoveOver(PdfPageTextLayerControl control, Point loc)
         {
             PdfAnnotation? annotation = control.PdfTextLayer!.FindAnnotationOver(loc.X, loc.Y);
-            System.Diagnostics.Debug.WriteLine($"HandleMouseMoveOver: X={loc.X} Y={loc.Y} (annot={annotation is not null})");
 
             if (annotation is not null)
             {

@@ -15,6 +15,8 @@
                   TargetType="controls:PdfPageItem"
                   x:DataType="viewModels:PdfPageViewModel">
 
+        <Setter Property="Width" Value="{Binding DisplayWidth}"/>
+        <Setter Property="Height" Value="{Binding DisplayHeight}"/>
 		<Setter Property="Exception" Value="{Binding Exception}"/>
 		<Setter Property="Picture" Value="{Binding PdfPicture}"/>
 		<Setter Property="VisibleArea" Value="{Binding VisibleArea}"/>
