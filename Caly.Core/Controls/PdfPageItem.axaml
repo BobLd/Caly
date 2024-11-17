@@ -31,6 +31,15 @@
 
 				<Separator/>
 
+                <MenuItem Header="Rotate Clockwise"
+                          Command="{Binding RotateClockwiseCommand}">
+                    <MenuItem.Icon>
+                        <PathIcon Width="15"
+                                  Height="15"
+                                  Data="{StaticResource arrow_rotate_clockwise_regular}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+
 				<MenuItem Header="Rotate Counterclockwise"
                           Command="{Binding RotateCounterclockwiseCommand}">
 					<MenuItem.Icon>
@@ -40,14 +49,6 @@
 					</MenuItem.Icon>
 				</MenuItem>
 
-				<MenuItem Header="Rotate Clockwise"
-                          Command="{Binding RotateClockwiseCommand}">
-					<MenuItem.Icon>
-						<PathIcon Width="15"
-                                  Height="15"
-                                  Data="{StaticResource arrow_rotate_clockwise_regular}"/>
-					</MenuItem.Icon>
-				</MenuItem>
 			</MenuFlyout>
 		</Setter>
 
