@@ -75,7 +75,8 @@
                                                            IsEnabled="{Binding IsPageRendering}"
                                                            IsVisible="{Binding IsPageRendering}"
                                                            HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"/>
+                                                           VerticalAlignment="Center"
+														   Foreground="{DynamicResource SystemAccentColor}"/>
 
 									<controls:SkiaPdfPageControl Picture="{Binding PdfPicture}"
                                                                  VisibleArea="{Binding VisibleArea}"

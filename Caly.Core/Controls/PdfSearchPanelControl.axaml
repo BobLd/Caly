@@ -41,7 +41,8 @@
                                  Maximum="100"
                                  Value="{Binding BuildIndexProgress}"
                                  VerticalAlignment="Bottom"
-                                 HorizontalAlignment="Stretch"/>
+                                 HorizontalAlignment="Stretch"
+                                 Background="Transparent"/>
 
 					<TextBlock DockPanel.Dock="Top"
                                IsVisible="{Binding BuildingIndex}"

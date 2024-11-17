@@ -28,7 +28,7 @@
 				<Grid RowDefinitions="30,*">
 
 					<!-- Top navigation bar -->
-					<DockPanel Grid.Row="0" Background="#3b3b3b">
+					<DockPanel Grid.Row="0">
 
 						<!-- Toggle sidebar -->
 						<ToggleButton DockPanel.Dock="Left"
@@ -165,6 +165,7 @@
 							   IsPaneOpen="{Binding IsPaneOpen}"
 							   OpenPaneLength="{Binding PaneSize, Mode=TwoWay}"
 							   CompactPaneLength="0"
+							   PaneBackground="Transparent"
 							   DisplayMode="CompactInline">
 
 						<!-- Left navigation bar -->
@@ -172,8 +173,7 @@
 
 							<Grid ColumnDefinitions="*,4">
 								<Border Grid.Column="0"
-										BorderThickness="1"
-										BorderBrush="{StaticResource SystemChromeHighColor}">
+										BorderThickness="1">
 
 									<TabControl Name="PART_TabControlNavigation"
 												TabStripPlacement="Left"
