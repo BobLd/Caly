@@ -5,7 +5,7 @@
 > [!IMPORTANT]
 > The development is currently in alpha.
 
-![caly preview](https://github.com/user-attachments/assets/dfc4f96a-cd9a-436a-a540-1865c69b87d4)
+![caly preview](https://github.com/user-attachments/assets/d6c1f962-b1d9-4a8c-874f-c8991d1415c9)
 
 ### Cross-Platform Compatibility
 
@@ -22,6 +22,7 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 * **Thumbnail View:** Get a visual overview of all pages with the intuitive thumbnail sidebar.
 * **Bookmark Support:** Navigate through bookmarks for quick access to important sections.
 * **Zoom In/Out:** Zoom in/out of the document.
+* **Rotate pages:** Rotate all or single pages of the document.
 * **Minimalist UI:** Enjoy a clean and distraction-free reading experience.
 
 ## Usage
@@ -35,6 +36,7 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 7. To view page thumbnails, click on the "Thumbnails" button in the left menu.
 8. To navigate through bookmarks, click on the "Bookmarks" button in the left menu.
 9. To zoom in and out of your document, either use the scroll wheel while pressing `Ctrl`, or use the "Zoom" buttons in the top menu.
+10. To rotate pages, either right-click and select one of the rotate options, or use the "Rotate" buttons in the top menu.
 ## Why Caly Pdf Reader?
 
 * **Open Source:** The source code is freely available on GitHub, allowing for community contributions and customization.
@@ -42,7 +44,7 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 * **Lightweight & Fast:** Designed for optimal performance and minimal resource consumption.
 * **Active Development:** We are constantly working on improving Caly Pdf Reader with new features and bug fixes.
 
-![image](https://github.com/user-attachments/assets/e7d40369-b404-4144-a7dd-b66fb6f3c493)
+![caly preview 2](https://github.com/user-attachments/assets/6f850a4f-e176-4d12-b096-ea3ddc9f6884)
 
 ## Getting Started
 
@@ -70,3 +72,5 @@ You can also help Caly Pdf Reader by contributing to:
 ## License
 
 Caly Pdf Reader is licensed under the [GPL-3.0 License](https://github.com/BobLd/Caly?tab=GPL-3.0-1-ov-file#readme).
+
+![caly preview 3](https://github.com/user-attachments/assets/ba304073-e3de-4e5f-a894-4f2955dee21c)
