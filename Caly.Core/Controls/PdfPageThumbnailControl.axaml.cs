@@ -28,8 +28,12 @@ namespace Caly.Core.Controls
          * Thumbnail images should be no larger than 106 by 106 samples, and should be created at one-eighth scale for 8.5-by-11-inch and A4-size pages.
          */
 
-        private static readonly Brush _areaBrush = new SolidColorBrush(Colors.DodgerBlue, 0.3);
-        private static readonly Pen _areaPen = new Pen(Colors.DodgerBlue.ToUInt32(), 2);
+        private const double _borderThickness = 2;
+
+        private static readonly Color _areaColor = Colors.DodgerBlue;
+        private static readonly Brush _areaBrush = new SolidColorBrush(_areaColor);
+        private static readonly Brush _areaTransparentBrush = new SolidColorBrush(_areaColor, 0.3);
+        private static readonly Pen _areaPen = new Pen() { Brush = _areaBrush, Thickness = _borderThickness };
 
         private Matrix _scale = Matrix.Identity;
 
@@ -129,7 +133,7 @@ namespace Caly.Core.Controls
                 // in the PdfPageViewModel to avoid this issue
 
                 var thumbnail = Thumbnail;
-                if (thumbnail is not null && Bounds.Width > 0 && Bounds.Height > 0)
+                if (thumbnail is not null && Bounds is { Width: > 0, Height: > 0 })
                 {
                     context.DrawImage(thumbnail, Bounds);
                 }
@@ -142,9 +146,16 @@ namespace Caly.Core.Controls
 
             if (VisibleArea.HasValue)
             {
-                context.DrawRectangle(_areaBrush.ToImmutable(),
-                    _areaPen.ToImmutable(),
-                    VisibleArea.Value.TransformToAABB(_scale));
+                var area = VisibleArea.Value.TransformToAABB(_scale);
+
+                if (area is { Width: > _borderThickness, Height: > _borderThickness })
+                {
+                    context.DrawRectangle(_areaTransparentBrush.ToImmutable(), _areaPen.ToImmutable(), area.Deflate(_borderThickness / 2.0));
+                }
+                else
+                {
+                    context.DrawRectangle(_areaBrush.ToImmutable(), null, area);
+                }
             }
         }
 
