@@ -23,10 +23,19 @@
                              BorderThickness="0"
                              ItemsSource="{Binding Pages}"
                              SelectedIndex="{Binding SelectedPageIndex, Mode=TwoWay, Converter={StaticResource zeroPageIndexConverter}}">
+
+						<ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                            </Style>
+						</ListBox.Styles>
+                 
 						<ListBox.ItemTemplate>
 							<DataTemplate x:DataType="viewModels:PdfPageViewModel">
-								<StackPanel>
-									<Grid Margin="2,3,2,0"
+								<DockPanel HorizontalAlignment="Center">
+									<Grid DockPanel.Dock="Top"
+                                          Margin="2,3,2,0"
                                           Width="{Binding ThumbnailWidth}"
                                           Height="{Binding ThumbnailHeight}">
 										<controls:PdfPageThumbnailControl
@@ -38,12 +47,14 @@
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch"/>
 									</Grid>
-									<Label Content="{Binding PageNumber}"
+									<Label DockPanel.Dock="Top"
+                                           Content="{Binding PageNumber}"
                                            HorizontalAlignment="Center"
                                            Padding="0"/>
-								</StackPanel>
+								</DockPanel>
 							</DataTemplate>
 						</ListBox.ItemTemplate>
+
 					</ListBox>
 
 				</ScrollViewer>
