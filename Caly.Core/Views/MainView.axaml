@@ -33,7 +33,9 @@
                    PanePlacement="Right">
             <SplitView.Pane>
 				<!-- Settings Pane -->
-				<Grid Background="BlueViolet"/>
+				<Grid>
+
+                </Grid>
 			</SplitView.Pane>
 
 			<SplitView.Content>

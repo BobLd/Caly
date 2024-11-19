@@ -165,7 +165,6 @@
 							   IsPaneOpen="{Binding IsPaneOpen}"
 							   OpenPaneLength="{Binding PaneSize, Mode=TwoWay}"
 							   CompactPaneLength="0"
-							   PaneBackground="Transparent"
 							   DisplayMode="CompactInline">
 
 						<!-- Left navigation bar -->
