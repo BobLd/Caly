@@ -5,7 +5,7 @@
 > [!IMPORTANT]
 > The development is currently in alpha.
 
-![caly preview](https://github.com/user-attachments/assets/d6c1f962-b1d9-4a8c-874f-c8991d1415c9)
+![caly preview](https://github.com/user-attachments/assets/985c9271-2b0e-4cc9-a5d4-15fd061875e0)
 
 ### Cross-Platform Compatibility
 
@@ -44,7 +44,7 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 * **Lightweight & Fast:** Designed for optimal performance and minimal resource consumption.
 * **Active Development:** We are constantly working on improving Caly Pdf Reader with new features and bug fixes.
 
-![caly preview 2](https://github.com/user-attachments/assets/6f850a4f-e176-4d12-b096-ea3ddc9f6884)
+![caly preview 2](https://github.com/user-attachments/assets/7f87be85-7f37-4be5-a12e-2fe2397d0620)
 
 ## Getting Started
 
@@ -73,4 +73,4 @@ You can also help Caly Pdf Reader by contributing to:
 
 Caly Pdf Reader is licensed under the [GPL-3.0 License](https://github.com/BobLd/Caly?tab=GPL-3.0-1-ov-file#readme).
 
-![caly preview 3](https://github.com/user-attachments/assets/ba304073-e3de-4e5f-a894-4f2955dee21c)
+![caly preview 3](https://github.com/user-attachments/assets/daebe394-718a-46b3-8886-7e6402695328)
