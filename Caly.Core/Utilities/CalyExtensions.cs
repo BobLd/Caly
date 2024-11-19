@@ -25,6 +25,24 @@ namespace Caly.Core.Utilities
 {
     internal static class CalyExtensions
     {
+        private static readonly int[] _versionParts = new int[4];
+
+        static CalyExtensions()
+        {
+            var assemblyName = Process.GetCurrentProcess().MainModule.FileName;
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assemblyName);
+
+            _versionParts[0] = fvi.ProductMajorPart;
+            _versionParts[1] = fvi.ProductMinorPart;
+            _versionParts[2] = fvi.ProductBuildPart;
+            _versionParts[3] = fvi.ProductPrivatePart;
+        }
+
+        public static string GetCalyVersion()
+        {
+            return string.Join('.', _versionParts);
+        }
+
         public static bool IsMobilePlatform()
         {
             return OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
