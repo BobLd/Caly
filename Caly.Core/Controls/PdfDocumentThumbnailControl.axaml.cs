@@ -97,5 +97,17 @@ namespace Caly.Core.Controls
 
             container.PropertyChanged -= Container_PropertyChanged;
         }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+            if (change.Property == IsVisibleProperty && _listBox is not null)
+            {
+                if (change is { OldValue: false, NewValue: true })
+                {
+                    _listBox.ScrollIntoView(_listBox.SelectedIndex);
+                }
+            }
+        }
     }
 }
