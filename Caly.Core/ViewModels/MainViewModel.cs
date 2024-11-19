@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Caly.Core.Services.Interfaces;
+using Caly.Core.Utilities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +40,8 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private int _selectedDocumentIndex;
 
         [ObservableProperty] private bool _isPaneOpen;
+
+        [ObservableProperty] private string _version = CalyExtensions.GetCalyVersion();
 
 #if DEBUG
         partial void OnSelectedDocumentIndexChanged(int oldValue, int newValue)
