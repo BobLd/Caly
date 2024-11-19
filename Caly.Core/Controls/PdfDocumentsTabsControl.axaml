@@ -171,9 +171,11 @@
 						<!-- Left navigation bar -->
 						<SplitView.Pane>
 
-							<Grid ColumnDefinitions="*,4">
-								<Border Grid.Column="0"
-										BorderThickness="1">
+							<Grid ColumnDefinitions="*,4"
+                                  IsVisible="{Binding IsPaneOpen}">
+
+                                <Border Grid.Column="0"
+                                        BorderThickness="1">
 
 									<TabControl Name="PART_TabControlNavigation"
 												TabStripPlacement="Left"
@@ -193,7 +195,7 @@
 													</PathIcon.RenderTransform>
 												</PathIcon>
 											</TabItem.Header>
-											<controls:PdfDocumentThumbnailControl />
+											<controls:PdfDocumentThumbnailControl IsVisible="{Binding IsPaneOpen}" />
 										</TabItem>
 
 										<!-- Bookmarks tab -->
