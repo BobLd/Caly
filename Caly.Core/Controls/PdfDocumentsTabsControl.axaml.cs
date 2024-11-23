@@ -17,7 +17,6 @@ using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using Caly.Core.ViewModels;
@@ -68,32 +67,26 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
     }
 
     #region Resize SplitView.Pane
-    private void Rectangle_OnPointerEntered(object? sender, PointerEventArgs e)
+    private void Resize_OnPointerEntered(object? sender, PointerEventArgs e)
     {
-        if (sender is Rectangle)
-        {
-            Cursor = SizeWestEastCursor;
-        }
+        Cursor = SizeWestEastCursor;
     }
 
-    private void Rectangle_OnPointerExited(object? sender, PointerEventArgs e)
+    private void Resize_OnPointerExited(object? sender, PointerEventArgs e)
     {
-        if (sender is Rectangle)
-        {
-            Cursor = Cursor.Default;
-        }
+        Cursor = Cursor.Default;
     }
 
-    private void Rectangle_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private void Resize_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is not Rectangle rect)
+        if (sender is not Grid grid)
         {
             return;
         }
 
         if (_splitView is null)
         {
-            _splitView = rect.FindAncestorOfType<SplitView>();
+            _splitView = grid.FindAncestorOfType<SplitView>();
             if (_splitView is null)
             {
                 return;
@@ -116,9 +109,9 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
         e.PreventGestureRecognition();
     }
 
-    private void Rectangle_OnPointerMoved(object? sender, PointerEventArgs e)
+    private void Resize_OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_lastPoint.HasValue || sender is not Rectangle)
+        if (!_lastPoint.HasValue || sender is not Grid)
         {
             return;
         }
@@ -132,9 +125,9 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
         _splitView.OpenPaneLength = Math.Max(Math.Min(_originalPaneLength + mouseMovement.X, MaxPaneLength), MinPaneLength);
     }
 
-    private void Rectangle_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    private void Resize_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (!_lastPoint.HasValue || sender is not Rectangle)
+        if (!_lastPoint.HasValue || sender is not Grid)
         {
             return;
         }

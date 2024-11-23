@@ -170,7 +170,7 @@
 						<!-- Left navigation bar -->
 						<SplitView.Pane>
 
-							<Grid ColumnDefinitions="*,4"
+							<Grid ColumnDefinitions="*,5"
                                   IsVisible="{Binding IsPaneOpen}">
 
                                 <Border Grid.Column="0"
@@ -253,14 +253,17 @@
 								</Border>
 
 								<!-- Resize left navigation bar -->
-								<Rectangle Grid.Column="1"
-										   Fill="{StaticResource SystemChromeHighColor}"
-										   PointerMoved="Rectangle_OnPointerMoved"
-										   PointerEntered="Rectangle_OnPointerEntered"
-										   PointerExited="Rectangle_OnPointerExited"
-										   PointerPressed="Rectangle_OnPointerPressed"
-										   PointerReleased="Rectangle_OnPointerReleased"/>
-
+                                <Grid Grid.Column="1"
+									  Background="Transparent"
+                                      PointerMoved="Resize_OnPointerMoved"
+                                      PointerEntered="Resize_OnPointerEntered"
+                                      PointerExited="Resize_OnPointerExited"
+                                      PointerPressed="Resize_OnPointerPressed"
+                                      PointerReleased="Resize_OnPointerReleased">
+                                    <Rectangle Width="{DynamicResource MenuFlyoutSeparatorThemeHeight}"
+                                               HorizontalAlignment="Center"
+                                               Fill="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"/>
+                                </Grid>
 							</Grid>
 						</SplitView.Pane>
 
