@@ -31,35 +31,16 @@
                    CompactPaneLength="0"
                    DisplayMode="CompactOverlay"
                    PanePlacement="Right">
-			<SplitView.Pane>
-				<!-- Settings Pane -->
-				<DockPanel Margin="5">
-                    <TextBlock DockPanel.Dock="Top"
-                               Text="Caly Pdf Reader"
-                               HorizontalAlignment="Left" />
 
-					<DockPanel DockPanel.Dock="Top">
-
-						<TextBlock DockPanel.Dock="Left"
-                                   Text="Version "
-                                   HorizontalAlignment="Left" />
-
-						<TextBlock DockPanel.Dock="Left"
-                                   Text="{Binding Version}"
-                                   MinWidth="120"
-                                   HorizontalAlignment="Left" />
-					</DockPanel>
-
-					<Separator DockPanel.Dock="Top"/>
-
-					<Grid/>
-
-				</DockPanel>
+            <!-- Settings Pane -->
+            <SplitView.Pane>
+                <controls:CalySettingsControl/>
 			</SplitView.Pane>
 
 			<SplitView.Content>
 				<controls:PdfDocumentsTabsControl/>
 			</SplitView.Content>
+
 		</SplitView>
 
 		<DockPanel Grid.Row="1">

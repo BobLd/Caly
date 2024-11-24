@@ -14,7 +14,7 @@
                     <x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
 				</ResourceDictionary>
 
-                <ResourceInclude Source="avares://Caly.Core/Controls/PdfDocumentControl.axaml"/>
+				<ResourceInclude Source="avares://Caly.Core/Controls/PdfDocumentControl.axaml"/>
 				<ResourceInclude Source="avares://Caly.Core/Controls/PdfDocumentThumbnailControl.axaml"/>
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfPageThumbnailControl.axaml"/>
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfPageItemsControl.axaml"/>
@@ -22,6 +22,8 @@
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfDocumentPropertiesControl.axaml"/>
                 <ResourceInclude Source="avares://Caly.Core/Controls/PdfSearchPanelControl.axaml"/>
                 <ResourceInclude Source="avares://Caly.Core/Controls/VerticalSeparator.axaml"/>
+                <ResourceInclude Source="avares://Caly.Core/Controls/CalySettingsControl.axaml"/>
+                <ResourceInclude Source="avares://Caly.Core/Controls/CalyLicenseControl.axaml"/>
 			</ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
 	</Application.Resources>
