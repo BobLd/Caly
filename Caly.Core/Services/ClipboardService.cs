@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Buffers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,7 +85,7 @@ namespace Caly.Core.Services
                     sb.Append(' ');
                 }
 
-                if (sb[^1] == ' ')
+                if (sb.Length > 0 && sb[^1] == ' ')
                 {
                     sb.Length--; // Last char added was a space
                 }
@@ -116,10 +115,6 @@ namespace Caly.Core.Services
         
         private static ReadOnlyMemory<char> PartialWord(PdfWord word, int startIndex, int endIndex)
         {
-            // TODO - We have an issue with words containing ligatures (e.g. 'f‌i', 'ff', 'fl')
-            // The index seems to not be correct as there is 1 bounding box for e.g. 2 chars.
-            // The startIndex / endIndex being based on bounding boxes, the index is lagged.
-
             System.Diagnostics.Debug.Assert(startIndex != -1);
             System.Diagnostics.Debug.Assert(endIndex != -1);
             System.Diagnostics.Debug.Assert(startIndex <= endIndex);
