@@ -316,18 +316,7 @@ namespace Caly.Core.ViewModels
                 _channelWriter?.Complete();
             }, _cts.Token);
         }
-
-        private async Task BuildSearchIndex()
-        {
-            _cts.Token.ThrowIfCancellationRequested();
-            var progress = new Progress<int>(done => 
-            {
-                BuildIndexProgress = (int)Math.Ceiling((done / (double)PageCount) * 100);
-            });
-
-            await Task.Run(() => _pdfService.BuildIndex(this, progress, _cts.Token), _cts.Token);
-        }
-
+        
         [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
         private void GoToPreviousPage()
         {

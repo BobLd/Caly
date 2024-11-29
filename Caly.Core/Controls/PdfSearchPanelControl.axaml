@@ -18,15 +18,6 @@
 			<ControlTemplate>
 
 				<DockPanel Focusable="True">
-					<Panel.Styles>
-						<Style Selector="TextBlock.indexed">
-							<Setter Property="Text" Value="No result found" />
-						</Style>
-						<Style Selector="TextBlock.indexing">
-							<Setter Property="Text" Value="Searching..." />
-						</Style>
-					</Panel.Styles>
-
 					<TextBox DockPanel.Dock="Top"
                              Name="PART_TextBoxSearch"
                              Focusable="True"
@@ -45,12 +36,8 @@
                                  Background="Transparent"/>
 
 					<TextBlock DockPanel.Dock="Top"
-                               IsVisible="{Binding BuildingIndex}"
-                               Text="Indexing..." />
-
-					<TextBlock IsVisible="{Binding !SearchResults.Count}"
-                               Classes.indexed="{Binding !BuildingIndex}"
-                               Classes.indexing="{Binding BuildingIndex}" />
+                               IsVisible="{Binding SearchStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               Text="{Binding SearchStatus}" />
 
 					<TreeView DockPanel.Dock="Bottom"
                               IsVisible="{Binding !!SearchResults.Count}"
