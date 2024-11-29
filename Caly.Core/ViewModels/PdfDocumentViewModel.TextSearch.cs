@@ -19,8 +19,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lifti.Querying;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,8 @@ namespace Caly.Core.ViewModels
 {
     public partial class PdfDocumentViewModel
     {
+        [ObservableProperty] private string _searchStatus;
+
         async partial void OnTextSearchChanged(string? value)
         {
             await SearchText(CancellationToken.None); // TODO - subscribe to event change instead and use rolling time window
@@ -43,6 +47,19 @@ namespace Caly.Core.ViewModels
 
         private Task? _pendingSearchTask;
         private CancellationTokenSource? _pendingSearchTaskCts;
+
+        private async Task BuildSearchIndex()
+        {
+            _cts.Token.ThrowIfCancellationRequested();
+            var progress = new Progress<int>(done =>
+            {
+                BuildIndexProgress = (int)Math.Ceiling((done / (double)PageCount) * 100);
+            });
+
+            await Task.Run(() => _pdfService.BuildIndex(this, progress, _cts.Token), _cts.Token);
+
+            SetSearchStatusFinal();
+        }
 
         // https://stackoverflow.com/questions/18999827/a-pattern-for-self-cancelling-and-restarting-task
         [RelayCommand]
@@ -84,6 +101,20 @@ namespace Caly.Core.ViewModels
             }
         }
 
+        internal void SetSearchStatus(string status)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                SearchStatus = status;
+            });
+        }
+
+        private void SetSearchStatusFinal()
+        {
+            SetSearchStatus(string.IsNullOrEmpty(TextSearch) ? "" :
+                SearchResults.Count == 0 ? "No Result Found" : "");
+        }
+
         private async Task SearchTextInternal(CancellationToken token)
         {
             try
@@ -92,12 +123,14 @@ namespace Caly.Core.ViewModels
                 SelectedTextSearchResult = null;
                 SearchResults.ClearSafely();
 
+                Task indexBuildTask = _buildSearchIndex.Value;
+
                 if (string.IsNullOrEmpty(TextSearch))
                 {
+                    SetSearchStatus(indexBuildTask.IsCompleted ? "" : "Indexing...");
                     return;
                 }
 
-                Task indexBuildTask = _buildSearchIndex.Value;
                 Task searchTask = Task.Run(async () =>
                 {
                     bool indexBuildTaskComplete;
@@ -131,6 +164,8 @@ namespace Caly.Core.ViewModels
 
                 if (!indexBuildTask.IsCompleted)
                 {
+                    SetSearchStatus("Indexing...");
+
                     await Task.WhenAny(indexBuildTask, searchTask);
                     if (indexBuildTask is { IsCompleted: true, Exception: not null })
                     {
@@ -145,8 +180,11 @@ namespace Caly.Core.ViewModels
                 }
                 else
                 {
+                    SetSearchStatus("Searching...");
                     await searchTask;
                 }
+
+                SetSearchStatusFinal();
             }
             catch (OperationCanceledException)
             {

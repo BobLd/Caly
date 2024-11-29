@@ -23,6 +23,7 @@ using Caly.Core.Services.Interfaces;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
 using Lifti;
+using Lifti.Querying;
 using Lifti.Tokenization;
 
 namespace Caly.Core.Services
@@ -108,17 +109,30 @@ namespace Caly.Core.Services
         public async Task<IEnumerable<TextSearchResultViewModel>> Search(PdfDocumentViewModel pdfDocument, string text, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
-
+            
             token.ThrowIfCancellationRequested();
-
+            
             if (string.IsNullOrEmpty(text))
             {
+                pdfDocument.SetSearchStatus("");
+                return [];
+            }
+
+            IQuery? query;
+            try
+            {
+                query = _index.QueryParser.Parse(_index.FieldLookup, text, _index);
+            }
+            catch (QueryParserException e)
+            {
+                System.Diagnostics.Debug.WriteLine(e);
+                pdfDocument.SetSearchStatus(e.Message);
                 return [];
             }
 
             return await Task.Run(() =>
             {
-                var results = _index.Search(text);
+                ISearchResults<int> results = _index.Search(query);
 
                 token.ThrowIfCancellationRequested();
 
