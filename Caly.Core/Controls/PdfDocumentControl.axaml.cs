@@ -174,20 +174,18 @@ namespace Caly.Core.Controls
 
                 double dZoom = newZoom / (double?)change.OldValue ?? 1.0;
 
-                var pixelPoint = new PixelPoint();
+                double w = 0, h = 0;
                 if (!_pdfPageItemsControl.DesiredSize.IsEmpty())
                 {
-                    _pdfPageItemsControl.DesiredSize.Deconstruct(out double w, out double h);
-                    pixelPoint = new PixelPoint((int)(w / 2.0), (int)(h / 2.0));
+                    _pdfPageItemsControl.DesiredSize.Deconstruct(out w, out h);
                 }
                 else if (!_pdfPageItemsControl.Bounds.Size.IsEmpty())
                 {
-                    _pdfPageItemsControl.Bounds.Size.Deconstruct(out double w, out double h);
-                    pixelPoint = new PixelPoint((int)(w / 2.0), (int)(h / 2.0));
+                    _pdfPageItemsControl.Bounds.Size.Deconstruct(out w, out h);
                 }
 
-                Point point = _pdfPageItemsControl.LayoutTransformControl.PointToClient(pixelPoint);
-
+                var pixelPoint = this.PointToScreen(new Point((int)(w / 2.0), (int)(h / 2.0)));
+                var point = _pdfPageItemsControl.LayoutTransformControl.PointToClient(pixelPoint);
                 _pdfPageItemsControl.ZoomTo(dZoom, point);
             }
         }
