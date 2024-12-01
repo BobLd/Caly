@@ -82,7 +82,11 @@ namespace Caly.Pdf.Models
             var firstLetter = letters[0];
             int charsCount = firstLetter.Value.Length;
 
-            if (TextOrientation == TextOrientation.Other)
+            if (Count == 1)
+            {
+                // Do nothing
+            }
+            else if (TextOrientation == TextOrientation.Other)
             {
                 // We keep all bounding boxes
                 _lettersBoundingBoxes = new PdfRectangle[letters.Count];
@@ -99,11 +103,11 @@ namespace Caly.Pdf.Models
             else
             {
                 // Only keep positions
-                _letterPositions = new float[letters.Count]; // TODO - skip last bbox (equals total width)
+                _letterPositions = new float[letters.Count - 1];
                 double position = firstLetter.BoundingBox.Width;
                 _letterPositions[0] = (float)position;
 
-                for (int i = 1; i < letters.Count; ++i)
+                for (int i = 1; i < letters.Count - 1; ++i)
                 {
                     var letter = letters[i];
 
@@ -111,6 +115,8 @@ namespace Caly.Pdf.Models
                     _letterPositions[i] = (float)position;
                     charsCount += letter.Value.Length;
                 }
+
+                charsCount += letters[^1].Value.Length;
             }
 
             char[] chars = new char[charsCount];
@@ -185,14 +191,22 @@ namespace Caly.Pdf.Models
 
         public PdfRectangle GetLetterBoundingBox(int index)
         {
+            if (Count == 1)
+            {
+                return BoundingBox;
+            }
+
             if (_letterPositions is not null)
             {
+                float startPosition = index == 0 ? 0 : _letterPositions[index - 1];
+                float endPosition = index == Count - 1 ? (float)BoundingBox.Width : _letterPositions[index];
+
                 switch (TextOrientation)
                 {
                     case TextOrientation.Horizontal:
                         {
-                            double startX = BoundingBox.BottomLeft.X + (index == 0 ? 0 : _letterPositions[index - 1]);
-                            double endX = BoundingBox.BottomLeft.X + _letterPositions[index];
+                            double startX = BoundingBox.BottomLeft.X + startPosition;
+                            double endX = BoundingBox.BottomLeft.X + endPosition;
                             double startY = BoundingBox.BottomLeft.Y;
                             double endY = BoundingBox.TopLeft.Y;
                             return new PdfRectangle(startX, startY, endX, endY);
@@ -200,8 +214,8 @@ namespace Caly.Pdf.Models
 
                     case TextOrientation.Rotate180:
                         {
-                            double startX = BoundingBox.BottomLeft.X - (index == 0 ? 0 : _letterPositions[index - 1]);
-                            double endX = BoundingBox.BottomLeft.X - _letterPositions[index];
+                            double startX = BoundingBox.BottomLeft.X - startPosition;
+                            double endX = BoundingBox.BottomLeft.X - endPosition;
                             double startY = BoundingBox.BottomLeft.Y;
                             double endY = BoundingBox.TopLeft.Y;
                             return new PdfRectangle(startX, startY, endX, endY);
@@ -209,8 +223,8 @@ namespace Caly.Pdf.Models
 
                     case TextOrientation.Rotate270:
                         {
-                            double l = BoundingBox.BottomLeft.Y + (index == 0 ? 0 : _letterPositions[index - 1]);
-                            double r = BoundingBox.BottomLeft.Y + _letterPositions[index];
+                            double l = BoundingBox.BottomLeft.Y + startPosition;
+                            double r = BoundingBox.BottomLeft.Y + endPosition;
                             double b = BoundingBox.TopLeft.X;
                             double t = BoundingBox.BottomRight.X;
                             return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
@@ -219,8 +233,8 @@ namespace Caly.Pdf.Models
 
                     case TextOrientation.Rotate90:
                         {
-                            double l = BoundingBox.BottomLeft.Y - (index == 0 ? 0 : _letterPositions[index - 1]);
-                            double r = BoundingBox.BottomLeft.Y - _letterPositions[index];
+                            double l = BoundingBox.BottomLeft.Y - startPosition;
+                            double r = BoundingBox.BottomLeft.Y - endPosition;
                             double b = BoundingBox.TopLeft.X;
                             double t = BoundingBox.BottomRight.X;
                             return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
@@ -240,6 +254,11 @@ namespace Caly.Pdf.Models
         public double GetWithinLetterOffset(int index, double x, double y)
         {
             var point = new PdfPoint(x, y);
+
+            if (Count == 1)
+            {
+                return PdfPointExtensions.ProjectPointOnLineM(point, BoundingBox.BottomLeft, BoundingBox.BottomRight);
+            }
 
             if (_letterPositions is not null)
             {
@@ -274,21 +293,29 @@ namespace Caly.Pdf.Models
                 return -1;
             }
 
+            if (Count == 1)
+            {
+                return 0;
+            }
+
             if (_letterPositions is not null)
             {
                 double position = PdfPointExtensions.ProjectPointOnLineM(point, BoundingBox.BottomLeft, BoundingBox.BottomRight);
 
-                for (int i = 0; i < Count; i++)
+                for (int i = 0; i < Count - 1; ++i)
                 {
                     if (position <= _letterPositions[i] / BoundingBox.Width)
                     {
                         return i;
                     }
                 }
+
+                return Count - 1;
             }
-            else if (_lettersBoundingBoxes is not null)
+            
+            if (_lettersBoundingBoxes is not null)
             {
-                for (int i = 0; i < Count; i++)
+                for (int i = 0; i < Count; ++i)
                 {
                     if (_lettersBoundingBoxes[i].Contains(point, true))
                     {
@@ -307,6 +334,11 @@ namespace Caly.Pdf.Models
                 return -1;
             }
 
+            if (Count == 1)
+            {
+                return 0;
+            }
+
             var point = new PdfPoint(x, y);
             double dist = double.MaxValue;
             int index = -1;
@@ -314,21 +346,27 @@ namespace Caly.Pdf.Models
             if (_letterPositions is not null)
             {
                 double position = PdfPointExtensions.ProjectPointOnLineM(point, BoundingBox.BottomLeft, BoundingBox.BottomRight);
-
-                for (int i = 0; i < Count; i++)
+                double localDist = 0;
+                for (int i = 0; i < Count - 1; ++i)
                 {
                     var letter = _letterPositions[i] / BoundingBox.Width;
-                    double localDist = Math.Abs(position - letter);
+                    localDist = Math.Abs(position - letter);
                     if (localDist < dist)
                     {
                         dist = localDist;
                         index = i;
                     }
                 }
+
+                localDist = Math.Abs(position - 1);
+                if (localDist < dist)
+                {
+                    index = Count - 1;
+                }
             }
             else if (_lettersBoundingBoxes is not null)
             {
-                for (int i = 0; i < Count; i++)
+                for (int i = 0; i < Count; ++i)
                 {
                     var letter = _lettersBoundingBoxes[i];
                     double localDist = Distances.Euclidean(point, letter.BottomRight);
