@@ -36,6 +36,10 @@ namespace Caly.Pdf.Models
 
         private readonly int[]? _toCharIndex;
 
+        private readonly float[]? _letterPositions;
+
+        private readonly PdfRectangle[]? _lettersBoundingBoxes;
+
         public TextOrientation TextOrientation { get; }
 
         /// <summary>
@@ -57,13 +61,11 @@ namespace Caly.Pdf.Models
         /// Text block index in the page the word belongs to.
         /// </summary>
         public int TextBlockIndex { get; internal set; }
-
-        public PdfRectangle[] LettersBoundingBoxes { get; }
-
+        
         public ReadOnlyMemory<char> Value { get; }
 
         public int Count { get; }
-
+        
         public PdfWord(IReadOnlyList<PdfLetter> letters)
         {
             ArgumentNullException.ThrowIfNull(letters, nameof(letters));
@@ -77,18 +79,44 @@ namespace Caly.Pdf.Models
 
             Count = letters.Count;
 
-            LettersBoundingBoxes = new PdfRectangle[letters.Count];
-            
             var firstLetter = letters[0];
-
-            LettersBoundingBoxes[0] = firstLetter.BoundingBox;
             int charsCount = firstLetter.Value.Length;
 
-            for (int i = 1; i < letters.Count; ++i)
+            if (Count == 1)
             {
-                var letter = letters[i];
-                LettersBoundingBoxes[i] = letter.BoundingBox;
-                charsCount += letter.Value.Length;
+                // Do nothing
+            }
+            else if (TextOrientation == TextOrientation.Other)
+            {
+                // We keep all bounding boxes
+                _lettersBoundingBoxes = new PdfRectangle[letters.Count];
+                _lettersBoundingBoxes[0] = firstLetter.BoundingBox;
+
+                for (int i = 1; i < letters.Count; ++i)
+                {
+                    var letter = letters[i];
+
+                    _lettersBoundingBoxes[i] = letter.BoundingBox;
+                    charsCount += letter.Value.Length;
+                }
+            }
+            else
+            {
+                // Only keep positions
+                _letterPositions = new float[letters.Count - 1];
+                double position = firstLetter.BoundingBox.Width;
+                _letterPositions[0] = (float)position;
+
+                for (int i = 1; i < letters.Count - 1; ++i)
+                {
+                    var letter = letters[i];
+
+                    position += letter.BoundingBox.Width;
+                    _letterPositions[i] = (float)position;
+                    charsCount += letter.Value.Length;
+                }
+
+                charsCount += letters[^1].Value.Length;
             }
 
             char[] chars = new char[charsCount];
@@ -161,45 +189,195 @@ namespace Caly.Pdf.Models
             return BoundingBox.Contains(new PdfPoint(x, y), true);
         }
 
+        public PdfRectangle GetLetterBoundingBox(int index)
+        {
+            if (Count == 1)
+            {
+                return BoundingBox;
+            }
+
+            if (_letterPositions is not null)
+            {
+                float startPosition = index == 0 ? 0 : _letterPositions[index - 1];
+                float endPosition = index == Count - 1 ? (float)BoundingBox.Width : _letterPositions[index];
+
+                switch (TextOrientation)
+                {
+                    case TextOrientation.Horizontal:
+                        {
+                            double startX = BoundingBox.BottomLeft.X + startPosition;
+                            double endX = BoundingBox.BottomLeft.X + endPosition;
+                            double startY = BoundingBox.BottomLeft.Y;
+                            double endY = BoundingBox.TopLeft.Y;
+                            return new PdfRectangle(startX, startY, endX, endY);
+                        }
+
+                    case TextOrientation.Rotate180:
+                        {
+                            double startX = BoundingBox.BottomLeft.X - startPosition;
+                            double endX = BoundingBox.BottomLeft.X - endPosition;
+                            double startY = BoundingBox.BottomLeft.Y;
+                            double endY = BoundingBox.TopLeft.Y;
+                            return new PdfRectangle(startX, startY, endX, endY);
+                        }
+
+                    case TextOrientation.Rotate270:
+                        {
+                            double l = BoundingBox.BottomLeft.Y + startPosition;
+                            double r = BoundingBox.BottomLeft.Y + endPosition;
+                            double b = BoundingBox.TopLeft.X;
+                            double t = BoundingBox.BottomRight.X;
+                            return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
+                                new PdfPoint(t, l), new PdfPoint(t, r));
+                        }
+
+                    case TextOrientation.Rotate90:
+                        {
+                            double l = BoundingBox.BottomLeft.Y - startPosition;
+                            double r = BoundingBox.BottomLeft.Y - endPosition;
+                            double b = BoundingBox.TopLeft.X;
+                            double t = BoundingBox.BottomRight.X;
+                            return new PdfRectangle(new PdfPoint(b, l), new PdfPoint(b, r),
+                                new PdfPoint(t, l), new PdfPoint(t, r));
+                        }
+                }
+            }
+            
+            if (_lettersBoundingBoxes is not null)
+            {
+                return _lettersBoundingBoxes[index];
+            }
+
+            throw new Exception();
+        }
+
+        public double GetWithinLetterOffset(int index, double x, double y)
+        {
+            var point = new PdfPoint(x, y);
+
+            if (Count == 1)
+            {
+                return PdfPointExtensions.ProjectPointOnLineM(point, BoundingBox.BottomLeft, BoundingBox.BottomRight);
+            }
+
+            if (_letterPositions is not null)
+            {
+                double position = PdfPointExtensions.ProjectPointOnLineM(point, BoundingBox.BottomLeft, BoundingBox.BottomRight);
+                if (index == 0)
+                {
+                    return position;
+                }
+
+                return position - _letterPositions[index - 1];
+            }
+            
+            if (_lettersBoundingBoxes is not null)
+            {
+                var bbox = _lettersBoundingBoxes[index];
+                return PdfPointExtensions.ProjectPointOnLineM(point, bbox.BottomLeft, bbox.BottomRight);
+            }
+
+            return double.NaN;
+        }
+
         public int FindLetterIndexOver(double x, double y)
         {
-            if (LettersBoundingBoxes.Length == 0)
+            if (Count == 0)
             {
                 return -1;
             }
 
             var point = new PdfPoint(x, y);
-            for (int i = 0; i < LettersBoundingBoxes.Length; i++)
-            {
-                if (LettersBoundingBoxes[i].Contains(point, true))
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        public int FindNearestLetterIndex(double x, double y)
-        {
-            if (LettersBoundingBoxes.Length == 0)
+            if (!BoundingBox.Contains(point))
             {
                 return -1;
+            }
+
+            if (Count == 1)
+            {
+                return 0;
+            }
+
+            if (_letterPositions is not null)
+            {
+                double position = PdfPointExtensions.ProjectPointOnLineM(point, BoundingBox.BottomLeft, BoundingBox.BottomRight);
+
+                for (int i = 0; i < Count - 1; ++i)
+                {
+                    if (position <= _letterPositions[i] / BoundingBox.Width)
+                    {
+                        return i;
+                    }
+                }
+
+                return Count - 1;
+            }
+            
+            if (_lettersBoundingBoxes is not null)
+            {
+                for (int i = 0; i < Count; ++i)
+                {
+                    if (_lettersBoundingBoxes[i].Contains(point, true))
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            return -1;
+        }
+        
+        public int FindNearestLetterIndex(double x, double y)
+        {
+            if (Count == 0)
+            {
+                return -1;
+            }
+
+            if (Count == 1)
+            {
+                return 0;
             }
 
             var point = new PdfPoint(x, y);
             double dist = double.MaxValue;
             int index = -1;
 
-            for (int i = 0; i < LettersBoundingBoxes.Length; i++)
+            if (_letterPositions is not null)
             {
-                var letter = LettersBoundingBoxes[i];
-                double localDist = Distances.Euclidean(point, letter.BottomRight);
+                double position = PdfPointExtensions.ProjectPointOnLineM(point, BoundingBox.BottomLeft, BoundingBox.BottomRight);
+                double localDist = 0;
+                for (int i = 0; i < Count - 1; ++i)
+                {
+                    var letter = _letterPositions[i] / BoundingBox.Width;
+                    localDist = Math.Abs(position - letter);
+                    if (localDist < dist)
+                    {
+                        dist = localDist;
+                        index = i;
+                    }
+                }
+
+                localDist = Math.Abs(position - 1);
                 if (localDist < dist)
                 {
-                    dist = localDist;
-                    index = i;
+                    index = Count - 1;
                 }
             }
+            else if (_lettersBoundingBoxes is not null)
+            {
+                for (int i = 0; i < Count; ++i)
+                {
+                    var letter = _lettersBoundingBoxes[i];
+                    double localDist = Distances.Euclidean(point, letter.BottomRight);
+                    if (localDist < dist)
+                    {
+                        dist = localDist;
+                        index = i;
+                    }
+                }
+            }
+
             return index;
         }
 
