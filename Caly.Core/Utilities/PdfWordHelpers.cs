@@ -55,14 +55,14 @@ namespace Caly.Core.Utilities
 
             if (length == 1)
             {
-                return GetGeometry(word.LettersBoundingBoxes[startIndex], true);
+                return GetGeometry(word.GetLetterBoundingBox(startIndex), true);
             }
 
             Span<PdfRectangle> rects = length <= 128 ? stackalloc PdfRectangle[length] : new PdfRectangle[length];
 
             for (int l = startIndex; l <= endIndex; ++l)
             {
-                rects[l - startIndex] = word.LettersBoundingBoxes[l];
+                rects[l - startIndex] = word.GetLetterBoundingBox(l);
             }
 
             PdfRectangle bbox = word.TextOrientation switch
