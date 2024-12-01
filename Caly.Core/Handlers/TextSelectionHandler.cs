@@ -32,6 +32,7 @@ using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
+using Caly.Pdf;
 using Caly.Pdf.Models;
 using UglyToad.PdfPig.Actions;
 using UglyToad.PdfPig.Core;
