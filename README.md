@@ -5,7 +5,7 @@
 > [!IMPORTANT]
 > The development is currently in alpha.
 
-![caly preview](https://github.com/user-attachments/assets/985c9271-2b0e-4cc9-a5d4-15fd061875e0)
+https://github.com/user-attachments/assets/2c577270-3bc8-4583-9fbe-e37228bb9ce4
 
 ### Cross-Platform Compatibility
 
@@ -25,6 +25,8 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 * **Rotate pages:** Rotate all or single pages of the document.
 * **Minimalist UI:** Enjoy a clean and distraction-free reading experience.
 
+![caly preview](https://github.com/user-attachments/assets/985c9271-2b0e-4cc9-a5d4-15fd061875e0)
+
 ## Usage
 
 1. Open the application and click on the "+" (New Tab) button to open a new Pdf document. You can also drag and drop your document or set Caly Pdf Reader as your default reader application.
@@ -37,6 +39,7 @@ As of now, only the Windows, Linux and Android versions have been tested. Androi
 8. To navigate through bookmarks, click on the "Bookmarks" button in the left menu.
 9. To zoom in and out of your document, either use the scroll wheel while pressing `Ctrl`, or use the "Zoom" buttons in the top menu.
 10. To rotate pages, either right-click and select one of the rotate options, or use the "Rotate" buttons in the top menu.
+
 ## Why Caly Pdf Reader?
 
 * **Open Source:** The source code is freely available on GitHub, allowing for community contributions and customization.
