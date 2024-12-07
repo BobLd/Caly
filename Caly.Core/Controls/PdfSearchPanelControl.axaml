@@ -41,28 +41,11 @@
                                IsVisible="{Binding SearchStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                Text="{Binding SearchStatus}" />
 
-					<TreeView DockPanel.Dock="Bottom"
-                              IsVisible="{Binding !!SearchResults.Count}"
-                              ItemsSource="{Binding SearchResults}"
-                              SelectedItem="{Binding SelectedTextSearchResult, Mode=OneWayToSource}">
-						<TreeView.ItemTemplate>
-							<TreeDataTemplate ItemsSource="{Binding Nodes}">
-								<Border HorizontalAlignment="Left"
-                                        BorderBrush="Gray" BorderThickness="1"
-                                        CornerRadius="5" Padding="15 3">
-
-									<TextBlock VerticalAlignment="Center"
-                                               HorizontalAlignment="Center"
-                                               Margin="5,0">
-										<TextBlock Text="{Binding PageNumber}"/>
-										<Run Text="/"/>
-										<TextBlock Text="{Binding WordIndex}"/>
-									</TextBlock>
-
-								</Border>
-							</TreeDataTemplate>
-						</TreeView.ItemTemplate>
-					</TreeView>
+                    <TreeDataGrid DockPanel.Dock="Bottom"
+                                  IsVisible="{Binding !!SearchResults.Count}"
+                                  Source="{Binding SearchResultsSource}"
+                                  ShowColumnHeaders="False"
+                                  CanUserSortColumns="False"/>
 				</DockPanel>
 
 			</ControlTemplate>

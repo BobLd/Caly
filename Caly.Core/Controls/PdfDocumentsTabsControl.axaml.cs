@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -38,32 +37,6 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
     public PdfDocumentsTabsControl()
     {
         InitializeComponent();
-    }
-
-    private void TreeView_SizeChanged(object? sender, SizeChangedEventArgs e)
-    {
-        if (!e.WidthChanged || sender is not TreeView treeView)
-        {
-            return;
-        }
-
-        double width = treeView.Bounds.Width;
-
-        foreach (var control in treeView.GetRealizedContainers().OfType<TreeViewItem>())
-        {
-            var stackPanel = control.GetVisualChildren().OfType<StackPanel>().FirstOrDefault();
-            if (stackPanel is null)
-            {
-                continue;
-            }
-
-            stackPanel.SetCurrentValue(WidthProperty, width);
-
-            foreach (TextBlock textBlock in stackPanel.GetVisualDescendants().OfType<TextBlock>())
-            {
-                textBlock.InvalidateMeasure();
-            }
-        }
     }
 
     #region Resize SplitView.Pane

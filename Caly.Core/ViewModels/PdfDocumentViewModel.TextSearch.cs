@@ -19,6 +19,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using Caly.Core.Utilities;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -46,6 +47,7 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private string? _textSearch;
 
         [ObservableProperty] private ObservableCollection<TextSearchResultViewModel> _searchResults = [];
+        [ObservableProperty] private HierarchicalTreeDataGridSource<TextSearchResultViewModel> _searchResultsSource;
 
         [ObservableProperty] private TextSearchResultViewModel? _selectedTextSearchResult;
 
@@ -231,6 +233,16 @@ namespace Caly.Core.ViewModels
                 System.Diagnostics.Debug.Write(e.ToString());
                 Exception = new ExceptionViewModel(e);
             }
+        }
+
+        private void TextSearchSelectionChanged(object? sender, Avalonia.Controls.Selection.TreeSelectionModelSelectionChangedEventArgs<TextSearchResultViewModel> e)
+        {
+            if (e.SelectedItems.Count == 0)
+            {
+                return;
+            }
+
+            SelectedTextSearchResult = e.SelectedItems[0];
         }
     }
 }

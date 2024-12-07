@@ -41,8 +41,8 @@
                 -->
 			</FluentTheme.Palettes>
 		</FluentTheme>
-
 		<tabalonia:CustomTheme/>
+        <StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
 
 		<StyleInclude Source="avares://Caly.Core/Assets/Icons.axaml"/>
         <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml"/>
