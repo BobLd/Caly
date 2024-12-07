@@ -21,7 +21,6 @@ using System.Text;
 using Caly.Core.Services.Interfaces;
 using Vanara.InteropServices;
 using Vanara.PInvoke;
-using static SkiaSharp.HarfBuzz.SKShaper;
 using static Vanara.PInvoke.WinSpool;
 
 namespace Caly.Core.Services
@@ -77,8 +76,8 @@ namespace Caly.Core.Services
                 {
                     EndDocPrinter(hprnt);
                 }
- 
 
+                
                 if (!WinSpool.AddJob(hprnt, out string? path, out uint id))
                 {
                     throw new Exception();
