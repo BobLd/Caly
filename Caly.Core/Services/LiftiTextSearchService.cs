@@ -75,6 +75,35 @@ namespace Caly.Core.Services
                                 return textLayer.Select(w => w.Value.GetString());
                             }, ct);
                         }, tokenizationOptions: builder => builder.WithFactory(o => new CalyIndexTokenizer(o)))
+                        .WithField("a", async (p, ct) =>
+                        {
+                            return await Task.Run(async () =>
+                            {
+                                var textLayer = p.PdfTextLayer;
+                                if (textLayer is null)
+                                {
+                                    await p.SetPageTextLayer(ct);
+                                    textLayer = p.PdfTextLayer;
+                                }
+
+                                if (textLayer is null)
+                                {
+                                    ct.ThrowIfCancellationRequested();
+                                    throw new NullReferenceException("Cannot index search on a null PdfTextLayer.");
+                                }
+
+                                if (textLayer.Annotations.Count == 0)
+                                {
+                                    return Array.Empty<string>();
+                                }
+                                
+                                // TODO - Index is not usable as is... need to find a way to find the annot back
+
+                                return textLayer.Annotations
+                                    .Where(a => !string.IsNullOrEmpty(a.Content))
+                                    .Select(a => a.Content!);
+                            }, ct);
+                        })
                 ).Build();
         }
 
@@ -114,21 +143,10 @@ namespace Caly.Core.Services
             
             if (string.IsNullOrEmpty(text))
             {
-                pdfDocument.SetSearchStatus("");
                 return [];
             }
 
-            IQuery? query;
-            try
-            {
-                query = _index.QueryParser.Parse(_index.FieldLookup, text, _index);
-            }
-            catch (QueryParserException e)
-            {
-                System.Diagnostics.Debug.WriteLine(e);
-                pdfDocument.SetSearchStatus(e.Message);
-                return [];
-            }
+            IQuery query = _index.QueryParser.Parse(_index.FieldLookup, text, _index);
 
             return await Task.Run(() =>
             {
@@ -140,14 +158,26 @@ namespace Caly.Core.Services
             }, token);
         }
 
-        private static TextSearchResultViewModel ToViewModel(PdfDocumentViewModel pdfDocument, SearchResult<int> result,
-            CancellationToken token)
+        private static SearchResultItemType GetSearchResultItemType(string fieldName)
+        {
+            return fieldName switch
+            {
+                "w" => SearchResultItemType.Word,
+                "a" => SearchResultItemType.Annotation,
+                "Unspecified" => SearchResultItemType.Unspecified,
+                _ => throw new NotImplementedException($"Unknown field name '{fieldName}'.")
+            };
+        }
+
+        private static TextSearchResultViewModel ToViewModel(PdfDocumentViewModel pdfDocument, SearchResult<int> result, CancellationToken token)
         {
             var children = new ObservableCollection<TextSearchResultViewModel>();
 
             foreach (var m in result.FieldMatches)
             {
                 token.ThrowIfCancellationRequested();
+
+                var itemType = GetSearchResultItemType(m.FoundIn);
 
                 foreach (TokenLocation l in m.Locations)
                 {
@@ -156,9 +186,12 @@ namespace Caly.Core.Services
                     var vm = new TextSearchResultViewModel()
                     {
                         PageNumber = result.Key,
+                        ItemType = itemType,
                         WordIndex = l.TokenIndex,
                         Score = m.Score,
-                        Word = pdfDocument.Pages[result.Key - 1].PdfTextLayer?[l.TokenIndex]
+                        Word = itemType == SearchResultItemType.Word
+                            ? pdfDocument.Pages[result.Key - 1].PdfTextLayer?[l.TokenIndex]
+                            : null
                     };
                     children.Add(vm);
                 }

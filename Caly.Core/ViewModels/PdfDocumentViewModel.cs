@@ -41,7 +41,14 @@ namespace Caly.Core.ViewModels
         private readonly IPdfService _pdfService;
         private readonly ISettingsService _settingsService;
 
+        private readonly ChannelWriter<PdfPageViewModel>? _channelWriter;
+        private readonly ChannelReader<PdfPageViewModel>? _channelReader;
+
         private readonly CancellationTokenSource _cts = new();
+
+        private Task? _processPagesInfoQueueTask;
+
+        internal string? LocalPath { get; private set; }
 
         [ObservableProperty] private ObservableCollection<PdfPageViewModel> _pages = [];
 
@@ -89,30 +96,9 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private string? _fileSize;
 
         [ObservableProperty] private ITextSelectionHandler _textSelectionHandler;
-
-        [ObservableProperty] private ObservableCollection<TextSearchResultViewModel> _searchResults = [];
-
-        [ObservableProperty] private string? _textSearch;
-
-        [ObservableProperty] private TextSearchResultViewModel? _selectedTextSearchResult;
-
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(BuildingIndex))]
-        private int _buildIndexProgress;
-
-        public bool BuildingIndex => BuildIndexProgress != 0 && BuildIndexProgress != 100;
-
-        private readonly ChannelWriter<PdfPageViewModel>? _channelWriter;
-        private readonly ChannelReader<PdfPageViewModel>? _channelReader;
-
+        
         private readonly Lazy<Task> _loadPagesTask;
         public Task LoadPagesTask => _loadPagesTask.Value;
-
-        private readonly Lazy<Task> _buildSearchIndex;
-
-        internal string? LocalPath { get; private set; }
-
-        private Task? _processPagesInfoQueueTask;
 
         partial void OnPaneSizeChanged(double oldValue, double newValue)
         {
@@ -195,7 +181,7 @@ namespace Caly.Core.ViewModels
                                 {
                                     var searchResult = e.NewItems.OfType<TextSearchResultViewModel>().ToArray();
 
-                                    var first = searchResult.FirstOrDefault();
+                                    var first = e.NewItems.OfType<TextSearchResultViewModel>().FirstOrDefault();
 
                                     if (first is null || first.PageNumber <= 0)
                                     {
@@ -237,9 +223,9 @@ namespace Caly.Core.ViewModels
         /// <returns>The number of pages in the opened document. <c>0</c> if the document was not opened.</returns>
         public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken token)
         {
-            // TODO - Combine token _cts.Token and token
+            var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, token);
 
-            int pageCount = await _pdfService.OpenDocument(storageFile, password, token);
+            int pageCount = await _pdfService.OpenDocument(storageFile, password, combinedCts.Token);
 
             if (pageCount == 0)
             {
@@ -249,6 +235,7 @@ namespace Caly.Core.ViewModels
             PageCount = _pdfService.NumberOfPages;
             FileName = _pdfService.FileName;
             LocalPath = _pdfService.LocalPath;
+
             if (_pdfService.FileSize.HasValue)
             {
                 FileSize = Helpers.FormatSizeBytes(_pdfService.FileSize.Value);
@@ -259,7 +246,7 @@ namespace Caly.Core.ViewModels
             if (PageCount > 1)
             {
                 // Fire and forget
-                _processPagesInfoQueueTask = Task.Run(() => ProcessPagesInfoQueue(_cts.Token));
+                _processPagesInfoQueueTask = Task.Run(() => ProcessPagesInfoQueue(combinedCts.Token), combinedCts.Token);
             }
 
             return pageCount;
