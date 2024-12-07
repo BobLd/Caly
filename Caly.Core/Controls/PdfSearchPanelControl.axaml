@@ -33,7 +33,9 @@
                                  Value="{Binding BuildIndexProgress}"
                                  VerticalAlignment="Bottom"
                                  HorizontalAlignment="Stretch"
-                                 Background="Transparent"/>
+                                 Background="Transparent">
+						<ToolTip.Tip>Indexing...</ToolTip.Tip>
+                    </ProgressBar>
 
 					<TextBlock DockPanel.Dock="Top"
                                IsVisible="{Binding SearchStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
