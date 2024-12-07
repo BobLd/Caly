@@ -33,11 +33,6 @@ namespace Caly.Core.Handlers.Interfaces
         void OnPointerReleased(PointerReleasedEventArgs e);
         
         /// <summary>
-        /// Clear current results and set the new ones.
-        /// </summary>
-        void SetTextSearchResults(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults);
-
-        /// <summary>
         /// Add results to existing ones.
         /// </summary>
         void AddTextSearchResults(PdfDocumentViewModel documentViewModel, IReadOnlyCollection<TextSearchResultViewModel> searchResults);

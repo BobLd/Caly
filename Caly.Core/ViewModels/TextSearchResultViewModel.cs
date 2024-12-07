@@ -23,10 +23,18 @@ namespace Caly.Core.ViewModels
     [DebuggerDisplay("Page {PageNumber} Word index: {WordIndex} ({Score}), Children {Nodes?.Count}")]
     public sealed partial class TextSearchResultViewModel : ViewModelBase
     {
+        [ObservableProperty] private SearchResultItemType _itemType;
         [ObservableProperty] private int _pageNumber;
         [ObservableProperty] private int? _wordIndex;
         [ObservableProperty] private PdfWord? _word;
         [ObservableProperty] private double? _score;
         [ObservableProperty] private ObservableCollection<TextSearchResultViewModel>? _nodes;
+    }
+
+    public enum SearchResultItemType
+    {
+        Unspecified = 0,
+        Word = 1,
+        Annotation = 2,
     }
 }
