@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -566,35 +565,7 @@ namespace Caly.Core.Handlers
                 Dispatcher.UIThread.Post(documentViewModel.Pages[p - 1].FlagSelectionChanged);
             }
         }
-
-        public void SetTextSearchResults(PdfDocumentViewModel documentViewModel,
-            IReadOnlyCollection<TextSearchResultViewModel> searchResults)
-        {
-            var currentPages = _searchResults.Keys.ToList();
-            _searchResults.Clear();
-
-            if (searchResults.Count > 0)
-            {
-                foreach (var result in searchResults)
-                {
-                    System.Diagnostics.Debug.Assert(result.Nodes is not null);
-
-                    _searchResults[result.PageNumber] = result.Nodes
-                        .Where(x => x.Word is not null)
-                        .Select(x => x.Word!)
-                        .ToArray();
-
-                    Dispatcher.UIThread.Post(documentViewModel.Pages[result.PageNumber - 1].FlagSelectionChanged);
-                    currentPages.Remove(result.PageNumber);
-                }
-            }
-
-            foreach (int p in currentPages)
-            {
-                Dispatcher.UIThread.Post(documentViewModel.Pages[p - 1].FlagSelectionChanged);
-            }
-        }
-
+        
         public void AddTextSearchResults(PdfDocumentViewModel documentViewModel,
             IReadOnlyCollection<TextSearchResultViewModel> searchResults)
         {
@@ -605,7 +576,7 @@ namespace Caly.Core.Handlers
                     System.Diagnostics.Debug.Assert(result.Nodes is not null);
 
                     _searchResults[result.PageNumber] = result.Nodes
-                        .Where(x => x.Word is not null)
+                        .Where(x => x is { ItemType: SearchResultItemType.Word, Word: not null })
                         .Select(x => x.Word!)
                         .ToArray();
 
