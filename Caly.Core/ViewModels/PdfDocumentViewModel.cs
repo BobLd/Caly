@@ -23,7 +23,10 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Collections;
+using Avalonia.Controls;
+using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Caly.Core.Handlers;
 using Caly.Core.Handlers.Interfaces;
 using Caly.Core.Models;
@@ -215,6 +218,22 @@ namespace Caly.Core.ViewModels
                         Exception = new ExceptionViewModel(ex);
                     }
                 });
+
+            SearchResultsSource = new HierarchicalTreeDataGridSource<TextSearchResultViewModel>(SearchResults)
+            {
+                Columns =
+                {
+                    new HierarchicalExpanderColumn<TextSearchResultViewModel>(
+                        new TextColumn<TextSearchResultViewModel, string>(null, x => x.ToString()),
+                        x => x.Nodes)
+                }
+            };
+            
+            Dispatcher.UIThread.Post(() =>
+            {
+                SearchResultsSource.RowSelection!.SingleSelect = true;
+                SearchResultsSource.RowSelection.SelectionChanged += TextSearchSelectionChanged;
+            });
         }
 
         /// <summary>

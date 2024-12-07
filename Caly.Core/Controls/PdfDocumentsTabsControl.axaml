@@ -208,18 +208,12 @@
 													<ToolTip.Tip>Bookmarks</ToolTip.Tip>
 												</PathIcon>
 											</TabItem.Header>
-											<TreeView ItemsSource="{Binding Bookmarks}"
-													  SelectedItem="{Binding SelectedBookmark, Mode=OneWayToSource}"
-													  SelectionMode="Toggle"
-													  SizeChanged="TreeView_SizeChanged">
-												<TreeView.ItemTemplate>
-													<TreeDataTemplate ItemsSource="{Binding Nodes}">
-														<TextBlock xml:space="preserve"
-																   Text="{Binding Title}"
-																   TextWrapping="WrapWithOverflow" />
-													</TreeDataTemplate>
-												</TreeView.ItemTemplate>
-											</TreeView>
+
+                                            <TreeDataGrid Source="{Binding BookmarksSource}"
+                                                          IsVisible="{Binding !!Bookmarks.Count}"
+                                                          ShowColumnHeaders="False"
+                                                          CanUserSortColumns="False"
+                                                          HorizontalAlignment="Stretch"/>
 										</TabItem>
 
 										<!-- Search tab -->

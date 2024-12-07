@@ -29,6 +29,15 @@ namespace Caly.Core.ViewModels
         [ObservableProperty] private PdfWord? _word;
         [ObservableProperty] private double? _score;
         [ObservableProperty] private ObservableCollection<TextSearchResultViewModel>? _nodes;
+
+        public override string ToString()
+        {
+            if (Nodes is null)
+            {
+                return $"{WordIndex} [{ItemType}]";
+            }
+            return $"{PageNumber} ({Nodes.Count})";
+        }
     }
 
     public enum SearchResultItemType
