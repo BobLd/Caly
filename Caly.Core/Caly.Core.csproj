@@ -31,6 +31,7 @@
 		<PackageReference Include="SkiaSharp" Version="2.88.9" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
+		<PackageReference Include="Vanara.PInvoke.Printing" Version="4.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

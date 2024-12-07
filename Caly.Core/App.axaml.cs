@@ -15,6 +15,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -65,6 +66,14 @@ namespace Caly.Core
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
+                WindowsPrintingService test = new WindowsPrintingService();
+
+                var printer = test.GetDefaultPrinterName();
+
+                var printers = test.EnumeratePrinters().ToArray();
+
+                test.Print("Test page.");
+
                 desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
                 desktop.MainWindow = new MainWindow
                 {
