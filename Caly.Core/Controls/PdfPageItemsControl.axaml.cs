@@ -180,11 +180,11 @@ public sealed class PdfPageItemsControl : ItemsControl
     {
         base.PrepareContainerForItemOverride(container, item, index);
 
-        if (_isTabDragging || _isSettingPageVisibility ||
+        if (_isTabDragging ||
             container is not PdfPageItem cp ||
             item is not PdfPageViewModel vm)
         {
-            System.Diagnostics.Debug.WriteLine($"Skipping LoadPage() for page {index + 1} (IsSettingPageVisibility: {_isSettingPageVisibility}, IsTabDragging: {_isTabDragging})");
+            System.Diagnostics.Debug.WriteLine($"Skipping LoadPage() for page {index + 1} (IsTabDragging: {_isTabDragging})");
             return;
         }
 
@@ -391,18 +391,18 @@ public sealed class PdfPageItemsControl : ItemsControl
 
     private void ItemsPanelRoot_DataContextChanged(object? sender, EventArgs e)
     {
-        void ExecuteScrollWhenLayoutUpdated(object? sender, EventArgs e)
-        {
-            LayoutUpdated -= ExecuteScrollWhenLayoutUpdated;
-            EnsureScrollBars();
-
-            // Ensure the pages visibility is set when OnApplyTemplate()
-            // is not called, i.e. when a new document is opened but the
-            // page has exactly the same dimension of the visible page
-            SetPagesVisibility();
-        }
-
         LayoutUpdated += ExecuteScrollWhenLayoutUpdated;
+    }
+
+    private void ExecuteScrollWhenLayoutUpdated(object? sender, EventArgs e)
+    {
+        LayoutUpdated -= ExecuteScrollWhenLayoutUpdated;
+        EnsureScrollBars();
+
+        // Ensure the pages visibility is set when OnApplyTemplate()
+        // is not called, i.e. when a new document is opened but the
+        // page has exactly the same dimension of the visible page
+        SetPagesVisibility();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
