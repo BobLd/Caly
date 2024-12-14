@@ -7,14 +7,16 @@
              xmlns:controls1="clr-namespace:Tabalonia.Controls;assembly=Tabalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Caly.Core.Controls.PdfDocumentsTabsControl"
-             x:DataType="vm:MainViewModel">
-	<controls1:TabsControl Background="Transparent"
-						 Padding="0"
-						 Margin="0"
-						 AddItemCommand="{Binding OpenFileCommand}"
-						 CloseItemCommand="{Binding CloseTabCommand}"
-						 ItemsSource="{Binding PdfDocuments}"
-						 SelectedIndex="{Binding SelectedDocumentIndex}">
+             x:DataType="vm:MainViewModel"
+             SizeChanged="OnSizeChanged">
+
+    <controls1:TabsControl Background="Transparent"
+                           Padding="0"
+                           Margin="0"
+                           AddItemCommand="{Binding OpenFileCommand}"
+                           CloseItemCommand="{Binding CloseTabCommand}"
+                           ItemsSource="{Binding PdfDocuments}"
+                           SelectedIndex="{Binding SelectedDocumentIndex}">
 		<TabControl.ItemTemplate>
 			<DataTemplate>
 				<TextBlock DockPanel.Dock="Left"
