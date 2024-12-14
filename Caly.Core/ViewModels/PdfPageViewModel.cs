@@ -81,7 +81,7 @@ namespace Caly.Core.ViewModels
 
         public bool IsPageVisible => VisibleArea.HasValue;
 
-        public int ThumbnailWidth => (int)(Width / Height * ThumbnailHeight);
+        public int ThumbnailWidth => Math.Max(1, (int)(Width / Height * ThumbnailHeight));
 
         public int ThumbnailHeight => 135;
 
