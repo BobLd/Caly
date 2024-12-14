@@ -625,17 +625,19 @@ public sealed class PdfPageItemsControl : ItemsControl
 
         indexMaxOverlap++; // Switch to base 1 indexing
 
-        if (indexMaxOverlap != -1 && SelectedPageIndex != indexMaxOverlap)
+        if (indexMaxOverlap == 0 || SelectedPageIndex == indexMaxOverlap)
         {
-            try
-            {
-                _isSettingPageVisibility = true;
-                SetCurrentValue(SelectedPageIndexProperty, indexMaxOverlap);
-            }
-            finally
-            {
-                _isSettingPageVisibility = false;
-            }
+            return;
+        }
+
+        try
+        {
+            _isSettingPageVisibility = true;
+            SetCurrentValue(SelectedPageIndexProperty, indexMaxOverlap);
+        }
+        finally
+        {
+            _isSettingPageVisibility = false;
         }
     }
 
