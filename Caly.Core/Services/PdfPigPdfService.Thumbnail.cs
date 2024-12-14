@@ -103,11 +103,17 @@ namespace Caly.Core.Services
 
             System.Diagnostics.Debug.WriteLine($"[RENDER] [THUMBNAIL] End process {renderRequest.Page.PageNumber}");
         }
-        
+
         private async Task SetThumbnail(PdfPageViewModel vm, SKPicture picture)
         {
             int tWidth = (int)(vm.ThumbnailWidth / 1.5);
             int tHeight = (int)(vm.ThumbnailHeight / 1.5);
+
+            if (tWidth <= 1 || tHeight <= 1)
+            {
+                tWidth = vm.ThumbnailWidth;
+                tHeight = vm.ThumbnailHeight;
+            }
 
             SKMatrix scale = SKMatrix.CreateScale(tWidth / (float)vm.Width, tHeight / (float)vm.Height);
 
@@ -117,18 +123,18 @@ namespace Caly.Core.Services
                 canvas.Clear(SKColors.White);
                 canvas.DrawPicture(picture, ref scale);
 
-                using (SKData d = bitmap.Encode(SKEncodedImageFormat.Jpeg, 100))
+                using (SKData d = bitmap.Encode(SKEncodedImageFormat.Jpeg, 50))
                 await using (Stream stream = d.AsStream())
                 {
-                    vm.Thumbnail = Bitmap.DecodeToWidth(stream, vm.ThumbnailWidth, BitmapInterpolationMode.LowQuality);
+                    vm.Thumbnail = Bitmap.DecodeToWidth(stream, vm.ThumbnailWidth,
+                        BitmapInterpolationMode.LowQuality);
 
                     if (!_bitmaps.TryAdd(vm.PageNumber, vm))
                     {
-                     
+
                     }
                 }
             }
-
             System.Diagnostics.Debug.WriteLine($"[RENDER] Thumbnail Count {_bitmaps.Count}");
         }
 
