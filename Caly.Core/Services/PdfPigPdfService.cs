@@ -187,9 +187,12 @@ namespace Caly.Core.Services
                 }
             }
             catch (OperationCanceledException)
+            { }
+            catch (Exception e)
             {
+                Debug.WriteExceptionToFile(e);
+                System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] Error on {renderRequest.Page.PageNumber}: {e}");
             }
-
             System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] End process {renderRequest.Page.PageNumber}");
         }
 

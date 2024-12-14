@@ -19,7 +19,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Caly.Core.Utilities;
 using Caly.Core.ViewModels;
+using Caly.Pdf.Models;
 using SkiaSharp;
+using SkiaSharp.HarfBuzz;
 
 namespace Caly.Core.Services
 {
@@ -175,9 +177,8 @@ namespace Caly.Core.Services
             }
             catch (Exception e)
             {
-                // We just ignore for the moment
                 Debug.WriteExceptionToFile(e);
-                return null;
+                pic = GetErrorPicture(pageNumber, e, cancellationToken);
             }
             finally
             {
@@ -188,6 +189,57 @@ namespace Caly.Core.Services
             }
 
             return pic is null ? null : RefCountable.Create(pic);
+        }
+
+        private SKPicture? GetErrorPicture(int pageNumber, Exception ex, CancellationToken cancellationToken)
+        {
+            // Try get page size
+            PdfPageInformation info;
+
+            try
+            {
+                info = _document!.GetPage<PdfPageInformation>(pageNumber);
+            }
+            catch (Exception e)
+            {
+                // TODO
+                info = new PdfPageInformation()
+                {
+                    Width = 100,
+                    Height = 100,
+                    PageNumber = pageNumber
+                };
+            }
+
+            float width = (float)info.Width;
+            float height = (float)info.Height;
+
+            using (var recorder = new SKPictureRecorder())
+            using (var canvas = recorder.BeginRecording(SKRect.Create(width, height)))
+            {
+//#if DEBUG
+                float size = 9;
+                using (var drawTypeface = SKTypeface.CreateDefault())
+                using (var skFont = drawTypeface.ToFont(size))
+                using (var fontPaint = new SKPaint(skFont))
+                {
+                    fontPaint.Color = SKColors.Red;
+                    fontPaint.IsAntialias = true;
+
+                    float lineY = size + 1;
+                    foreach (var textLine in ex.ToString().Split('\n'))
+                    {
+                        canvas.DrawShapedText(textLine, new SKPoint(0, lineY), fontPaint);
+                        lineY += size;
+                    }
+                }
+//#endif
+
+                canvas.Flush();
+
+                return recorder.EndRecording();
+            }
+
         }
     }
 }
