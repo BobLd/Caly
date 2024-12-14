@@ -42,10 +42,12 @@ namespace Caly.Pdf.Models
 
         public TextOrientation TextOrientation { get; }
 
+        private readonly PdfRectangle _boundingBox;
+
         /// <summary>
         /// The rectangle completely containing the block.
         /// </summary>
-        public PdfRectangle BoundingBox { get; }
+        public ref readonly PdfRectangle BoundingBox => ref _boundingBox;
 
         /// <summary>
         /// Word index in the page.
@@ -153,23 +155,23 @@ namespace Caly.Pdf.Models
             switch (TextOrientation)
             {
                 case TextOrientation.Horizontal:
-                    BoundingBox = GetBoundingBoxH(letters);
+                    _boundingBox = GetBoundingBoxH(letters);
                     break;
 
                 case TextOrientation.Rotate180:
-                    BoundingBox = GetBoundingBox180(letters);
+                    _boundingBox = GetBoundingBox180(letters);
                     break;
 
                 case TextOrientation.Rotate90:
-                    BoundingBox = GetBoundingBox90(letters);
+                    _boundingBox = GetBoundingBox90(letters);
                     break;
 
                 case TextOrientation.Rotate270:
-                    BoundingBox = GetBoundingBox270(letters);
+                    _boundingBox = GetBoundingBox270(letters);
                     break;
 
                 default: // Other
-                    BoundingBox = GetBoundingBoxOther(letters);
+                    _boundingBox = GetBoundingBoxOther(letters);
                     break;
             }
         }

@@ -20,7 +20,7 @@ namespace Caly.Pdf.Models
 {
     public interface IPdfTextElement
     {
-        public PdfRectangle BoundingBox { get; }
+        public ref readonly PdfRectangle BoundingBox { get; }
 
         public TextOrientation TextOrientation { get; }
     }

@@ -20,14 +20,17 @@ namespace Caly.Pdf.Models
 {
     public sealed class PdfLetter : IPdfTextElement
     {
-        public ReadOnlyMemory<char> Value { get; }
+        private readonly ReadOnlyMemory<char> _value;
+        public ref readonly ReadOnlyMemory<char> Value => ref _value;
 
         public TextOrientation TextOrientation { get; }
+
+        private readonly PdfRectangle _boundingBox;
 
         /// <summary>
         /// The rectangle completely containing the block.
         /// </summary>
-        public PdfRectangle BoundingBox { get; }
+        public ref readonly PdfRectangle BoundingBox => ref _boundingBox;
 
         /// <summary>
         /// The placement position of the character in PDF space (the start point of the baseline).
@@ -51,8 +54,8 @@ namespace Caly.Pdf.Models
 
         public PdfLetter(ReadOnlyMemory<char> value, PdfRectangle boundingBox, double pointSize, int textSequence)
         {
-            Value = value;
-            BoundingBox = boundingBox;
+            _value = value;
+            _boundingBox = boundingBox;
             PointSize = pointSize;
             TextSequence = textSequence;
 

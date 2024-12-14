@@ -27,10 +27,11 @@ namespace Caly.Pdf.Models
 
         public TextOrientation TextOrientation { get; }
 
+        private readonly PdfRectangle _boundingBox;
         /// <summary>
         /// The rectangle completely containing the block.
         /// </summary>
-        public PdfRectangle BoundingBox { get; }
+        public ref readonly PdfRectangle BoundingBox => ref _boundingBox;
 
         public int IndexInPage { get; internal set; }
 
@@ -51,7 +52,7 @@ namespace Caly.Pdf.Models
             TextLines = textLines;
             TextOrientation = PdfTextLayerHelper.GetTextOrientation(textLines);
 
-            BoundingBox = TextOrientation switch
+            _boundingBox = TextOrientation switch
             {
                 TextOrientation.Horizontal => GetBoundingBoxH(textLines),
                 TextOrientation.Rotate180 => GetBoundingBox180(textLines),
