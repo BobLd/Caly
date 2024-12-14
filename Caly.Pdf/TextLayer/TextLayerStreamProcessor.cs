@@ -15,6 +15,7 @@
 
 using System.Runtime.InteropServices;
 using Caly.Pdf.Models;
+using RBush;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Annotations;
 using UglyToad.PdfPig.Content;
@@ -37,6 +38,8 @@ namespace Caly.Pdf.TextLayer
         /// Stores each letter as it is encountered in the content stream.
         /// </summary>
         private readonly List<PdfLetter> _letters = new();
+        private readonly RBush<PdfLetter> _tree = new RBush<PdfLetter>();
+
 
         private readonly double _pageWidth;
         private readonly double _pageHeight;
@@ -146,19 +149,14 @@ namespace Caly.Pdf.TextLayer
 
             // Check overlap
             double tolerance = transformedPdfBounds.Width / (unicode.Length == 0 ? 1 : unicode.Length) / 3.0;
-            double minX = transformedPdfBounds.BottomLeft.X - tolerance;
-            double maxX = transformedPdfBounds.BottomLeft.X + tolerance;
-            double minY = transformedPdfBounds.BottomLeft.Y - tolerance;
-            double maxY = transformedPdfBounds.BottomLeft.Y + tolerance;
+            
+            var result = _tree.Search(new Envelope(
+                transformedPdfBounds.BottomLeft.X - tolerance,
+                transformedPdfBounds.BottomLeft.Y - tolerance,
+                transformedPdfBounds.BottomLeft.X + tolerance,
+                transformedPdfBounds.BottomLeft.Y + tolerance));
 
-            var duplicates = _letters.Where(l => minX <= l.BoundingBox.BottomLeft.X &&
-                                                maxX >= l.BoundingBox.BottomLeft.X &&
-                                                minY <= l.BoundingBox.BottomLeft.Y &&
-                                                maxY >= l.BoundingBox.BottomLeft.Y); // do other checks?
-
-            var duplicatesOverlapping = duplicates.FirstOrDefault(l => l.Value.Span.SequenceEqual(unicode.AsSpan()));
-
-            if (duplicatesOverlapping is not null)
+            if (result.Count > 0 && result.Any(l => l.Value.Span.SequenceEqual(unicode.AsSpan())))
             {
                 return;
             }
@@ -168,6 +166,7 @@ namespace Caly.Pdf.TextLayer
                 pointSize,
                 TextSequence);
 
+            _tree.Insert(letter);
             _letters.Add(letter);
         }
 

@@ -13,12 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+using RBush;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 
 namespace Caly.Pdf.Models
 {
-    public sealed class PdfLetter : IPdfTextElement
+    public sealed class PdfLetter : IPdfTextElement, ISpatialData
     {
         public ReadOnlyMemory<char> Value { get; }
 
@@ -49,6 +50,9 @@ namespace Caly.Pdf.Models
         /// </summary>
         public int TextSequence { get; }
 
+        private readonly Envelope _envelope;
+        public ref readonly Envelope Envelope => ref _envelope;
+
         public PdfLetter(ReadOnlyMemory<char> value, PdfRectangle boundingBox, double pointSize, int textSequence)
         {
             Value = value;
@@ -57,6 +61,20 @@ namespace Caly.Pdf.Models
             TextSequence = textSequence;
 
             TextOrientation = GetTextOrientation();
+
+            //BoundingBox.Normalise()
+
+            var bottomLeft = BoundingBox.BottomLeft;
+            var bottomRight = BoundingBox.BottomRight;
+            var topLeft = BoundingBox.TopLeft;
+            var topRight = BoundingBox.TopRight;
+
+            var minX = Math.Min(Math.Min(bottomLeft.X, bottomRight.X), Math.Min(topLeft.X, topRight.X));
+            var minY = Math.Min(Math.Min(bottomLeft.Y, bottomRight.Y), Math.Min(topLeft.Y, topRight.Y));
+            var maxX = Math.Max(Math.Max(bottomLeft.X, bottomRight.X), Math.Max(topLeft.X, topRight.X));
+            var maxY = Math.Max(Math.Max(bottomLeft.Y, bottomRight.Y), Math.Max(topLeft.Y, topRight.Y));
+
+            _envelope = new Envelope(minX, minY, maxX, maxY);
         }
 
         private TextOrientation GetTextOrientation()
