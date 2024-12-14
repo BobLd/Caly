@@ -39,6 +39,25 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
         InitializeComponent();
     }
 
+    private SplitView? GetSplitView()
+    {
+        if (_splitView is null)
+        {
+            _splitView = this.FindDescendantOfType<SplitView>();
+            if (_splitView is null)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(_splitView.Name) || !_splitView.Name.Equals("PART_SplitView"))
+            {
+                throw new Exception("The found split view does not have the correct name.");
+            }
+        }
+
+        return _splitView;
+    }
+
     #region Resize SplitView.Pane
     private void Resize_OnPointerEntered(object? sender, PointerEventArgs e)
     {
@@ -57,27 +76,20 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
             return;
         }
 
-        if (_splitView is null)
-        {
-            _splitView = grid.FindAncestorOfType<SplitView>();
-            if (_splitView is null)
-            {
-                return;
-            }
+        SplitView? splitView = GetSplitView();
 
-            if (string.IsNullOrEmpty(_splitView.Name) || !_splitView.Name.Equals("PART_SplitView"))
-            {
-                throw new Exception("The found split view does not have the correct name.");
-            }
+        if (splitView is null)
+        {
+            return;
         }
 
-        if (!_splitView.IsPaneOpen)
+        if (!splitView.IsPaneOpen)
         {
             return;
         }
 
         _lastPoint = e.GetPosition(null);
-        _originalPaneLength = _splitView.OpenPaneLength;
+        _originalPaneLength = splitView.OpenPaneLength;
         e.Handled = true;
         e.PreventGestureRecognition();
     }
@@ -89,13 +101,15 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
             return;
         }
 
-        if (_splitView is null || !_splitView.IsPaneOpen)
+        SplitView? splitView = GetSplitView();
+
+        if (splitView is null || !splitView.IsPaneOpen)
         {
             return;
         }
 
         Point mouseMovement = (e.GetPosition(null) - _lastPoint).Value;
-        _splitView.OpenPaneLength = Math.Max(Math.Min(_originalPaneLength + mouseMovement.X, MaxPaneLength), MinPaneLength);
+        splitView.OpenPaneLength = Math.Max(Math.Min(_originalPaneLength + mouseMovement.X, MaxPaneLength), MinPaneLength);
     }
 
     private void Resize_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -146,6 +160,26 @@ public sealed partial class PdfDocumentsTabsControl : UserControl
                     vm.SelectedPageIndexString = string.Empty;
                 }
             }
+        }
+    }
+
+    private void OnSizeChanged(object? sender, SizeChangedEventArgs e)
+    {
+        if (!e.WidthChanged ||
+            sender is not PdfDocumentsTabsControl tabsControl ||
+            e.NewSize.Width > e.PreviousSize.Width)
+        {
+            return;
+        }
+
+        if (GetSplitView()?.DataContext is not PdfDocumentViewModel vm || !vm.IsPaneOpen)
+        {
+            return;
+        }
+        
+        if (tabsControl.Bounds.Width < vm.PaneSize * 2)
+        {
+            vm.IsPaneOpen = false;
         }
     }
 }
