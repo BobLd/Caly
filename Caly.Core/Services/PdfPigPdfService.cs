@@ -329,15 +329,19 @@ namespace Caly.Core.Services
         public async Task SetPageInformationAsync(PdfPageViewModel page, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
+            bool hasLock = false;
 
             try
             {
-                if (token.IsCancellationRequested || IsDisposed())
+                token.ThrowIfCancellationRequested();
+
+                if (IsDisposed())
                 {
                     return;
                 }
 
-                await _semaphore.WaitAsync(CancellationToken.None);
+                await _semaphore.WaitAsync(token);
+                hasLock = true;
 
                 if (IsDisposed())
                 {
@@ -359,37 +363,45 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !IsDisposed())
+                if (hasLock && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
+#if DEBUG
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"SetPageInformationAsync NO LOCK {page.PageNumber}");
+                }
+#endif
             }
         }
 
-        private async Task<PdfTextLayer?> GetTextLayerAsync(int pageNumber, CancellationToken cancellationToken)
+        private async Task<PdfTextLayer?> GetTextLayerAsync(int pageNumber, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
+            bool hasLock = false;
 
             try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (_document is null || IsDisposed())
-                {
-                    return null;
-                }
-
-                await _semaphore.WaitAsync(CancellationToken.None);
+                token.ThrowIfCancellationRequested();
 
                 if (IsDisposed())
                 {
                     return null;
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
+                await _semaphore.WaitAsync(token);
+                hasLock = true;
+
+                if (IsDisposed())
+                {
+                    return null;
+                }
+
+                token.ThrowIfCancellationRequested();
 
                 var page = _document.GetPage<PageTextLayerContent>(pageNumber);
-                return PdfTextLayerHelper.GetTextLayer(page, cancellationToken);
+                return PdfTextLayerHelper.GetTextLayer(page, token);
             }
             catch (OperationCanceledException)
             {
@@ -397,10 +409,16 @@ namespace Caly.Core.Services
             }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !IsDisposed())
+                if (hasLock && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
+#if DEBUG
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"GetTextLayerAsync NO LOCK {pageNumber}");
+                }
+#endif
             }
         }
 
@@ -461,15 +479,19 @@ namespace Caly.Core.Services
         public async Task SetPdfBookmark(PdfDocumentViewModel pdfDocument, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
+            bool hasLock = false;
 
             try
             {
-                if (token.IsCancellationRequested || IsDisposed())
+                token.ThrowIfCancellationRequested();
+
+                if (IsDisposed())
                 {
                     return;
                 }
 
-                await _semaphore.WaitAsync(CancellationToken.None);
+                await _semaphore.WaitAsync(token);
+                hasLock = true;
 
                 if (IsDisposed())
                 {
@@ -496,14 +518,19 @@ namespace Caly.Core.Services
                 pdfDocument.Bookmarks = children;
             }
             catch (OperationCanceledException)
-            {
-            }
+            { }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !IsDisposed())
+                if (hasLock && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
+#if DEBUG
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"SetPdfBookmark NO LOCK.");
+                }
+#endif
             }
         }
 

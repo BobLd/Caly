@@ -148,26 +148,30 @@ namespace Caly.Core.Services
             System.Diagnostics.Debug.Assert((picture?.RefCount ?? 0) == 0);
         }
 
-        private async Task<IRef<SKPicture>?> GetRenderPageAsync(int pageNumber, CancellationToken cancellationToken)
+        private async Task<IRef<SKPicture>?> GetRenderPageAsync(int pageNumber, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
+            bool hasLock = false;
 
             SKPicture? pic;
             try
             {
-                if (cancellationToken.IsCancellationRequested || IsDisposed())
-                {
-                    return null;
-                }
-
-                await _semaphore.WaitAsync(CancellationToken.None);
+                token.ThrowIfCancellationRequested();
 
                 if (IsDisposed())
                 {
                     return null;
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
+                await _semaphore.WaitAsync(token);
+                hasLock = true;
+
+                if (IsDisposed())
+                {
+                    return null;
+                }
+
+                token.ThrowIfCancellationRequested();
 
                 pic = _document!.GetPage<SKPicture>(pageNumber);
             }
@@ -178,14 +182,20 @@ namespace Caly.Core.Services
             catch (Exception e)
             {
                 Debug.WriteExceptionToFile(e);
-                pic = GetErrorPicture(pageNumber, e, cancellationToken);
+                pic = GetErrorPicture(pageNumber, e, token);
             }
             finally
             {
-                if (_semaphore.CurrentCount == 0 && !IsDisposed())
+                if (hasLock && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
+#if DEBUG
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"GetRenderPageAsync NO LOCK {pageNumber}");
+                }
+#endif
             }
 
             return pic is null ? null : RefCountable.Create(pic);
