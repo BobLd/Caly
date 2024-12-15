@@ -67,12 +67,6 @@ namespace Caly.Core.Services
                 {
                     _semaphore.Release();
                 }
-#if DEBUG
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"GetRenderPageAsync NO LOCK {pageNumber}");
-                }
-#endif
             }
 
             return pic is null ? null : RefCountable.Create(pic);

@@ -220,6 +220,7 @@ namespace Caly.Core.Services
             Debug.ThrowOnUiThread();
             bool hasLock = false;
 
+            PageTextLayerContent? page;
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -239,8 +240,7 @@ namespace Caly.Core.Services
 
                 token.ThrowIfCancellationRequested();
 
-                var page = _document.GetPage<PageTextLayerContent>(pageNumber);
-                return PdfTextLayerHelper.GetTextLayer(page, token);
+                page = _document.GetPage<PageTextLayerContent>(pageNumber);
             }
             finally
             {
@@ -249,6 +249,8 @@ namespace Caly.Core.Services
                     _semaphore.Release();
                 }
             }
+
+            return page is null ? null : PdfTextLayerHelper.GetTextLayer(page, token);
         }
 
         public ValueTask SetDocumentPropertiesAsync(PdfDocumentViewModel document, CancellationToken token)
@@ -310,6 +312,8 @@ namespace Caly.Core.Services
             Debug.ThrowOnUiThread();
             bool hasLock = false;
 
+            Bookmarks? bookmarks = null;
+
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -329,7 +333,23 @@ namespace Caly.Core.Services
 
                 token.ThrowIfCancellationRequested();
 
-                if (!_document!.TryGetBookmarks(out var bookmarks) || bookmarks.Roots.Count == 0)
+                if (!_document!.TryGetBookmarks(out bookmarks))
+                {
+                    return;
+                }
+            }
+            catch (OperationCanceledException) { }
+            finally
+            {
+                if (hasLock && !IsDisposed())
+                {
+                    _semaphore.Release();
+                }
+            }
+
+            try
+            {
+                if (IsDisposed() || bookmarks is null || bookmarks.Roots.Count == 0)
                 {
                     return;
                 }
@@ -347,13 +367,6 @@ namespace Caly.Core.Services
                 pdfDocument.Bookmarks = children;
             }
             catch (OperationCanceledException) { }
-            finally
-            {
-                if (hasLock && !IsDisposed())
-                {
-                    _semaphore.Release();
-                }
-            }
         }
 
         public async Task BuildIndex(PdfDocumentViewModel pdfDocument, IProgress<int> progress, CancellationToken token)

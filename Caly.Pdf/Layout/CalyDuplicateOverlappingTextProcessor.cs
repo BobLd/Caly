@@ -32,8 +32,9 @@ namespace Caly.Pdf.Layout
         /// <para>Logic inspired from PdfBox's PDFTextStripper class.</para>
         /// </summary>
         /// <param name="letters">Letters to be processed.</param>
+        /// <param name="token"/>
         /// <returns>Letters with no duplicate overlapping.</returns>
-        public static IReadOnlyList<PdfLetter> Get(IReadOnlyList<PdfLetter> letters)
+        public static IReadOnlyList<PdfLetter> Get(IReadOnlyList<PdfLetter> letters, CancellationToken token)
         {
             if (letters is null || letters.Count == 0)
             {
@@ -42,8 +43,14 @@ namespace Caly.Pdf.Layout
 
             var cleanLetters = new List<PdfLetter>() { letters[0] };
 
+            int i = 0;
             foreach (var letter in letters)
             {
+                if (i++ % 100 == 0)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+
                 double tolerance = letter.BoundingBox.Width / (letter.Value.Length == 0 ? 1 : letter.Value.Length) / 3.0;
                 double minX = letter.BoundingBox.BottomLeft.X - tolerance;
                 double maxX = letter.BoundingBox.BottomLeft.X + tolerance;

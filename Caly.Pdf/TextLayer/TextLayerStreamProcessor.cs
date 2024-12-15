@@ -144,24 +144,6 @@ namespace Caly.Pdf.TextLayer
                         new PdfRectangle(0, 0, characterBoundingBox.Width, UserSpaceUnit.PointMultiples)),
                 _pageHeight);
 
-            // Check overlap
-            double tolerance = transformedPdfBounds.Width / (unicode.Length == 0 ? 1 : unicode.Length) / 3.0;
-            double minX = transformedPdfBounds.BottomLeft.X - tolerance;
-            double maxX = transformedPdfBounds.BottomLeft.X + tolerance;
-            double minY = transformedPdfBounds.BottomLeft.Y - tolerance;
-            double maxY = transformedPdfBounds.BottomLeft.Y + tolerance;
-
-            var duplicates = _letters.Where(l => minX <= l.BoundingBox.BottomLeft.X &&
-                                                maxX >= l.BoundingBox.BottomLeft.X &&
-                                                minY <= l.BoundingBox.BottomLeft.Y &&
-                                                maxY >= l.BoundingBox.BottomLeft.Y); // do other checks?
-
-            var duplicatesOverlapping = duplicates.FirstOrDefault(l => l.Value.Span.SequenceEqual(unicode.AsSpan()));
-
-            if (duplicatesOverlapping is not null)
-            {
-                return;
-            }
 
             var letter = new PdfLetter(unicode.AsMemory(),
                 transformedPdfBounds,
