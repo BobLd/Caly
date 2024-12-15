@@ -53,8 +53,6 @@ namespace Caly.Core.Services.Interfaces
 
         void AskRemovePagePicture(PdfPageViewModel page);
 
-        void ClearAllPagePictures();
-
         
         void AskPageThumbnail(PdfPageViewModel page, CancellationToken token);
 
