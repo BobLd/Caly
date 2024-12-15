@@ -52,13 +52,13 @@ namespace Caly.Benchmarks
         [Benchmark]
         public IReadOnlyList<PdfLetter> BaseNoDup()
         {
-            return CalyDuplicateOverlappingTextProcessor.Get(_calyWordsNoDup);
+            return CalyDuplicateOverlappingTextProcessor.Get(_calyWordsNoDup, CancellationToken.None);
         }
 
         [Benchmark]
         public IReadOnlyList<PdfLetter> BaseDup()
         {
-            return CalyDuplicateOverlappingTextProcessor.Get(_calyWordsDup);
+            return CalyDuplicateOverlappingTextProcessor.Get(_calyWordsDup, CancellationToken.None);
         }
     }
 }
