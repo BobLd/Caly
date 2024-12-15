@@ -276,11 +276,6 @@ namespace Caly.Core.ViewModels
             _pdfService.ClearAllThumbnail();
         }
 
-        public void ClearAllPagePictures()
-        {
-            _pdfService.ClearAllPagePictures();
-        }
-
         internal async ValueTask CancelAsync()
         {
             await _cts.CancelAsync();

@@ -873,12 +873,14 @@ public sealed class PdfPageItemsControl : ItemsControl
         }
     }
 
+#if DEBUG
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
         if (change.Property == DataContextProperty && change.OldValue is PdfDocumentViewModel oldVm)
         {
-            oldVm.ClearAllPagePictures();
+
         }
     }
+#endif
 }

@@ -70,7 +70,7 @@ namespace Caly.Pdf.Layout
             });
 
             // 2. Group indexes
-            foreach (var group in GroupIndexes(indexes))
+            foreach (var group in GroupIndexes(indexes, parallelOptions.CancellationToken))
             {
                 yield return group.Select(i => elements[i]).ToArray();
             }
@@ -137,7 +137,7 @@ namespace Caly.Pdf.Layout
             });
 
             // 2. Group indexes
-            foreach (var group in GroupIndexes(indexes))
+            foreach (var group in GroupIndexes(indexes, parallelOptions.CancellationToken))
             {
                 yield return group.Select(i => elements[i]).ToArray();
             }
@@ -203,7 +203,7 @@ namespace Caly.Pdf.Layout
             });
 
             // 2. Group indexes
-            foreach (var group in GroupIndexes(indexes))
+            foreach (var group in GroupIndexes(indexes, parallelOptions.CancellationToken))
             {
                 yield return group.Select(i => elements[i]).ToArray();
             }
@@ -215,11 +215,16 @@ namespace Caly.Pdf.Layout
         /// </summary>
         /// <param name="edges">The graph. edges[i] = j indicates that there is an edge between i and j.</param>
         /// <returns>A List of HashSets containing the grouped indexes.</returns>
-        internal static List<HashSet<int>> GroupIndexes(int[] edges)
+        internal static List<HashSet<int>> GroupIndexes(int[] edges, CancellationToken token)
         {
             int[][] adjacency = new int[edges.Length][];
             for (int i = 0; i < edges.Length; i++)
             {
+                if (i % 100 == 0)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+
                 HashSet<int> matches = new HashSet<int>();
                 if (edges[i] != -1) matches.Add(edges[i]);
                 for (int j = 0; j < edges.Length; j++)

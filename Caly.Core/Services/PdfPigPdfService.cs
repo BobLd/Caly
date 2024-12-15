@@ -17,9 +17,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using Caly.Core.Models;
@@ -42,22 +44,6 @@ namespace Caly.Core.Services
     /// </summary>
     internal sealed partial class PdfPigPdfService : IPdfService
     {
-        private enum RenderRequestTypes
-        {
-            Picture = 0,
-            Thumbnail = 1,
-            Information = 2,
-            TextLayer = 3
-        }
-
-        private sealed record RenderRequest(PdfPageViewModel Page, RenderRequestTypes Type, CancellationToken Token)
-        {
-        }
-
-        private readonly BlockingCollection<RenderRequest> _pendingHighPriorityRequests = new(new ConcurrentStack<RenderRequest>());
-        private readonly BlockingCollection<RenderRequest> _pendingOtherRequests = new(new ConcurrentStack<RenderRequest>());
-        private readonly BlockingCollection<RenderRequest>[] _pendingRequests;
-
         private readonly IDialogService _dialogService;
         private readonly ITextSearchService _textSearchService;
 
@@ -76,126 +62,22 @@ namespace Caly.Core.Services
 
         public int NumberOfPages { get; private set; }
 
-        private readonly CancellationTokenSource _mainCts = new();
-
-        private readonly Task _renderingLoopTask;
-
         public PdfPigPdfService(IDialogService dialogService, ITextSearchService textSearchService)
         {
-            if (dialogService is null)
-            {
-                throw new NullReferenceException("Missing Dialog Service instance.");
-            }
-
-            _dialogService = dialogService;
+            _dialogService = dialogService ?? throw new NullReferenceException("Missing Dialog Service instance.");
             _textSearchService = textSearchService;
 
             // Priority to rendering page
-            _pendingRequests = [_pendingHighPriorityRequests, _pendingOtherRequests];
+            _priorityRequests = [_pendingHighPriorityRequests, _pendingOtherRequests];
 
-            _renderingLoopTask = Task.Run(RenderingLoop, _mainCts.Token);
+            var channel = Channel.CreateUnbounded<RenderRequest>();
+            _requestsWriter = channel.Writer;
+            _requestsReader = channel.Reader;
+
+            _processingLoopTask = Task.Run(ProcessingLoop, _mainCts.Token);
+            _enqueuingLoopTask = Task.Run(EnqueuingLoop, _mainCts.Token);
         }
-
-        private async Task RenderingLoop()
-        {
-            Debug.ThrowOnUiThread();
-
-            // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
-            while (!_pendingHighPriorityRequests.IsCompleted && !_pendingOtherRequests.IsCompleted)
-            {
-                // Blocks if dataItems.Count == 0.
-                // IOE means that Take() was called on a completed collection.
-                // Some other thread can call CompleteAdding after we pass the
-                // IsCompleted check but before we call Take.
-                // In this example, we can simply catch the exception since the
-                // loop will break on the next iteration.
-                try
-                {
-                    if (IsDisposed())
-                    {
-                        return;
-                    }
-
-                    int q = BlockingCollection<RenderRequest>.TakeFromAny(_pendingRequests, out RenderRequest? renderRequest, _mainCts.Token);
-                    //RenderRequest renderRequest = _pendingOtherRequests.Take(_mainCts.Token);
-
-                    System.Diagnostics.Debug.WriteLine($"[RENDER] Dequeued from {q}.");
-
-                    if (renderRequest is null)
-                    {
-                        continue;
-                    }
-
-                    switch (renderRequest.Type)
-                    {
-                        case RenderRequestTypes.Picture:
-                            await ProcessPictureRequest(renderRequest);
-                            break;
-
-                        case RenderRequestTypes.Thumbnail:
-                            await ProcessThumbnailRequest(renderRequest);
-                            break;
-
-                        case RenderRequestTypes.TextLayer:
-                            await ProcessTextLayerRequest(renderRequest);
-                            break;
-
-                        default:
-                            throw new NotImplementedException(renderRequest.Type.ToString());
-                    }
-                }
-                catch (OperationCanceledException) { }
-                catch (InvalidOperationException) { }
-            }
-
-            // TODO - What happens if one queue is complete, and the other is not
-
-            //while (!_pendingHighPriorityRequests.IsCompleted || !_pendingOtherRequests.IsCompleted)
-            //{
-
-            //}
-        }
-
-        private async Task ProcessTextLayerRequest(RenderRequest renderRequest)
-        {
-            if (IsDisposed())
-            {
-                return;
-            }
-
-            if (renderRequest.Token.IsCancellationRequested)
-            {
-                System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] Cancelled {renderRequest.Page.PageNumber}");
-                return;
-            }
-
-            System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] Start process {renderRequest.Page.PageNumber}");
-
-            try
-            {
-                if (_textLayerTokens.TryRemove(renderRequest.Page.PageNumber, out var cts))
-                {
-                    cts.Dispose();
-
-                    if (renderRequest.Page.PdfTextLayer is not null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] No need process {renderRequest.Page.PageNumber}");
-                        return;
-                    }
-
-                    await SetPageTextLayer(renderRequest.Page, renderRequest.Token);
-                }
-            }
-            catch (OperationCanceledException)
-            { }
-            catch (Exception e)
-            {
-                Debug.WriteExceptionToFile(e);
-                System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] Error on {renderRequest.Page.PageNumber}: {e}");
-            }
-            System.Diagnostics.Debug.WriteLine($"[RENDER] [TEXT] End process {renderRequest.Page.PageNumber}");
-        }
-
+        
         public async Task<int> OpenDocument(IStorageFile? storageFile, string? password, CancellationToken token)
         {
             Debug.ThrowOnUiThread();
@@ -281,50 +163,6 @@ namespace Caly.Core.Services
                 return 0;
             }
         }
-
-        public async Task SetPageTextLayer(PdfPageViewModel page, CancellationToken token)
-        {
-            page.PdfTextLayer ??= await GetTextLayerAsync(page.PageNumber, token);
-            if (page.PdfTextLayer is not null)
-            {
-                // We ensure the correct selection is set now that we have the text layer
-                page.TextSelectionHandler.Selection.SelectWordsInRange(page);
-            }
-        }
-
-        private readonly ConcurrentDictionary<int, CancellationTokenSource> _textLayerTokens = new();
-
-        public void AskPageTextLayer(PdfPageViewModel page, CancellationToken token)
-        {
-            System.Diagnostics.Debug.WriteLine($"[RENDER] AskPageTextLayer {page.PageNumber}");
-
-            if (IsDisposed())
-            {
-                return;
-            }
-
-            var pageCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-
-            if (_textLayerTokens.TryAdd(page.PageNumber, pageCts))
-            {
-                _pendingOtherRequests.Add(new RenderRequest(page, RenderRequestTypes.TextLayer, pageCts.Token), pageCts.Token);
-            }
-            else
-            {
-
-            }
-        }
-
-        public void AskRemovePageTextLayer(PdfPageViewModel page)
-        {
-            System.Diagnostics.Debug.WriteLine($"[RENDER] AskRemovePageTextLayer {page.PageNumber}");
-
-            if (_textLayerTokens.TryRemove(page.PageNumber, out var cts))
-            {
-                cts.Cancel();
-                cts.Dispose();
-            }
-        }
         
         public async Task SetPageInformationAsync(PdfPageViewModel page, CancellationToken token)
         {
@@ -358,21 +196,22 @@ namespace Caly.Core.Services
                     page.Height = info.Height;
                 }
             }
-            catch (OperationCanceledException)
-            {
-            }
             finally
             {
                 if (hasLock && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
-#if DEBUG
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"SetPageInformationAsync NO LOCK {page.PageNumber}");
-                }
-#endif
+            }
+        }
+
+        public async Task SetPageTextLayer(PdfPageViewModel page, CancellationToken token)
+        {
+            page.PdfTextLayer ??= await GetTextLayerAsync(page.PageNumber, token);
+            if (page.PdfTextLayer is not null)
+            {
+                // We ensure the correct selection is set now that we have the text layer
+                page.TextSelectionHandler.Selection.SelectWordsInRange(page);
             }
         }
 
@@ -403,22 +242,12 @@ namespace Caly.Core.Services
                 var page = _document.GetPage<PageTextLayerContent>(pageNumber);
                 return PdfTextLayerHelper.GetTextLayer(page, token);
             }
-            catch (OperationCanceledException)
-            {
-                return null;
-            }
             finally
             {
                 if (hasLock && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
-#if DEBUG
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"GetTextLayerAsync NO LOCK {pageNumber}");
-                }
-#endif
             }
         }
 
@@ -435,9 +264,9 @@ namespace Caly.Core.Services
 
             var others =
                 _document.Information.DocumentInformationDictionary?.Data?
-                    .Where(x=>x.Value is not null)
+                    .Where(x => x.Value is not null)
                     .ToDictionary(x => x.Key,
-                    x => x.Value.ToString()!);
+                        x => x.Value.ToString()!);
 
             document.Properties = new PdfDocumentProperties()
             {
@@ -517,20 +346,13 @@ namespace Caly.Core.Services
 
                 pdfDocument.Bookmarks = children;
             }
-            catch (OperationCanceledException)
-            { }
+            catch (OperationCanceledException) { }
             finally
             {
                 if (hasLock && !IsDisposed())
                 {
                     _semaphore.Release();
                 }
-#if DEBUG
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"SetPdfBookmark NO LOCK.");
-                }
-#endif
             }
         }
 
@@ -583,18 +405,12 @@ namespace Caly.Core.Services
 
         private long _isDisposed;
 
-
-        private static async Task ClearTokensAsync(ConcurrentDictionary<int, CancellationTokenSource> tokens)
+        [Conditional("DEBUG")]
+        private static void AssertTokensCancelled(ConcurrentDictionary<int, CancellationTokenSource> tokens)
         {
-            var keys = tokens.Keys.ToArray();
-
-            foreach (int key in keys)
+            foreach (var kvp in tokens)
             {
-                if (tokens.TryRemove(key, out var token))
-                {
-                    await token.CancelAsync();
-                    token.Dispose();
-                }
+                System.Diagnostics.Debug.Assert(kvp.Value.IsCancellationRequested);
             }
         }
 
@@ -610,20 +426,19 @@ namespace Caly.Core.Services
                     return;
                 }
 
-                await _semaphore.WaitAsync(CancellationToken.None); // Acquire the lock
+                System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document async for {FileName}.");
 
                 Interlocked.Increment(ref _isDisposed); // Flag as disposed
 
-                _semaphore.Release(); // Release lock
+                await _mainCts.CancelAsync();
 
-                System.Diagnostics.Debug.WriteLine($"[INFO] Disposing document async for {FileName}.");
-
-                await ClearTokensAsync(_thumbnailTokens);
-                await ClearTokensAsync(_textLayerTokens);
-                await ClearTokensAsync(_pictureTokens);
+                AssertTokensCancelled(_thumbnailTokens);
+                AssertTokensCancelled(_textLayerTokens);
+                AssertTokensCancelled(_pictureTokens);
 
                 _pendingOtherRequests.CompleteAdding();
                 _pendingHighPriorityRequests.CompleteAdding();
+                _requestsWriter.Complete();
 
                 _semaphore.Dispose();
 
@@ -639,15 +454,12 @@ namespace Caly.Core.Services
                     _document = null;
                 }
 
-                await _renderingLoopTask;
+                await _processingLoopTask;
+                await _enqueuingLoopTask;
                 
-                System.Diagnostics.Debug.Assert(_renderingLoopTask.IsCanceled ||
-                                                _renderingLoopTask.IsCompleted ||
-                                                _renderingLoopTask.IsCompletedSuccessfully ||
-                                                _renderingLoopTask.IsFaulted);
-
                 _pendingOtherRequests.Dispose();
                 _pendingHighPriorityRequests.Dispose();
+
             }
             catch (Exception ex)
             {
