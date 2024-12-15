@@ -43,31 +43,85 @@ namespace Caly.Pdf.Layout
 
             var cleanLetters = new List<PdfLetter>() { letters[0] };
 
-            int i = 0;
-            foreach (var letter in letters)
+            for (int i = 1; i < letters.Count; ++i)
             {
-                if (i++ % 100 == 0)
+                if (i % 1000 == 0)
                 {
                     token.ThrowIfCancellationRequested();
                 }
 
+                var letter = letters[i];
                 double tolerance = letter.BoundingBox.Width / (letter.Value.Length == 0 ? 1 : letter.Value.Length) / 3.0;
                 double minX = letter.BoundingBox.BottomLeft.X - tolerance;
                 double maxX = letter.BoundingBox.BottomLeft.X + tolerance;
                 double minY = letter.BoundingBox.BottomLeft.Y - tolerance;
                 double maxY = letter.BoundingBox.BottomLeft.Y + tolerance;
 
-                var duplicates = cleanLetters.Where(l => minX <= l.BoundingBox.BottomLeft.X &&
-                                                         maxX >= l.BoundingBox.BottomLeft.X &&
-                                                         minY <= l.BoundingBox.BottomLeft.Y &&
-                                                         maxY >= l.BoundingBox.BottomLeft.Y); // do other checks?
+                var duplicates = cleanLetters
+                    .Where(l => minX <= l.BoundingBox.BottomLeft.X &&
+                                maxX >= l.BoundingBox.BottomLeft.X &&
+                                minY <= l.BoundingBox.BottomLeft.Y &&
+                                maxY >= l.BoundingBox.BottomLeft.Y); // do other checks?
 
-                var duplicatesOverlapping = duplicates.FirstOrDefault(l => l.Value.Span.SequenceEqual(letter.Value.Span));
+                var duplicatesOverlapping = duplicates.Any(l => l.Value.Span.SequenceEqual(letter.Value.Span));
 
-                if (duplicatesOverlapping is null)
+                if (!duplicatesOverlapping)
                 {
                     cleanLetters.Add(letter);
                 }
+            }
+
+            return cleanLetters;
+        }
+
+        /// <summary>
+        /// Checks if each letter is a duplicate and overlaps any other letter and remove the duplicate, and flag the remaining as bold.
+        /// <para>Logic inspired from PdfBox's PDFTextStripper class.</para>
+        /// </summary>
+        /// <param name="letters">Letters to be processed.</param>
+        /// <param name="token"/>
+        /// <returns>Letters with no duplicate overlapping.</returns>
+        public static IReadOnlyList<PdfLetter> GetInPlace(IReadOnlyList<PdfLetter> letters, CancellationToken token)
+        {
+            if (letters is null || letters.Count == 0)
+            {
+                return letters;
+            }
+
+            if (letters is not List<PdfLetter> cleanLetters)
+            {
+                cleanLetters = letters.ToList();
+            }
+
+            for (int i = 0; i < cleanLetters.Count; ++i)
+            {
+                if (i % 1000 == 0)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+
+                var letter = cleanLetters[i];
+                double tolerance = letter.BoundingBox.Width / (letter.Value.Length == 0 ? 1 : letter.Value.Length) / 3.0;
+                double minX = letter.BoundingBox.BottomLeft.X - tolerance;
+                double maxX = letter.BoundingBox.BottomLeft.X + tolerance;
+                double minY = letter.BoundingBox.BottomLeft.Y - tolerance;
+                double maxY = letter.BoundingBox.BottomLeft.Y + tolerance;
+
+                var duplicatesOverlapping = cleanLetters
+                    .Skip(i + 1)
+                    .Any(l => minX <= l.BoundingBox.BottomLeft.X &&
+                              maxX >= l.BoundingBox.BottomLeft.X &&
+                              minY <= l.BoundingBox.BottomLeft.Y &&
+                              maxY >= l.BoundingBox.BottomLeft.Y &&
+                              l.Value.Span.SequenceEqual(letter.Value.Span));
+
+                if (!duplicatesOverlapping)
+                {
+                    continue;
+                }
+
+                cleanLetters.RemoveAt(i);
+                i--;
             }
 
             return cleanLetters;

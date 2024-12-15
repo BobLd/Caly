@@ -73,7 +73,7 @@ namespace Caly.Pdf
                 return PdfTextLayer.Empty;
             }
 
-            var letters = CalyDuplicateOverlappingTextProcessor.Get(page.Letters, token);
+            var letters = CalyDuplicateOverlappingTextProcessor.GetInPlace(page.Letters, token);
             var words = CalyNNWordExtractor.Instance.GetWords(letters, token);
             var pdfBlocks = CalyDocstrum.Instance.GetBlocks(words, token);
 
