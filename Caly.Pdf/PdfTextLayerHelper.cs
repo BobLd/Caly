@@ -64,19 +64,18 @@ namespace Caly.Pdf
             }
         }
 
-        public static PdfTextLayer GetTextLayer(PageTextLayerContent page, CancellationToken cancellationToken)
+        public static PdfTextLayer GetTextLayer(PageTextLayerContent page, CancellationToken token)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            token.ThrowIfCancellationRequested();
 
             if (page.Letters.Count == 0)
             {
                 return PdfTextLayer.Empty;
             }
 
-            //var letters = CalyDuplicateOverlappingTextProcessor.Get(page.Letters);
-
-            var words = CalyNNWordExtractor.Instance.GetWords(page.Letters, cancellationToken);
-            var pdfBlocks = CalyDocstrum.Instance.GetBlocks(words, cancellationToken);
+            var letters = CalyDuplicateOverlappingTextProcessor.Get(page.Letters, token);
+            var words = CalyNNWordExtractor.Instance.GetWords(letters, token);
+            var pdfBlocks = CalyDocstrum.Instance.GetBlocks(words, token);
 
             int wordIndex = 0;
             int lineIndex = 0;
@@ -95,7 +94,7 @@ namespace Caly.Pdf
                         // throw if cancelled every now and then
                         if (wordIndex % 100 == 0)
                         {
-                            cancellationToken.ThrowIfCancellationRequested();
+                            token.ThrowIfCancellationRequested();
                         }
 
                         word.IndexInPage = wordIndex++;
