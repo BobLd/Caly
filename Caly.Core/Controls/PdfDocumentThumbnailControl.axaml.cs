@@ -66,25 +66,15 @@ namespace Caly.Core.Controls
                 return;
             }
 
-            container.PropertyChanged += Container_PropertyChanged;
+            container.PropertyChanged += _onContainerPropertyChanged;
             vm.LoadThumbnail();
         }
 
-        private void Container_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        private void _onContainerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property == ContentPresenter.ContentProperty && e.OldValue is PdfPageViewModel oldVm)
+            if (e.Property == ContentPresenter.ContentProperty && e.OldValue is PdfPageViewModel vm)
             {
-                if (_listBox?.ItemsPanelRoot is VirtualizingStackPanel panel)
-                {
-                    int startPage = panel.FirstRealizedIndex + 1;
-                    int endPage = panel.LastRealizedIndex + 1;
-
-                    if (startPage == 0 || endPage == 0 ||
-                        oldVm.PageNumber <= startPage || oldVm.PageNumber >= endPage)
-                    {
-                        oldVm.UnloadThumbnail();
-                    }
-                }
+                vm.UnloadThumbnail();
             }
         }
 
@@ -95,7 +85,7 @@ namespace Caly.Core.Controls
                 return;
             }
 
-            container.PropertyChanged -= Container_PropertyChanged;
+            container.PropertyChanged -= _onContainerPropertyChanged;
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
