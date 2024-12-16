@@ -190,7 +190,7 @@ namespace Caly.Core.Services
 
             if (_pictureTokens.TryAdd(page.PageNumber, pageCts))
             {
-                _pendingHighPriorityRequests.Add(new RenderRequest(page, RenderRequestTypes.Picture, pageCts.Token), pageCts.Token);
+                _pendingHighPriorityRequests.Add(new RenderRequest(page, RenderRequestTypes.Picture, pageCts.Token), CancellationToken.None);
             }
         }
 
@@ -301,7 +301,7 @@ namespace Caly.Core.Services
                 var picture = renderRequest.Page.PdfPicture?.Clone();
                 if (picture is not null)
                 {
-                    await SetThumbnail(renderRequest.Page, picture.Item);
+                    await SetThumbnail(renderRequest.Page, picture.Item, renderRequest.Token);
                     picture.Dispose();
                     return;
                 }
@@ -315,7 +315,7 @@ namespace Caly.Core.Services
                         renderRequest.Page.Width = picture.Item.CullRect.Width;
                         renderRequest.Page.Height = picture.Item.CullRect.Height;
 
-                        await SetThumbnail(renderRequest.Page, picture.Item);
+                        await SetThumbnail(renderRequest.Page, picture.Item, renderRequest.Token);
                     }
                 }
             }
@@ -340,10 +340,12 @@ namespace Caly.Core.Services
             }
 
             var pageCts = CancellationTokenSource.CreateLinkedTokenSource(token, _mainCts.Token);
+            
+            //pageCts.Cancel();
 
             if (_thumbnailTokens.TryAdd(page.PageNumber, pageCts))
             {
-                _pendingOtherRequests.Add(new RenderRequest(page, RenderRequestTypes.Thumbnail, pageCts.Token), pageCts.Token);
+                _pendingOtherRequests.Add(new RenderRequest(page, RenderRequestTypes.Thumbnail, pageCts.Token), CancellationToken.None);
             }
 
             System.Diagnostics.Debug.WriteLine($"[RENDER] Thumbnail Count {_bitmaps.Count}");
@@ -366,7 +368,7 @@ namespace Caly.Core.Services
             if (_bitmaps.TryRemove(page.PageNumber, out var vm))
             {
                 // Should always be null
-                System.Diagnostics.Debug.Assert(vm.Thumbnail is null);
+                //System.Diagnostics.Debug.Assert(vm.Thumbnail is null);
             }
 
             thumbnail?.Dispose();
