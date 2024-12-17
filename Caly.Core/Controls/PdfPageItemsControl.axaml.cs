@@ -180,6 +180,11 @@ public sealed class PdfPageItemsControl : ItemsControl
     {
         base.PrepareContainerForItemOverride(container, item, index);
 
+        if (_isEnsureScrollBars)
+        {
+            return;
+        }
+
         if (_isTabDragging ||
             container is not PdfPageItem cp ||
             item is not PdfPageViewModel vm)
@@ -215,8 +220,13 @@ public sealed class PdfPageItemsControl : ItemsControl
         return NeedsContainer<PdfPageItem>(item, out recycleKey);
     }
 
-    private static void _onContainerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void _onContainerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
+        if (_isEnsureScrollBars)
+        {
+            return;
+        }
+
         if (e.Property == ContentPresenter.ContentProperty &&
             e.OldValue is PdfPageViewModel vm)
         {
@@ -839,6 +849,8 @@ public sealed class PdfPageItemsControl : ItemsControl
         return new Vector(x * s, y * s);
     }
 
+    private bool _isEnsureScrollBars = false;
+
     /// <summary>
     /// Ensure the scroll bars are correctly set.
     /// </summary>
@@ -849,6 +861,7 @@ public sealed class PdfPageItemsControl : ItemsControl
         try
         {
             _isSettingPageVisibility = true;
+            _isEnsureScrollBars = true;
 
             // There's a bug in VirtualizingStackPanel. Scroll bars do not display correctly
             // This hack fixes that by scrolling into view a page that's not realised
@@ -868,7 +881,7 @@ public sealed class PdfPageItemsControl : ItemsControl
         finally
         {
             _isSettingPageVisibility = false;
-
+            _isEnsureScrollBars = false;
             ScrollIntoView(currentPage);
         }
     }
