@@ -31,7 +31,7 @@ namespace Caly.Core.Utilities
     {
         // https://googleprojectzero.blogspot.com/2019/09/windows-exploitation-tricks-spoofing.html
 
-        private static readonly string _pipeName = $"caly-files-pipe-{Environment.MachineName}-{Environment.UserName}";
+        private static readonly string _pipeName = "caly-pdf-files-pipe";
 
         private static readonly ReadOnlyMemory<byte> _keyPhrase = "ca1y k3y pa$$"u8.ToArray();
 
