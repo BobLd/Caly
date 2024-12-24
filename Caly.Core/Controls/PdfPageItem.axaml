@@ -2,7 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="using:Caly.Core.Controls"
                     xmlns:viewModels="clr-namespace:Caly.Core.ViewModels"
-                    xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing">
+                    xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+                    xmlns:utilities="clr-namespace:Caly.Core.Utilities">
 	<Design.PreviewWith>
 		<StackPanel>
 			<controls:PdfPageItem x:DataType="viewModels:PdfPageViewModel"
@@ -27,7 +28,9 @@
 		<!-- ContextFlyout -->
 		<Setter Property="ContextFlyout">
 			<MenuFlyout>
-				<MenuItem Header="Copy" Command="{Binding $parent[controls:PdfPageItemsControl].((viewModels:PdfDocumentViewModel)DataContext).CopyTextCommand}"/>
+				<MenuItem Header="{DynamicResource StringTextFlyoutCopyText}"
+                          Command="{Binding $parent[controls:PdfPageItemsControl].((viewModels:PdfDocumentViewModel)DataContext).CopyTextCommand}"
+                          InputGesture="{x:Static utilities:CalyHotkeyConfiguration.CopyGesture}"/>
 
 				<Separator/>
 

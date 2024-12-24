@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Caly.Core.ViewModels"
-             xmlns:tabalonia="clr-namespace:Tabalonia.Controls;assembly=Tabalonia"
              xmlns:controls="clr-namespace:Caly.Core.Controls"
+             xmlns:utilities="clr-namespace:Caly.Core.Utilities"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Caly.Core.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -15,12 +15,12 @@
 	</Design.DataContext>
 
 	<UserControl.KeyBindings>
-		<KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
-		<KeyBinding Gesture="Ctrl+F4" Command="{Binding CloseDocumentCommand}" />
-		<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
-		<KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
-		<KeyBinding Gesture="Ctrl+PageDown" Command="{Binding ActivateNextDocumentCommand}"/>
-		<KeyBinding Gesture="Ctrl+PageUp" Command="{Binding ActivatePreviousDocumentCommand}"/>
+		<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.OpenFileGesture}" Command="{Binding OpenFileCommand}" />
+		<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.DocumentCloseGesture}" Command="{Binding CloseDocumentCommand}" />
+		<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.CopyGesture}" Command="{Binding CopyTextCommand}" />
+		<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.DocumentSearchGesture}" Command="{Binding ActivateSearchTextTabCommand}" />
+		<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.DocumentNextGesture}" Command="{Binding ActivateNextDocumentCommand}"/>
+		<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.DocumentPreviousGesture}" Command="{Binding ActivatePreviousDocumentCommand}"/>
 	</UserControl.KeyBindings>
 
 	<Grid RowDefinitions="*,18">

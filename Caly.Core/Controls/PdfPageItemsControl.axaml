@@ -1,7 +1,8 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="using:Caly.Core.Controls"
-                    xmlns:viewModels="clr-namespace:Caly.Core.ViewModels">
+                    xmlns:viewModels="clr-namespace:Caly.Core.ViewModels"
+                    xmlns:utilities="clr-namespace:Caly.Core.Utilities">
 
 	<Design.PreviewWith>
 		<StackPanel Width="400" Spacing="10">
@@ -38,8 +39,8 @@
 									  IsScrollInertiaEnabled="True">
 
 							<ScrollViewer.KeyBindings>
-								<KeyBinding Gesture="Ctrl+C" Command="{Binding CopyTextCommand}" />
-								<KeyBinding Gesture="Ctrl+F" Command="{Binding ActivateSearchTextTabCommand}" />
+								<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.CopyGesture}" Command="{Binding CopyTextCommand}" />
+								<KeyBinding Gesture="{x:Static utilities:CalyHotkeyConfiguration.DocumentSearchGesture}" Command="{Binding ActivateSearchTextTabCommand}" />
 							</ScrollViewer.KeyBindings>
 
 							<LayoutTransformControl Name="PART_LayoutTransformControl"
