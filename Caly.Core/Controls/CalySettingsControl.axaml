@@ -40,7 +40,7 @@
 
                         <HyperlinkButton DockPanel.Dock="Top"
                                          Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                                         NavigateUri="https://raw.githubusercontent.com/BobLd/Caly/refs/heads/master/Caly.Desktop/THIRD-PARTY-NOTICES.TXT">
+                                         NavigateUri="https://raw.githubusercontent.com/CalyPdf/Caly/refs/heads/master/Caly.Desktop/THIRD-PARTY-NOTICES.TXT">
                             <TextBlock Text="THIRD-PARTY-NOTICES.TXT"/>
                         </HyperlinkButton>
 
