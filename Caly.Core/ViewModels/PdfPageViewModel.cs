@@ -177,6 +177,11 @@ namespace Caly.Core.ViewModels
 
         public void LoadThumbnail()
         {
+            if (_cts is null)
+            {
+                return;
+            }
+
             _pdfService.AskPageThumbnail(this, _cts.Token);
         }
 
@@ -201,13 +206,13 @@ namespace Caly.Core.ViewModels
         }
 
         [RelayCommand]
-        private void RotateClockwise()
+        internal void RotateClockwise()
         {
             Rotation = (Rotation + 90) % 360;
         }
 
         [RelayCommand]
-        private void RotateCounterclockwise()
+        internal void RotateCounterclockwise()
         {
             Rotation = (Rotation + 270) % 360;
         }

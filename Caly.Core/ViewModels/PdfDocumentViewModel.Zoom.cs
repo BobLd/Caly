@@ -94,7 +94,7 @@ namespace Caly.Core.ViewModels
         {
             foreach (PdfPageViewModel page in Pages)
             {
-                page.RotateClockwiseCommand.Execute(null);
+                page.RotateClockwise();
             }
         }
 
@@ -103,7 +103,7 @@ namespace Caly.Core.ViewModels
         {
             foreach (PdfPageViewModel page in Pages)
             {
-                page.RotateCounterclockwiseCommand.Execute(null);
+                page.RotateCounterclockwise();
             }
         }
     }
